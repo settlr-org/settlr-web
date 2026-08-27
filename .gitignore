@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+.env*
+!.env.example
+coverage/
+.playwright-cli/
+tsconfig.tsbuildinfo
+AGENTS.md
+CLAUDE.md
