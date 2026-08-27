@@ -1,11 +1,122 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { Brand } from '../components/Brand';
-import { ApiError, apiFetch } from '../lib/api';
-type Balance={summary:{you_are_owed:number;you_owe:number;net_balance:number};currency:string};type Friend={name:string;user_id:string};type Event={type:string;created_at:string;payload?:Record<string,unknown>};
-export default function Home(){const [theme,setTheme]=useState<'dark'|'light'>('dark');const [showLogin,setShowLogin]=useState(false);const [balance,setBalance]=useState<Balance>();const [friends,setFriends]=useState<Friend[]>([]);const [events,setEvents]=useState<Event[]>([]);const [loading,setLoading]=useState(true);const [auth,setAuth]=useState(false);const [error,setError]=useState('');useEffect(()=>{const token=typeof window!=='undefined'?localStorage.getItem('settlr_access_token')??undefined:undefined;Promise.all([apiFetch<Balance>('/api/v1/me/balances',{},token),apiFetch<{data:Friend[]}>('/api/v1/friends',{},token),apiFetch<{data:Event[]}>('/api/v1/activity?limit=3',{},token)]).then(([b,f,a])=>{setBalance(b);setFriends(f.data??[]);setEvents(a.data??[])}).catch((e:unknown)=>{if(e instanceof ApiError&&e.status===401)setAuth(true);else setError('Unable to load live data right now.')}).finally(()=>setLoading(false))},[]);const owed=balance?.summary.you_are_owed??0;const owing=balance?.summary.you_owe??0;const net=balance?.summary.net_balance??0;const currency=balance?.currency??'NPR';return <div className={`app design-${theme}`}>
-<aside className="sidebar"><Brand/><div className="brand-context"><span>SETTLR</span><strong>Shared Expenses</strong></div><nav aria-label="Primary navigation">{['Home','Personal','Groups','Activity','You'].map((x,i)=><a className={i===0?'active':''} href={'#'+x.toLowerCase()} key={x}><span aria-hidden="true">{['⌂','◌','♧','♧','◎'][i]}</span>{x}{x==='Groups'&&<i className="nav-dot"/>}</a>)}</nav><div className="sidebar-premium"><p>UPGRADE TO PREMIUM</p><span>Unlock smart reminders & unlimited active group tracking.</span><button>Get Pro</button></div><button className="profile"><span className="avatar avatar-photo">SW</span><span><strong>Sam Wilson</strong><small>sam@settlr.app</small></span><span>⚙</span></button></aside>
-<main className="content"><header className="topbar"><div><p className="kicker">SETTLR OVERVIEW</p><h1>Settlr Overview</h1><p className="subtitle">Track and settle split expenses instantly across your network</p></div><div className="top-actions"><label className="search"><span>⌕</span><input aria-label="Search transactions and friends" placeholder="Search transactions, friends..."/></label><button className="icon-button" aria-label="Notifications">♧</button><button className="button button-ghost" onClick={()=>setShowLogin(true)}>Sign in</button><button className="button button-primary">＋ Add expense</button><button className="theme-switch" onClick={()=>setTheme(theme==='dark'?'light':'dark')} aria-label="Switch theme">{theme==='dark'?'☼':'☾'}</button></div></header>
-<div className="overview-grid"><section className="balance-card hero-balance"><div className="card-head"><span>Total balance</span><b>•••</b></div><strong className="hero-money">{net>=0?'+':'−'}{currency} {Math.abs(net).toLocaleString('en-IN')}</strong><span className="detail">{loading?'Loading live balances…':'Across your active groups · '+currency}</span><div className="balance-split"><div><span className="circle positive">↙</span><small>YOU ARE OWED</small><strong>{currency} {owed.toLocaleString('en-IN')}</strong></div><div><span className="circle negative">↗</span><small>YOU OWE</small><strong className="negative-text">{currency} {owing.toLocaleString('en-IN')}</strong></div></div></section><section className="quick-actions"><p className="kicker">QUICK ACTIONS</p>{['＋ Add expense','▣ Settle up','♧ New group','♧ Remind'].map(x=><button className={x.startsWith('＋')?'quick-primary':''} key={x}>{x}</button>)}</section><section className="friends"><div className="section-heading"><div><p className="kicker">BALANCES</p><h2>Friends</h2></div><a href="#friends">See all</a></div>{friends.length?friends.map((f,i)=><div className="friend-row" key={f.user_id}><span className={`friend-avatar ${['coral','purple','blue'][i%3]}`}>{f.name.slice(0,2).toUpperCase()}</span><div><strong>{f.name}</strong><small>live balance</small></div><b className="positive-text">—</b><span className="qr">▦</span></div>):<p className="empty-state">{auth?'Sign in to see friend balances.':error||'No friends yet.'}</p>}</section></div>
-<div className="lower-grid"><section className="recent"><div className="section-heading"><div><p className="kicker">RECENT</p><h2>Latest activity</h2></div><button className="filter" aria-label="Filter expenses">▽</button></div>{events.length?events.map((event,i)=><div className="expense-card" key={event.created_at+i}><span className="expense-icon">{['🍜','📶','🚕'][i%3]}</span><div><strong>{event.type.replaceAll('_',' ')}</strong><small>{new Date(event.created_at).toLocaleDateString()}</small></div><div className="expense-total"><small>EVENT</small><span>Live</span></div><b className="chevron">›</b></div>):<p className="empty-state">{loading?'Loading live activity…':auth?'Sign in to see your activity.':error||'No recent activity.'}</p>}</section><aside className="insight"><span className="insight-icon">✣</span><h3>Live account insight</h3><p>{auth?'Sign in to unlock personalized spending insights.':'Insights will appear as your groups record expenses.'}</p><a href="#report">View full report →</a></aside></div></main>
-{showLogin&&<div className="modal-backdrop" role="presentation" onClick={()=>setShowLogin(false)}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="login-title" onClick={e=>e.stopPropagation()}><button className="modal-close" onClick={()=>setShowLogin(false)} aria-label="Close sign in">×</button><p className="kicker">WELCOME BACK</p><h2 id="login-title">Keep your circle balanced</h2><p className="modal-copy">Sign in to load your real groups, balances, and recent activity.</p><label>Email<input id="email" type="email" placeholder="you@example.com"/></label><label>Password<input id="password" type="password" placeholder="••••••••"/></label><button className="button button-primary button-wide" onClick={()=>setShowLogin(false)}>Sign in securely</button></section></div>}</div>}
+"use client";
+
+import Link from "next/link";
+import {
+  ArrowRightOutlined,
+  CheckCircleOutlined,
+  PieChartOutlined,
+  SafetyCertificateOutlined,
+  TeamOutlined,
+  WalletOutlined,
+} from "@ant-design/icons";
+import { Brand } from "../components/Brand";
+export default function Landing() {
+  return (
+    <main className="landing">
+      <header className="landing-nav">
+        <Brand />
+        <nav>
+          <a href="#how">How it works</a>
+          <a href="#features">Features</a>
+          <Link href="/login">Sign in</Link>
+          <Link className="button primary" href="/register">
+            Start settling
+          </Link>
+        </nav>
+      </header>
+      <section className="landing-hero">
+        <div>
+          <p className="eyebrow">SHARED MONEY WITHOUT THE AWKWARDNESS</p>
+          <h1>
+            Keep the memories.
+            <br />
+            <em>Split the maths.</em>
+          </h1>
+          <p>
+            Track group expenses, see exactly who owes whom, and settle up
+            without spreadsheets or uncomfortable reminders.
+          </p>
+          <div className="hero-actions">
+            <Link href="/register" className="button primary">
+              Create a free account <ArrowRightOutlined />
+            </Link>
+            <Link href="/login" className="button">
+              I already use Settlr
+            </Link>
+          </div>
+          <div className="trust-row">
+            <span>
+              <CheckCircleOutlined /> Free to use
+            </span>
+            <span>
+              <CheckCircleOutlined /> Exact-cent splits
+            </span>
+            <span>
+              <CheckCircleOutlined /> Multi-currency
+            </span>
+          </div>
+        </div>
+        <div className="hero-visual">
+          <div className="visual-card visual-main">
+            <span className="visual-label">POKHARA WEEKEND</span>
+            <strong>NPR 12,480</strong>
+            <p>Group spending this trip</p>
+            <div className="visual-members">
+              <i>NK</i>
+              <i>AS</i>
+              <i>MR</i>
+              <span>3 friends</span>
+            </div>
+          </div>
+          <div className="visual-card visual-float">
+            <WalletOutlined />
+            <div>
+              <span>You are owed</span>
+              <strong>NPR 3,240</strong>
+            </div>
+          </div>
+          <div className="visual-orbit" />
+        </div>
+      </section>
+      <section id="how" className="landing-section">
+        <p className="eyebrow">ONE SHARED SOURCE OF TRUTH</p>
+        <h2>From “I’ll pay you later” to settled.</h2>
+        <div className="feature-grid">
+          <article>
+            <TeamOutlined />
+            <span>01</span>
+            <h3>Make a group</h3>
+            <p>
+              Bring everyone into one ledger for a home, trip, couple, or event.
+            </p>
+          </article>
+          <article>
+            <PieChartOutlined />
+            <span>02</span>
+            <h3>Add every expense</h3>
+            <p>
+              Split equally or use exact amounts, percentages, and custom
+              shares.
+            </p>
+          </article>
+          <article>
+            <SafetyCertificateOutlined />
+            <span>03</span>
+            <h3>Settle clearly</h3>
+            <p>
+              Settlr simplifies the debt graph and shows the shortest path back
+              to even.
+            </p>
+          </article>
+        </div>
+      </section>
+      <footer className="landing-footer">
+        <Brand />
+        <p>Shared money, made clear.</p>
+        <Link href="/register">
+          Get started <ArrowRightOutlined />
+        </Link>
+      </footer>
+    </main>
+  );
+}
