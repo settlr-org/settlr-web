@@ -1268,8 +1268,11 @@ textarea {
 /* Landing */
 .landing {
   min-height: 100vh;
+  min-height: 100svh;
   background: var(--paper);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 .landing-nav {
   height: 88px;
@@ -1291,7 +1294,8 @@ textarea {
   height: 44px;
 }
 .landing-hero {
-  min-height: 680px;
+  flex: 1;
+  min-height: 0;
   max-width: 1220px;
   margin: auto;
   padding: 76px 34px 110px;
@@ -1487,22 +1491,22 @@ textarea {
   color: #cbd4cf;
 }
 .landing-footer {
-  max-width: 1160px;
-  margin: auto;
-  padding: 42px 20px;
+  width: 100%;
+  margin: auto 0 0;
+  padding: 30px max(28px, calc((100vw - 1160px) / 2));
+  background: var(--forest);
+  color: #f7f4ea;
   display: flex;
   align-items: center;
   gap: 24px;
 }
 .landing-footer p {
-  color: var(--muted);
+  color: #bdcac4;
   font-size: 11px;
   flex: 1;
 }
-.landing-footer > a {
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--brand);
+.landing-footer .brand {
+  color: #fff;
 }
 
 /* Authentication */
@@ -2470,7 +2474,7 @@ legend {
     grid-template-columns: 1fr;
   }
   .landing-footer {
-    padding: 32px 18px;
+    padding: 26px 18px;
   }
   .auth-form-wrap,
   .simple-auth {

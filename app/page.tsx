@@ -76,9 +76,6 @@ export default function Landing() {
       <footer className="landing-footer">
         <Brand />
         <p>Shared money, made clear.</p>
-        <Link href="/register">
-          Get started <ArrowRightOutlined />
-        </Link>
       </footer>
     </main>
   );
