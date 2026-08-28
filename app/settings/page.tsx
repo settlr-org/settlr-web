@@ -2,6 +2,9 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
   BellOutlined,
+  BankOutlined,
+  DeleteOutlined,
+  DownloadOutlined,
   LockOutlined,
   LogoutOutlined,
   SafetyCertificateOutlined,
@@ -12,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { AppShell } from "../../components/AppShell";
 import { ErrorState, Panel, PanelTitle } from "../../components/UI";
 import { useSession } from "../../components/SessionProvider";
-import { apiFetch } from "../../lib/api";
+import { apiDownload, apiFetch } from "../../lib/api";
 import { initials } from "../../lib/types";
 type Prefs = {
   email_enabled: boolean;
@@ -30,21 +33,29 @@ type Session = {
   expires_at: string;
   revoked_at?: string;
 };
+type Payment = {
+  bank_qr_url: string;
+  bank_name: string;
+  payment_handle: string;
+};
 export default function Settings() {
   const { user, refresh, signOut } = useSession();
   const router = useRouter();
   const [prefs, setPrefs] = useState<Prefs>();
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [payment, setPayment] = useState<Payment>();
   const [error, setError] = useState("");
   const [saved, setSaved] = useState("");
   const load = useCallback(async () => {
     try {
-      const [p, s] = await Promise.all([
+      const [p, s, pay] = await Promise.all([
         apiFetch<Prefs>("/api/v1/me/notification-preferences"),
         apiFetch<{ data: Session[] }>("/api/v1/auth/sessions"),
+        apiFetch<Payment>("/api/v1/me/payment-info"),
       ]);
       setPrefs(p);
       setSessions(s.data);
+      setPayment(pay);
     } catch (x) {
       setError(x instanceof Error ? x.message : "Unable to load settings.");
     }
@@ -110,6 +121,57 @@ export default function Settings() {
     await signOut();
     router.replace("/login");
   };
+  const savePayment = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    try {
+      const updated = await apiFetch<Payment>("/api/v1/me/payment-info", {
+        method: "PUT",
+        body: JSON.stringify({
+          bank_name: data.get("bank_name"),
+          payment_handle: data.get("payment_handle"),
+          bank_qr_url: data.get("bank_qr_url"),
+        }),
+      });
+      setPayment(updated);
+      setSaved("Payment details saved.");
+    } catch (x) {
+      setError(
+        x instanceof Error ? x.message : "Could not save payment details.",
+      );
+    }
+  };
+  const revoke = async (id?: string) => {
+    if (!confirm(id ? "Revoke this session?" : "Sign out every device?"))
+      return;
+    try {
+      await apiFetch(
+        id ? `/api/v1/auth/sessions/${id}` : "/api/v1/auth/sessions",
+        { method: "DELETE" },
+      );
+      if (!id) {
+        await leave();
+        return;
+      }
+      await load();
+    } catch (x) {
+      setError(x instanceof Error ? x.message : "Could not revoke session.");
+    }
+  };
+  const deleteAccount = async () => {
+    if (
+      !confirm(
+        "Delete your account? Your identity will be anonymized and this cannot be undone.",
+      )
+    )
+      return;
+    try {
+      await apiFetch("/api/v1/me", { method: "DELETE" });
+      await leave();
+    } catch (x) {
+      setError(x instanceof Error ? x.message : "Could not delete account.");
+    }
+  };
   return (
     <AppShell
       title="Settings"
@@ -131,6 +193,9 @@ export default function Settings() {
           </a>
           <a href="#security">
             <LockOutlined /> Security
+          </a>
+          <a href="#payments">
+            <BankOutlined /> Payments
           </a>
           <a href="#sessions">
             <SafetyCertificateOutlined /> Sessions
@@ -237,6 +302,47 @@ export default function Settings() {
             </form>
           </Panel>
           <Panel>
+            <span id="payments" />
+            <PanelTitle
+              title="Payment details"
+              meta="Friends can view these when settling with you"
+            />
+            {payment && (
+              <form className="stack-form" onSubmit={savePayment}>
+                <div className="form-grid">
+                  <label>
+                    Bank name
+                    <input
+                      name="bank_name"
+                      defaultValue={payment.bank_name}
+                      placeholder="Your bank"
+                    />
+                  </label>
+                  <label>
+                    Payment handle
+                    <input
+                      name="payment_handle"
+                      defaultValue={payment.payment_handle}
+                      placeholder="Wallet, UPI, Venmo…"
+                    />
+                  </label>
+                </div>
+                <label>
+                  Payment QR URL
+                  <input
+                    name="bank_qr_url"
+                    type="url"
+                    defaultValue={payment.bank_qr_url}
+                    placeholder="https://…"
+                  />
+                </label>
+                <button className="button">
+                  <BankOutlined /> Save payment details
+                </button>
+              </form>
+            )}
+          </Panel>
+          <Panel>
             <span id="sessions" />
             <PanelTitle
               title="Active sessions"
@@ -257,11 +363,80 @@ export default function Settings() {
                 >
                   {s.revoked_at ? "Revoked" : "Active"}
                 </span>
+                {!s.revoked_at && (
+                  <button
+                    className="row-action"
+                    aria-label="Revoke session"
+                    onClick={() => void revoke(s.id)}
+                  >
+                    <LogoutOutlined />
+                  </button>
+                )}
               </article>
             ))}
-            <button className="button danger settings-logout" onClick={leave}>
-              <LogoutOutlined /> Sign out of this device
-            </button>
+            <div className="button-row">
+              <button className="button danger settings-logout" onClick={leave}>
+                <LogoutOutlined /> Sign out of this device
+              </button>
+              <button className="button danger" onClick={() => void revoke()}>
+                <LogoutOutlined /> Sign out all devices
+              </button>
+            </div>
+          </Panel>
+          <Panel>
+            <PanelTitle
+              title="Account data"
+              meta="Verification, exports, and account ownership"
+            />
+            <div className="button-row">
+              <button
+                className="button"
+                onClick={() =>
+                  void apiFetch("/api/v1/auth/resend-verification", {
+                    method: "POST",
+                  }).then(() => setSaved("Verification email sent."))
+                }
+              >
+                <BellOutlined /> Resend verification
+              </button>
+              <button
+                className="button"
+                onClick={() =>
+                  void apiDownload(
+                    "/api/v1/me/export.csv",
+                    "settlr-account.csv",
+                  )
+                }
+              >
+                <DownloadOutlined /> Export CSV
+              </button>
+              <button
+                className="button"
+                onClick={() =>
+                  void apiDownload(
+                    "/api/v1/me/export.json",
+                    "settlr-account.json",
+                  )
+                }
+              >
+                <DownloadOutlined /> Export JSON
+              </button>
+            </div>
+            <div className="danger-inline">
+              <div>
+                <strong>Delete account</strong>
+                <p>
+                  Your name and email are anonymized while financial records
+                  remain consistent.
+                </p>
+              </div>
+              <button
+                className="button danger"
+                onClick={() => void deleteAccount()}
+              >
+                <DeleteOutlined /> Delete account
+              </button>
+            </div>
           </Panel>
         </div>
       </div>

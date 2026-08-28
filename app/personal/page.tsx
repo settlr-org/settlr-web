@@ -3,7 +3,10 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
   BarChartOutlined,
   DownloadOutlined,
+  DeleteOutlined,
+  EditOutlined,
   PlusOutlined,
+  TagOutlined,
   WalletOutlined,
 } from "@ant-design/icons";
 import { AppShell } from "../../components/AppShell";
@@ -30,6 +33,7 @@ export default function Personal() {
   const [stats, setStats] = useState<Stats>();
   const [budget, setBudget] = useState<Budget>();
   const [show, setShow] = useState(false);
+  const [editing, setEditing] = useState<PersonalExpense>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const month = new Date().toISOString().slice(0, 7);
@@ -60,23 +64,59 @@ export default function Personal() {
     e.preventDefault();
     const d = new FormData(e.currentTarget);
     try {
-      await apiFetch("/api/v1/personal/expenses", {
-        method: "POST",
-        body: JSON.stringify({
-          description: d.get("description"),
-          amount: Math.round(Number(d.get("amount")) * 100),
-          currency: d.get("currency"),
-          category_id: d.get("category_id") || undefined,
-          expense_date: d.get("expense_date"),
-          notes: d.get("notes"),
-        }),
-      });
+      await apiFetch(
+        editing
+          ? `/api/v1/personal/expenses/${editing.id}`
+          : "/api/v1/personal/expenses",
+        {
+          method: editing ? "PATCH" : "POST",
+          body: JSON.stringify({
+            description: d.get("description"),
+            amount: Math.round(Number(d.get("amount")) * 100),
+            currency: d.get("currency"),
+            category_id: d.get("category_id") || undefined,
+            expense_date: d.get("expense_date"),
+            notes: d.get("notes"),
+          }),
+        },
+      );
       setShow(false);
+      setEditing(undefined);
       await load();
     } catch (x) {
       setError(
         x instanceof Error ? x.message : "Could not save personal expense.",
       );
+    }
+  };
+  const createCategory = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const d = new FormData(form);
+    try {
+      await apiFetch("/api/v1/categories", {
+        method: "POST",
+        body: JSON.stringify({
+          name: d.get("name"),
+          icon: "tag",
+          color: "#176b54",
+        }),
+      });
+      form.reset();
+      await load();
+    } catch (x) {
+      setError(x instanceof Error ? x.message : "Could not create category.");
+    }
+  };
+  const removeExpense = async (expense: PersonalExpense) => {
+    if (!confirm(`Delete “${expense.description}”?`)) return;
+    try {
+      await apiFetch(`/api/v1/personal/expenses/${expense.id}`, {
+        method: "DELETE",
+      });
+      await load();
+    } catch (x) {
+      setError(x instanceof Error ? x.message : "Could not delete expense.");
     }
   };
   const saveBudget = async (e: FormEvent<HTMLFormElement>) => {
@@ -105,7 +145,13 @@ export default function Personal() {
       eyebrow="JUST FOR YOU"
       description="Private spending, monthly budgets, and trends outside your groups."
       actions={
-        <button className="button primary" onClick={() => setShow(true)}>
+        <button
+          className="button primary"
+          onClick={() => {
+            setEditing(undefined);
+            setShow(true);
+          }}
+        >
           <PlusOutlined /> Add personal expense
         </button>
       }
@@ -171,6 +217,23 @@ export default function Personal() {
                     </p>
                   </div>
                   <strong>{money(e.amount, e.currency)}</strong>
+                  <button
+                    className="row-action"
+                    aria-label={`Edit ${e.description}`}
+                    onClick={() => {
+                      setEditing(e);
+                      setShow(true);
+                    }}
+                  >
+                    <EditOutlined />
+                  </button>
+                  <button
+                    className="row-action"
+                    aria-label={`Delete ${e.description}`}
+                    onClick={() => void removeExpense(e)}
+                  >
+                    <DeleteOutlined />
+                  </button>
                 </article>
               ))}
               {!expenses.length && (
@@ -195,20 +258,37 @@ export default function Personal() {
                 </label>
                 <button className="button primary full">Update budget</button>
               </form>
+              <hr className="panel-rule" />
+              <PanelTitle
+                title="Categories"
+                meta="Create a private spending label"
+                action={<TagOutlined />}
+              />
+              <form className="inline-form" onSubmit={createCategory}>
+                <input name="name" required placeholder="e.g. Subscriptions" />
+                <button className="button">Add</button>
+              </form>
             </Panel>
           </div>
         </>
       )}
       {show && (
         <Modal
-          title="Add a personal expense"
+          title={editing ? "Edit personal expense" : "Add a personal expense"}
           subtitle="Only you can see personal expenses."
-          onClose={() => setShow(false)}
+          onClose={() => {
+            setShow(false);
+            setEditing(undefined);
+          }}
         >
           <form onSubmit={create}>
             <label>
               Description
-              <input name="description" required />
+              <input
+                name="description"
+                defaultValue={editing?.description}
+                required
+              />
             </label>
             <div className="form-grid">
               <label>
@@ -219,11 +299,15 @@ export default function Personal() {
                   min=".01"
                   step=".01"
                   required
+                  defaultValue={editing ? editing.amount / 100 : undefined}
                 />
               </label>
               <label>
                 Currency
-                <select name="currency" defaultValue="NPR">
+                <select
+                  name="currency"
+                  defaultValue={editing?.currency || "NPR"}
+                >
                   <option>NPR</option>
                   <option>USD</option>
                   <option>EUR</option>
@@ -232,7 +316,10 @@ export default function Personal() {
               </label>
               <label>
                 Category
-                <select name="category_id">
+                <select
+                  name="category_id"
+                  defaultValue={editing?.category_id || ""}
+                >
                   <option value="">Uncategorized</option>
                   {categories.map((c) => (
                     <option value={c.id} key={c.id}>
@@ -246,16 +333,19 @@ export default function Personal() {
                 <input
                   name="expense_date"
                   type="date"
-                  defaultValue={new Date().toISOString().slice(0, 10)}
+                  defaultValue={
+                    editing?.expense_date ||
+                    new Date().toISOString().slice(0, 10)
+                  }
                 />
               </label>
             </div>
             <label>
               Notes
-              <textarea name="notes" />
+              <textarea name="notes" defaultValue={editing?.notes} />
             </label>
             <button className="button primary full">
-              Save personal expense
+              {editing ? "Save changes" : "Save personal expense"}
             </button>
           </form>
         </Modal>

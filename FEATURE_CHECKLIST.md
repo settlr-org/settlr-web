@@ -19,7 +19,8 @@ Last audited: 2026-08-28. A checked item was exercised through the rendered UI w
 
 ## Shared navigation and presentation
 
-- [x] Desktop sidebar links: Overview, Groups, Friends, Personal, Activity, Notifications, Settings.
+- [x] Desktop sidebar links: Overview, Groups, Friends, Personal, Activity, Search, Invitations, Notifications, Settings.
+- [x] The authenticated shell remains mounted during client-side route changes; DOM identity was verified across Overview → Groups.
 - [x] Mobile bottom navigation: Home, Groups, Add expense, Activity, Account.
 - [x] Mobile navigation drawer opens, closes from its controls, closes after navigation, and closes with Escape.
 - [x] Profile shortcut opens Settings.
@@ -59,6 +60,17 @@ Last audited: 2026-08-28. A checked item was exercised through the rendered UI w
 - [x] Partial settlement saves, appears in history, and reduces outstanding debt.
 - [x] Member list displays names, roles, and positions.
 - [x] Add-member dialog adds an existing user by email.
+- [x] Group management edits ledger details and simplify-repayment preferences.
+- [x] Email invitations can be sent from the invitation desk or a group control room; pending invites and expiration are shown.
+- [x] Secure email invitation links open a dedicated acceptance page and enter the invited group.
+- [x] Owners/admins can change member roles and remove members; members can leave a group.
+- [x] Owners can archive or delete groups behind confirmation.
+- [x] Recurring equal-split expenses can be created, paused/resumed, and deleted.
+- [x] Group spending statistics, category breakdown, recent activity, and CSV/JSON exports are available.
+- [x] Existing expenses open a dedicated record page and can be edited.
+- [x] Expense comments can be added and deleted.
+- [x] Receipt/document attachments can be uploaded, downloaded, and deleted.
+- [x] Existing settlements can be edited or deleted.
 - [x] Dialog focus is trapped, Escape closes, and focus returns to the opener.
 
 ## Friends and notifications
@@ -68,6 +80,8 @@ Last audited: 2026-08-28. A checked item was exercised through the rendered UI w
 - [x] Incoming friend request can be accepted.
 - [x] Incoming friend request can be rejected.
 - [x] Accepted friendship appears for both users and creates the direct ledger.
+- [x] Friend profiles expose the direct ledger, payment details, remove-friend, and block controls.
+- [x] Global search returns matching people, groups, and expenses with links to each record.
 - [x] Notification inbox loads read and unread events.
 - [x] A single notification can be marked read.
 - [x] Mark all read updates every unread notification and the count.
@@ -78,6 +92,8 @@ Last audited: 2026-08-28. A checked item was exercised through the rendered UI w
 - [x] Monthly spend, monthly budget, usage progress, and recent expenses load.
 - [x] Budget can be created/updated for the current month.
 - [x] Personal expense can be added with description, amount, date, category, and notes.
+- [x] Personal expenses can be edited and deleted.
+- [x] Custom personal categories can be created.
 - [x] Personal CSV export downloads and contains the saved row and expected columns.
 
 ## Activity and settings
@@ -87,7 +103,12 @@ Last audited: 2026-08-28. A checked item was exercised through the rendered UI w
 - [x] Email/push/friend-request/settlement notification preferences toggle and expose accessible names/states.
 - [x] Password can be changed; sign-in with the new password succeeds; the audit password was restored.
 - [x] Active sessions list loads.
+- [x] Individual sessions and all other sessions can be revoked.
 - [x] Sign out this device revokes the current session.
+- [x] Payment bank/handle/QR details can be saved for friends to view.
+- [x] Verification email can be resent.
+- [x] Complete account data can be exported as CSV or JSON.
+- [x] Account deletion is available behind an explicit confirmation.
 - [x] Settings anchor navigation works on desktop.
 
 ## Mobile application
@@ -100,6 +121,6 @@ Last audited: 2026-08-28. A checked item was exercised through the rendered UI w
 - [x] SecureStore persists and refreshes the native session.
 - [x] Expo web export, TypeScript, formatting, and tests pass.
 
-## Backend capabilities not currently surfaced in these clients
+## Current backend surface coverage
 
-These are implemented by the API but are not claimed as frontend features: resend verification; per-session/all-session revocation; account deletion; group edit/archive/delete/leave; member removal and role changes; group invites; expense editing/comments/attachments; recurring expenses; settlement editing/deletion; friend removal/blocking/payment details; custom category creation; group statistics; global search; and full account/group JSON/CSV exports. They require dedicated product UI and a separate acceptance pass before Settlr can honestly claim full Splitwise parity.
+Every currently implemented backend capability has a routed web interface. This does not claim parity with features the API itself does not yet implement (for example currency conversion or bank payment execution).

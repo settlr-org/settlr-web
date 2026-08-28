@@ -4,9 +4,11 @@ import { useParams } from "next/navigation";
 import {
   ArrowLeftOutlined,
   DeleteOutlined,
+  EditOutlined,
   DollarOutlined,
   PlusOutlined,
   SearchOutlined,
+  SettingOutlined,
   SwapOutlined,
   TeamOutlined,
   UserAddOutlined,
@@ -54,6 +56,7 @@ export default function GroupDetail() {
   const [balances, setBalances] = useState<GroupBalances>();
   const [debts, setDebts] = useState<Debt[]>([]);
   const [settlements, setSettlements] = useState<Settlement[]>([]);
+  const [editingSettlement, setEditingSettlement] = useState<Settlement>();
   const [tab, setTab] = useState<Tab>("expenses");
   const [modal, setModal] = useState<"expense" | "settle" | "member" | null>(
     null,
@@ -124,7 +127,13 @@ export default function GroupDetail() {
       description={group?.description || "A shared Settlr ledger."}
       actions={
         <div className="top-action-pair">
-          <button className="button" onClick={() => setModal("settle")}>
+          <button
+            className="button"
+            onClick={() => {
+              setEditingSettlement(undefined);
+              setModal("settle");
+            }}
+          >
             <SwapOutlined /> Settle up
           </button>
           <button
@@ -136,9 +145,14 @@ export default function GroupDetail() {
         </div>
       }
     >
-      <Link href="/groups" className="back-link">
-        <ArrowLeftOutlined /> All groups
-      </Link>
+      <div className="detail-toolbar">
+        <Link href="/groups" className="back-link">
+          <ArrowLeftOutlined /> All groups
+        </Link>
+        <Link href={`/groups/${id}/manage`} className="text-button">
+          <SettingOutlined /> Manage group
+        </Link>
+      </div>
       {error && <ErrorState message={error} retry={load} />}
       <section className="group-summary">
         <div>
@@ -226,6 +240,13 @@ export default function GroupDetail() {
                 <strong>{money(e.amount, e.currency)}</strong>
                 <small>{(e.split_mode ?? "equal").toLowerCase()} split</small>
               </div>
+              <Link
+                className="row-action"
+                href={`/expenses/${e.id}`}
+                aria-label={`Open ${e.description}`}
+              >
+                <SettingOutlined />
+              </Link>
               <button
                 className="row-action"
                 onClick={() => void removeExpense(e)}
@@ -347,6 +368,28 @@ export default function GroupDetail() {
                 </p>
               </div>
               <strong>{money(s.amount, s.currency)}</strong>
+              <button
+                className="row-action"
+                aria-label={`Edit settlement ${money(s.amount, s.currency)}`}
+                onClick={() => {
+                  setEditingSettlement(s);
+                  setModal("settle");
+                }}
+              >
+                <EditOutlined />
+              </button>
+              <button
+                className="row-action"
+                aria-label={`Delete settlement ${money(s.amount, s.currency)}`}
+                onClick={() =>
+                  confirm("Delete this settlement?") &&
+                  void apiFetch(`/api/v1/settlements/${s.id}`, {
+                    method: "DELETE",
+                  }).then(load)
+                }
+              >
+                <DeleteOutlined />
+              </button>
             </article>
           ))}
           {!settlements.length && (
@@ -371,9 +414,14 @@ export default function GroupDetail() {
           group={group}
           members={members}
           debts={debts}
-          onClose={() => setModal(null)}
+          settlement={editingSettlement}
+          onClose={() => {
+            setModal(null);
+            setEditingSettlement(undefined);
+          }}
           onDone={() => {
             setModal(null);
+            setEditingSettlement(undefined);
             void load();
           }}
         />
@@ -585,12 +633,14 @@ function SettlementModal({
   group,
   members,
   debts,
+  settlement,
   onClose,
   onDone,
 }: {
   group: Group;
   members: Member[];
   debts: Debt[];
+  settlement?: Settlement;
   onClose: () => void;
   onDone: () => void;
 }) {
@@ -600,17 +650,29 @@ function SettlementModal({
     e.preventDefault();
     const d = new FormData(e.currentTarget);
     try {
-      await apiFetch(`/api/v1/groups/${group.id}/settlements`, {
-        method: "POST",
-        body: JSON.stringify({
-          from_user: d.get("from_user"),
-          to_user: d.get("to_user"),
-          amount: Math.round(Number(d.get("amount")) * 100),
-          currency: group.currency,
-          note: d.get("note"),
-          settled_at: new Date().toISOString(),
-        }),
-      });
+      await apiFetch(
+        settlement
+          ? `/api/v1/settlements/${settlement.id}`
+          : `/api/v1/groups/${group.id}/settlements`,
+        {
+          method: settlement ? "PATCH" : "POST",
+          body: JSON.stringify(
+            settlement
+              ? {
+                  amount: Math.round(Number(d.get("amount")) * 100),
+                  note: d.get("note"),
+                }
+              : {
+                  from_user: d.get("from_user"),
+                  to_user: d.get("to_user"),
+                  amount: Math.round(Number(d.get("amount")) * 100),
+                  currency: group.currency,
+                  note: d.get("note"),
+                  settled_at: new Date().toISOString(),
+                },
+          ),
+        },
+      );
       onDone();
     } catch (x) {
       setError(x instanceof Error ? x.message : "Could not record settlement.");
@@ -618,14 +680,18 @@ function SettlementModal({
   };
   return (
     <Modal
-      title="Record a settlement"
+      title={settlement ? "Edit settlement" : "Record a settlement"}
       subtitle="Log a payment that already happened. This updates everyone’s balance."
       onClose={onClose}
     >
       <form onSubmit={submit}>
         <label>
           Who paid?
-          <select name="from_user" defaultValue={first?.from_user}>
+          <select
+            name="from_user"
+            defaultValue={settlement?.from_user || first?.from_user}
+            disabled={Boolean(settlement)}
+          >
             {members.map((m) => (
               <option value={m.id} key={m.id}>
                 {m.name}
@@ -635,7 +701,11 @@ function SettlementModal({
         </label>
         <label>
           Who received it?
-          <select name="to_user" defaultValue={first?.to_user}>
+          <select
+            name="to_user"
+            defaultValue={settlement?.to_user || first?.to_user}
+            disabled={Boolean(settlement)}
+          >
             {members.map((m) => (
               <option value={m.id} key={m.id}>
                 {m.name}
@@ -650,16 +720,28 @@ function SettlementModal({
             type="number"
             min="0.01"
             step="0.01"
-            defaultValue={first ? first.amount / 100 : undefined}
+            defaultValue={
+              settlement
+                ? settlement.amount / 100
+                : first
+                  ? first.amount / 100
+                  : undefined
+            }
             required
           />
         </label>
         <label>
           Note
-          <input name="note" placeholder="Bank transfer, cash…" />
+          <input
+            name="note"
+            defaultValue={settlement?.note}
+            placeholder="Bank transfer, cash…"
+          />
         </label>
         {error && <p className="form-error">{error}</p>}
-        <button className="button primary full">Record settlement</button>
+        <button className="button primary full">
+          {settlement ? "Save settlement" : "Record settlement"}
+        </button>
       </form>
     </Modal>
   );

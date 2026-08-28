@@ -1,16 +1,26 @@
 "use client";
-import { ReactNode, useEffect, useState } from "react";
+import {
+  createContext,
+  Fragment,
+  ReactNode,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BellOutlined,
   HomeOutlined,
   LogoutOutlined,
+  MailOutlined,
   MenuOutlined,
   MoonOutlined,
   PieChartOutlined,
   PlusOutlined,
   SettingOutlined,
+  SearchOutlined,
   SunOutlined,
   TeamOutlined,
   UnorderedListOutlined,
@@ -27,6 +37,16 @@ const navigation = [
   { href: "/personal", label: "Personal", icon: <PieChartOutlined /> },
   { href: "/activity", label: "Activity", icon: <UnorderedListOutlined /> },
 ];
+type ShellConfig = {
+  title: string;
+  eyebrow: string;
+  description: string;
+  actions?: ReactNode;
+};
+const ShellContext = createContext<((config: ShellConfig) => void) | undefined>(
+  undefined,
+);
+
 export function AppShell({
   title,
   eyebrow = "SETTLR WORKSPACE",
@@ -40,14 +60,44 @@ export function AppShell({
   children: ReactNode;
   actions?: ReactNode;
 }) {
+  const configure = useContext(ShellContext);
+  useLayoutEffect(() => {
+    configure?.({ title, eyebrow, description, actions });
+  }, [configure, title, eyebrow, description, actions]);
+  return <Fragment>{children}</Fragment>;
+}
+
+const workspacePrefixes = [
+  "/overview",
+  "/groups",
+  "/friends",
+  "/personal",
+  "/activity",
+  "/notifications",
+  "/settings",
+  "/search",
+  "/invites",
+  "/invite",
+  "/expenses",
+];
+
+export function WorkspaceLayout({ children }: { children: ReactNode }) {
   const { user, loading, signOut } = useSession();
   const router = useRouter();
   const path = usePathname();
   const [menu, setMenu] = useState(false);
+  const [config, setConfig] = useState<ShellConfig>({
+    title: "Workspace",
+    eyebrow: "SETTLR",
+    description: "Shared money, made clear.",
+  });
+  const workspace = workspacePrefixes.some(
+    (prefix) => path === prefix || path.startsWith(`${prefix}/`),
+  );
   useEffect(() => {
-    if (!loading && !user)
+    if (workspace && !loading && !user)
       router.replace(`/login?next=${encodeURIComponent(path)}`);
-  }, [loading, user, router, path]);
+  }, [workspace, loading, user, router, path]);
   useEffect(() => {
     if (!menu) return;
     const closeMenu = (event: KeyboardEvent) => {
@@ -62,6 +112,7 @@ export function AppShell({
     document.documentElement.dataset.theme = next;
     localStorage.setItem("settlr_theme", next);
   };
+  if (!workspace) return children;
   if (loading || !user)
     return (
       <div className="route-loading">
@@ -105,6 +156,20 @@ export function AppShell({
         </nav>
         <div className="sidebar-secondary">
           <Link
+            href="/search"
+            className={path === "/search" ? "nav-item active" : "nav-item"}
+          >
+            <SearchOutlined />
+            <span>Search</span>
+          </Link>
+          <Link
+            href="/invites"
+            className={path === "/invites" ? "nav-item active" : "nav-item"}
+          >
+            <MailOutlined />
+            <span>Invitations</span>
+          </Link>
+          <Link
             href="/notifications"
             className={
               path === "/notifications" ? "nav-item active" : "nav-item"
@@ -147,9 +212,9 @@ export function AppShell({
             <MenuOutlined />
           </button>
           <div className="page-heading">
-            <p className="eyebrow">{eyebrow}</p>
-            <h1>{title}</h1>
-            <p className="subtitle">{description}</p>
+            <p className="eyebrow">{config.eyebrow}</p>
+            <h1>{config.title}</h1>
+            <p className="subtitle">{config.description}</p>
           </div>
           <div className="top-actions">
             <Link
@@ -167,7 +232,7 @@ export function AppShell({
               <MoonOutlined className="theme-icon theme-icon-light" />
               <SunOutlined className="theme-icon theme-icon-dark" />
             </button>
-            {actions ?? (
+            {config.actions ?? (
               <Link className="button primary" href="/groups">
                 <PlusOutlined /> Add expense
               </Link>
@@ -181,7 +246,9 @@ export function AppShell({
             </button>
           </div>
         </header>
-        {children}
+        <ShellContext.Provider value={setConfig}>
+          {children}
+        </ShellContext.Provider>
       </main>
       <nav className="mobile-nav" aria-label="Mobile navigation">
         <Link

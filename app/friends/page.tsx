@@ -1,11 +1,13 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import {
   CheckOutlined,
   CloseOutlined,
   SearchOutlined,
   TeamOutlined,
   UserAddOutlined,
+  ArrowRightOutlined,
 } from "@ant-design/icons";
 import { AppShell } from "../../components/AppShell";
 import {
@@ -114,14 +116,19 @@ export default function Friends() {
                 meta={`${friends.length} connected`}
               />
               {friends.map((f) => (
-                <article className="friend-card" key={f.user_id}>
+                <Link
+                  className="friend-card"
+                  href={`/friends/${f.user_id}`}
+                  key={f.user_id}
+                >
                   <span className="avatar">{initials(f.name)}</span>
                   <div>
                     <h3>{f.name}</h3>
                     <p>Direct expenses and settlements</p>
                   </div>
                   <span className="status-pill">Connected</span>
-                </article>
+                  <ArrowRightOutlined />
+                </Link>
               ))}
               {!friends.length && (
                 <Empty
