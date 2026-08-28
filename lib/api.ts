@@ -4,15 +4,33 @@ export type Session = {
   refresh_token: string;
   user?: User;
 };
+export type RegistrationResult = {
+  user: User;
+  email: string;
+  verification_required: true;
+  verification_token?: string;
+};
 export type User = {
   id: string;
   name: string;
   email: string;
   avatar_url?: string;
   default_currency?: string;
+  email_verified?: boolean;
 };
 const ACCESS_KEY = "settlr_access_token";
 const REFRESH_KEY = "settlr_refresh_token";
+const GET_CACHE_MS = 60_000;
+type CacheEntry = {
+  expiresAt: number;
+  promise: Promise<unknown>;
+  value?: unknown;
+};
+const requestCache = new Map<string, CacheEntry>();
+
+export const readApiCache = <T>(path: string) =>
+  requestCache.get(path)?.value as T | undefined;
+export const clearApiCache = () => requestCache.clear();
 
 const readToken = (key: string) =>
   window.localStorage.getItem(key) ?? window.sessionStorage.getItem(key);
@@ -58,6 +76,7 @@ export const hasSession = () =>
   typeof window !== "undefined" &&
   Boolean(readToken(REFRESH_KEY) || readToken(ACCESS_KEY));
 export const clearSession = () => {
+  clearApiCache();
   window.localStorage.removeItem(ACCESS_KEY);
   window.localStorage.removeItem(REFRESH_KEY);
   window.sessionStorage.removeItem(ACCESS_KEY);
@@ -103,6 +122,39 @@ export async function apiFetch<T>(
   init: RequestInit = {},
   retry = true,
 ): Promise<T> {
+  const method = (init.method || "GET").toUpperCase();
+  const cacheable = method === "GET" && !init.body && retry;
+  if (cacheable) {
+    const cached = requestCache.get(path);
+    if (cached && cached.expiresAt > Date.now())
+      return cached.promise as Promise<T>;
+    const entry: CacheEntry = {
+      expiresAt: Date.now() + GET_CACHE_MS,
+      promise: Promise.resolve(undefined),
+      value: cached?.value,
+    };
+    entry.promise = performRequest<T>(path, init, retry)
+      .then((value) => {
+        entry.value = value;
+        return value;
+      })
+      .catch((error) => {
+        if (requestCache.get(path) === entry) requestCache.delete(path);
+        throw error;
+      });
+    requestCache.set(path, entry);
+    return entry.promise as Promise<T>;
+  }
+  const value = await performRequest<T>(path, init, retry);
+  if (method !== "GET") clearApiCache();
+  return value;
+}
+
+async function performRequest<T>(
+  path: string,
+  init: RequestInit,
+  retry: boolean,
+): Promise<T> {
   const headers = new Headers(init.headers);
   headers.set("Accept", "application/json");
   if (
@@ -123,7 +175,7 @@ export async function apiFetch<T>(
     typeof window !== "undefined" &&
     (await refreshAccessToken())
   )
-    return apiFetch<T>(path, init, false);
+    return performRequest<T>(path, init, false);
   if (!response.ok)
     throw new ApiError(response.status, await parseError(response));
   if (response.status === 204) return undefined as T;
@@ -138,18 +190,18 @@ export async function authenticate(
     password: string;
     remember?: boolean;
   },
-) {
+): Promise<Session | RegistrationResult> {
   const body =
     mode === "register"
       ? { name: input.name, email: input.email, password: input.password }
       : { email: input.email, password: input.password };
-  const session = await apiFetch<Session>(
+  const result = await apiFetch<Session | RegistrationResult>(
     `/api/v1/auth/${mode}`,
     { method: "POST", body: JSON.stringify(body) },
     false,
   );
-  saveSession(session, mode === "register" || Boolean(input.remember));
-  return session;
+  if (mode === "login") saveSession(result as Session, Boolean(input.remember));
+  return result;
 }
 
 export async function logout() {

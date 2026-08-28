@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { authenticate, clearSession, hasSession } from "./api";
+import {
+  apiFetch,
+  authenticate,
+  clearSession,
+  hasSession,
+  readApiCache,
+} from "./api";
 
 const session = {
   access_token: "access-token",
@@ -80,5 +86,51 @@ describe("authentication", () => {
       "access-token",
     );
     expect(window.sessionStorage.getItem("settlr_access_token")).toBeNull();
+  });
+
+  it("keeps a newly registered account signed out until email verification", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          user: {
+            id: "pending-user",
+            name: "Pending Person",
+            email: "pending@example.com",
+          },
+          email: "pending@example.com",
+          verification_required: true,
+        }),
+        { status: 201, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+
+    const result = await authenticate("register", {
+      name: "Pending Person",
+      email: "pending@example.com",
+      password: "correct-horse-battery-staple",
+    });
+
+    expect(result).toMatchObject({ verification_required: true });
+    expect(hasSession()).toBe(false);
+  });
+
+  it("coalesces repeated GETs and exposes warm data for instant route paint", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify({ data: ["warm"] }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    const [first, second] = await Promise.all([
+      apiFetch<{ data: string[] }>("/api/v1/cache-probe"),
+      apiFetch<{ data: string[] }>("/api/v1/cache-probe"),
+    ]);
+
+    expect(first).toEqual(second);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(
+      readApiCache<{ data: string[] }>("/api/v1/cache-probe")?.data,
+    ).toEqual(["warm"]);
   });
 });

@@ -18,16 +18,19 @@ import {
   Panel,
   PanelTitle,
 } from "../../components/UI";
-import { apiFetch } from "../../lib/api";
+import { apiFetch, readApiCache } from "../../lib/api";
 import { Balance, Group, money } from "../../lib/types";
 export default function Groups() {
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [balance, setBalance] = useState<Balance>();
-  const [loading, setLoading] = useState(true);
+  const cachedGroups = readApiCache<{ data: Group[] }>("/api/v1/groups");
+  const cachedBalance = readApiCache<Balance>("/api/v1/me/balances");
+  const warm = Boolean(cachedGroups && cachedBalance);
+  const [groups, setGroups] = useState<Group[]>(cachedGroups?.data ?? []);
+  const [balance, setBalance] = useState<Balance | undefined>(cachedBalance);
+  const [loading, setLoading] = useState(!warm);
   const [show, setShow] = useState(false);
   const [error, setError] = useState("");
   const load = useCallback(async () => {
-    setLoading(true);
+    if (!warm) setLoading(true);
     try {
       const [g, b] = await Promise.all([
         apiFetch<{ data: Group[] }>("/api/v1/groups"),
@@ -40,7 +43,7 @@ export default function Groups() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [warm]);
   useEffect(() => {
     void load();
     if (new URLSearchParams(location.search).has("create")) setShow(true);

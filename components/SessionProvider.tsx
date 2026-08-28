@@ -14,6 +14,7 @@ import {
   hasSession,
   logout,
 } from "../lib/api";
+import type { RegistrationResult } from "../lib/api";
 import type { User } from "../lib/types";
 
 type SessionValue = {
@@ -27,7 +28,7 @@ type SessionValue = {
       password: string;
       remember?: boolean;
     },
-  ) => Promise<void>;
+  ) => Promise<RegistrationResult | void>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
 };
@@ -59,11 +60,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       remember?: boolean;
     },
   ) => {
-    const session = await authenticate(mode, values);
+    const result = await authenticate(mode, values);
+    if (mode === "register") return result as RegistrationResult;
+    const session = result as import("../lib/api").Session;
     setUser(
       (session.user as User | undefined) ??
         (await apiFetch<User>("/api/v1/me")),
     );
+    return undefined;
   };
   const signOut = async () => {
     await logout();

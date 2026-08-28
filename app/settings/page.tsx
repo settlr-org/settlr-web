@@ -3,6 +3,7 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
   BellOutlined,
   BankOutlined,
+  CheckCircleOutlined,
   DeleteOutlined,
   DownloadOutlined,
   LockOutlined,
@@ -389,16 +390,22 @@ export default function Settings() {
               meta="Verification, exports, and account ownership"
             />
             <div className="button-row">
-              <button
-                className="button"
-                onClick={() =>
-                  void apiFetch("/api/v1/auth/resend-verification", {
-                    method: "POST",
-                  }).then(() => setSaved("Verification email sent."))
-                }
-              >
-                <BellOutlined /> Resend verification
-              </button>
+              {user?.email_verified ? (
+                <span className="status-pill">
+                  <CheckCircleOutlined /> Email verified
+                </span>
+              ) : (
+                <button
+                  className="button"
+                  onClick={() =>
+                    void apiFetch("/api/v1/auth/resend-verification", {
+                      method: "POST",
+                    }).then(() => setSaved("Verification email sent."))
+                  }
+                >
+                  <BellOutlined /> Resend verification
+                </button>
+              )}
               <button
                 className="button"
                 onClick={() =>

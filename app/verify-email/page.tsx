@@ -48,11 +48,8 @@ export default function VerifyEmail() {
               : "We could not verify this link"}
         </h2>
         <p>{message}</p>
-        <Link
-          className="button primary auth-submit"
-          href={state === "done" ? "/overview" : "/login"}
-        >
-          Continue
+        <Link className="button primary auth-submit" href="/login">
+          {state === "done" ? "Sign in" : "Back to sign in"}
         </Link>
       </section>
     </main>

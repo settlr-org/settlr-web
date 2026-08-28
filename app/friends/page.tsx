@@ -4,7 +4,9 @@ import Link from "next/link";
 import {
   CheckOutlined,
   CloseOutlined,
+  MailOutlined,
   SearchOutlined,
+  SendOutlined,
   TeamOutlined,
   UserAddOutlined,
   ArrowRightOutlined,
@@ -18,27 +20,41 @@ import {
   PanelTitle,
 } from "../../components/UI";
 import { apiFetch } from "../../lib/api";
-import { Friend, FriendRequest, initials } from "../../lib/types";
+import { Friend, FriendRequest, Group, initials } from "../../lib/types";
 type SearchUser = {
   id: string;
   name: string;
   email?: string;
   avatar_url?: string;
 };
+type Invite = {
+  id: string;
+  group_name: string;
+  email: string;
+};
 export default function Friends() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [requests, setRequests] = useState<FriendRequest[]>([]);
   const [results, setResults] = useState<SearchUser[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [invites, setInvites] = useState<Invite[]>([]);
+  const [groupId, setGroupId] = useState("");
+  const [sent, setSent] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const load = useCallback(async () => {
     try {
-      const [f, r] = await Promise.all([
+      const [f, r, g, i] = await Promise.all([
         apiFetch<{ data: Friend[] }>("/api/v1/friends"),
         apiFetch<{ data: FriendRequest[] }>("/api/v1/friends/requests"),
+        apiFetch<{ data: Group[] }>("/api/v1/groups"),
+        apiFetch<{ data: Invite[] }>("/api/v1/invites"),
       ]);
       setFriends(f.data);
       setRequests(r.data);
+      setGroups(g.data);
+      setInvites(i.data);
+      setGroupId((current) => current || g.data[0]?.id || "");
     } catch (x) {
       setError(x instanceof Error ? x.message : "Unable to load friends.");
     } finally {
@@ -69,6 +85,21 @@ export default function Friends() {
       await load();
     } catch (x) {
       setError(x instanceof Error ? x.message : "Action failed.");
+    }
+  };
+  const inviteByEmail = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const email = String(new FormData(form).get("email") || "");
+    try {
+      await apiFetch(`/api/v1/groups/${groupId}/invites`, {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      });
+      form.reset();
+      setSent(`Invitation sent to ${email}.`);
+    } catch (x) {
+      setError(x instanceof Error ? x.message : "Could not send invitation.");
     }
   };
   return (
@@ -138,42 +169,97 @@ export default function Friends() {
               )}
             </Panel>
           </div>
-          <Panel>
-            <PanelTitle title="Requests" meta={`${requests.length} waiting`} />
-            {requests.map((r) => (
-              <article className="request-card" key={r.friendship_id}>
-                <span className="avatar soft">{initials(r.name)}</span>
-                <div>
-                  <strong>{r.name}</strong>
-                  <small>Wants to connect</small>
-                </div>
-                <button
-                  className="accept"
-                  onClick={() =>
-                    void act(`/api/v1/friends/${r.from_user}/accept`)
-                  }
-                  aria-label={`Accept ${r.name}`}
-                >
-                  <CheckOutlined />
-                </button>
-                <button
-                  className="reject"
-                  onClick={() =>
-                    void act(`/api/v1/friends/${r.from_user}/reject`)
-                  }
-                  aria-label={`Reject ${r.name}`}
-                >
-                  <CloseOutlined />
-                </button>
-              </article>
-            ))}
-            {!requests.length && (
-              <Empty
-                title="No pending requests"
-                text="New requests will appear here."
+          <div>
+            <Panel>
+              <PanelTitle
+                title="Invite by email"
+                meta="Bring someone into a shared ledger"
+                action={<MailOutlined />}
               />
-            )}
-          </Panel>
+              {sent && (
+                <p className="success-note" role="status">
+                  {sent}
+                </p>
+              )}
+              {groups.length ? (
+                <form className="stack-form" onSubmit={inviteByEmail}>
+                  <label>
+                    Group
+                    <select
+                      value={groupId}
+                      onChange={(event) => setGroupId(event.target.value)}
+                    >
+                      {groups.map((group) => (
+                        <option value={group.id} key={group.id}>
+                          {group.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Friend’s email
+                    <input
+                      name="email"
+                      type="email"
+                      required
+                      placeholder="friend@example.com"
+                    />
+                  </label>
+                  <button className="button primary">
+                    <SendOutlined /> Send invitation
+                  </button>
+                </form>
+              ) : (
+                <Empty text="Create a group before inviting someone by email." />
+              )}
+              {invites.length > 0 && (
+                <p className="pending-invite-note">
+                  <MailOutlined /> {invites.length} invitation
+                  {invites.length === 1 ? " is" : "s are"} waiting for your
+                  response. Check your email to accept.
+                </p>
+              )}
+            </Panel>
+            <Panel>
+              <PanelTitle
+                title="Requests"
+                meta={`${requests.length} waiting`}
+              />
+              {requests.map((r) => (
+                <article className="request-card" key={r.friendship_id}>
+                  <span className="avatar soft">{initials(r.name)}</span>
+                  <div>
+                    <strong>{r.name}</strong>
+                    <small>Wants to connect</small>
+                  </div>
+                  <button
+                    className="accept"
+                    onClick={() =>
+                      void act(`/api/v1/friends/${r.from_user}/accept`)
+                    }
+                    aria-label={`Accept ${r.name}`}
+                  >
+                    <CheckOutlined />
+                  </button>
+                  <button
+                    className="reject"
+                    onClick={() =>
+                      void act(`/api/v1/friends/${r.from_user}/reject`)
+                    }
+                    aria-label={`Reject ${r.name}`}
+                  >
+                    <CloseOutlined />
+                  </button>
+                </article>
+              ))}
+              {!requests.length && (
+                <Empty
+                  title="No pending requests"
+                  text="New requests will appear here."
+                />
+              )}
+            </Panel>
+          </div>
           {error && <ErrorState message={error} retry={load} />}
         </div>
       )}

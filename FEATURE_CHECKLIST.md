@@ -7,7 +7,8 @@ Last audited: 2026-08-28. A checked item was exercised through the rendered UI w
 - [x] Landing page renders at desktop and phone widths.
 - [x] Landing navigation, “How it works”, and “Features” anchors navigate correctly.
 - [x] Landing sign-in, registration, hero, and footer calls to action navigate correctly.
-- [x] Registration creates an account and starts an authenticated session.
+- [x] Registration creates an inactive account, sends verification, and does not create a session until the email is verified.
+- [x] Unverified accounts are blocked at sign-in and can request a fresh verification email without exposing whether an address exists.
 - [x] Sign-in accepts valid credentials and displays invalid-server responses.
 - [x] “Keep me signed in” stores a durable session; leaving it off uses tab-scoped storage.
 - [x] Protected deep links return to the originally requested page after sign-in.
@@ -19,8 +20,9 @@ Last audited: 2026-08-28. A checked item was exercised through the rendered UI w
 
 ## Shared navigation and presentation
 
-- [x] Desktop sidebar links: Overview, Groups, Friends, Personal, Activity, Search, Invitations, Notifications, Settings.
+- [x] Desktop sidebar links: Overview, Groups, Friends, Personal, Activity, Search, Notifications, Settings.
 - [x] The authenticated shell remains mounted during client-side route changes; DOM identity was verified across Overview → Groups.
+- [x] Overview and Groups use session-scoped stale-while-revalidate data; repeated switching paints immediately without loading placeholders or duplicate API requests.
 - [x] Mobile bottom navigation: Home, Groups, Add expense, Activity, Account.
 - [x] Mobile navigation drawer opens, closes from its controls, closes after navigation, and closes with Escape.
 - [x] Profile shortcut opens Settings.
@@ -76,6 +78,7 @@ Last audited: 2026-08-28. A checked item was exercised through the rendered UI w
 ## Friends and notifications
 
 - [x] User search by name/email returns results.
+- [x] Friends contains the group email-invitation form; invitations no longer occupy a separate sidebar destination.
 - [x] Friend request can be sent.
 - [x] Incoming friend request can be accepted.
 - [x] Incoming friend request can be rejected.

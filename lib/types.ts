@@ -5,6 +5,7 @@ export type User = {
   avatar_url?: string;
   default_currency?: string;
   timezone?: string;
+  email_verified?: boolean;
 };
 export type Balance = {
   summary: { you_are_owed: number; you_owe: number; net_balance: number };

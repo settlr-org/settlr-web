@@ -18,7 +18,7 @@ import {
   Panel,
   PanelTitle,
 } from "../../components/UI";
-import { apiFetch } from "../../lib/api";
+import { apiFetch, readApiCache } from "../../lib/api";
 import {
   Balance,
   Event,
@@ -29,14 +29,23 @@ import {
   initials,
 } from "../../lib/types";
 export default function Overview() {
-  const [balance, setBalance] = useState<Balance>();
-  const [events, setEvents] = useState<Event[]>([]);
-  const [friends, setFriends] = useState<Friend[]>([]);
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cachedBalance = readApiCache<Balance>("/api/v1/me/balances");
+  const cachedEvents = readApiCache<{ data: Event[] }>(
+    "/api/v1/activity?limit=6",
+  );
+  const cachedFriends = readApiCache<{ data: Friend[] }>("/api/v1/friends");
+  const cachedGroups = readApiCache<{ data: Group[] }>("/api/v1/groups");
+  const warm = Boolean(
+    cachedBalance && cachedEvents && cachedFriends && cachedGroups,
+  );
+  const [balance, setBalance] = useState<Balance | undefined>(cachedBalance);
+  const [events, setEvents] = useState<Event[]>(cachedEvents?.data ?? []);
+  const [friends, setFriends] = useState<Friend[]>(cachedFriends?.data ?? []);
+  const [groups, setGroups] = useState<Group[]>(cachedGroups?.data ?? []);
+  const [loading, setLoading] = useState(!warm);
   const [error, setError] = useState("");
   const load = useCallback(async () => {
-    setLoading(true);
+    if (!warm) setLoading(true);
     setError("");
     try {
       const [b, a, f, g] = await Promise.all([
@@ -54,7 +63,7 @@ export default function Overview() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [warm]);
   useEffect(() => {
     void load();
   }, [load]);

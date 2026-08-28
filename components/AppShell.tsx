@@ -14,7 +14,6 @@ import {
   BellOutlined,
   HomeOutlined,
   LogoutOutlined,
-  MailOutlined,
   MenuOutlined,
   MoonOutlined,
   PieChartOutlined,
@@ -161,13 +160,6 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
           >
             <SearchOutlined />
             <span>Search</span>
-          </Link>
-          <Link
-            href="/invites"
-            className={path === "/invites" ? "nav-item active" : "nav-item"}
-          >
-            <MailOutlined />
-            <span>Invitations</span>
           </Link>
           <Link
             href="/notifications"
