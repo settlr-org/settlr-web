@@ -49,6 +49,8 @@ The icon contrast script inspected 18–26 visible button/link icons per authent
 
 Screenshots `01`–`75` in `screenshots/` record the public, authentication, shared-ledger, settings, responsive, theme, and Expo views. `settlr-personal-expenses.csv` is the validated export artifact.
 
+Screenshot `76-production-after-push.png` verifies the connected Vercel production deployment after the final push.
+
 ## Infrastructure check
 
 `/etc/nginx/nginx.conf` proxies to `127.0.0.1:18080`. Docker publishes `127.0.0.1:18080 -> 8080/tcp`, while the API is configured with `PORT=8080` and `EXPOSE 8080`. The nginx upstream therefore matches the backend’s published listening port.
