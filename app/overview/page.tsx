@@ -45,7 +45,7 @@ export default function Overview() {
   const [friends, setFriends] = useState<Friend[]>(cachedFriends?.data ?? []);
   const [groups, setGroups] = useState<Group[]>(cachedGroups?.data ?? []);
   const [friendBalances, setFriendBalances] = useState<
-    Record<string, { amount: number; currency: string }>
+    Record<string, { amount: number; currency: string } | null>
   >({});
   const [loading, setLoading] = useState(!warm);
   const [error, setError] = useState("");
@@ -67,27 +67,13 @@ export default function Overview() {
         const entries = await Promise.all(
           f.data.map(async (friend) => {
             try {
-              const ledger = await apiFetch<{ group_id: string }>(
-                `/api/v1/friends/${friend.user_id}/ledger`,
-              );
-              const balances = await apiFetch<{
-                data: { user_id: string; amount: number }[];
+              const position = await apiFetch<{
+                amount: number;
                 currency: string;
-              }>(`/api/v1/groups/${ledger.group_id}/balances`);
-              return [
-                friend.user_id,
-                {
-                  amount:
-                    balances.data.find((item) => item.user_id === user.id)
-                      ?.amount ?? 0,
-                  currency: balances.currency,
-                },
-              ] as const;
+              }>(`/api/v1/friends/${friend.user_id}/balance`);
+              return [friend.user_id, position] as const;
             } catch {
-              return [
-                friend.user_id,
-                { amount: 0, currency: balance?.currency || "NPR" },
-              ] as const;
+              return [friend.user_id, null] as const;
             }
           }),
         );
@@ -215,7 +201,15 @@ export default function Overview() {
               {friends.slice(0, 5).map((f) =>
                 (() => {
                   const position = friendBalances[f.user_id];
-                  const amount = position?.amount ?? 0;
+                  const amount = position?.amount;
+                  const balanceLabel =
+                    amount === undefined
+                      ? "Balance unavailable"
+                      : amount > 0
+                        ? `Owed ${money(amount, position?.currency)}`
+                        : amount < 0
+                          ? `You owe ${money(Math.abs(amount), position?.currency)}`
+                          : "Settled up";
                   return (
                     <Link
                       href={`/friends?user=${f.user_id}`}
@@ -225,12 +219,14 @@ export default function Overview() {
                       <span className="avatar soft">{initials(f.name)}</span>
                       <div>
                         <strong>{f.name}</strong>
-                        <small className={amount < 0 ? "negative" : "positive"}>
-                          {amount > 0
-                            ? `Owed ${money(amount, position?.currency)}`
-                            : amount < 0
-                              ? `You owe ${money(Math.abs(amount), position?.currency)}`
-                              : "Settled up"}
+                        <small
+                          className={
+                            amount !== undefined && amount < 0
+                              ? "negative"
+                              : "positive"
+                          }
+                        >
+                          {balanceLabel}
                         </small>
                       </div>
                       <ArrowRightOutlined />
