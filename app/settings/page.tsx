@@ -73,7 +73,8 @@ export default function Settings() {
   };
   const password = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const d = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const d = new FormData(form);
     try {
       await apiFetch("/api/v1/me/password", {
         method: "PATCH",
@@ -82,7 +83,7 @@ export default function Settings() {
           new_password: d.get("new_password"),
         }),
       });
-      e.currentTarget.reset();
+      form.reset();
       setSaved("Password updated.");
     } catch (x) {
       setError(x instanceof Error ? x.message : "Could not update password.");
@@ -203,6 +204,7 @@ export default function Settings() {
                     className={prefs[key] ? "toggle active" : "toggle"}
                     onClick={() => void toggle(key)}
                     aria-pressed={prefs[key]}
+                    aria-label={`${prefs[key] ? "Disable" : "Enable"} ${label.toLowerCase()}`}
                   >
                     <i />
                   </button>

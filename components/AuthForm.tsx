@@ -1,5 +1,5 @@
 "use client";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -16,12 +16,14 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const submitting = useRef(false);
   useEffect(() => {
-    if (user) router.replace("/overview");
+    if (user && !submitting.current) router.replace("/overview");
   }, [user, router]);
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
+    submitting.current = true;
     setBusy(true);
     setError("");
     try {
@@ -29,9 +31,18 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         name: String(data.get("name") || ""),
         email: String(data.get("email") || ""),
         password: String(data.get("password") || ""),
+        remember: mode === "register" || data.get("remember") === "on",
       });
-      router.replace("/overview");
+      const requested = new URLSearchParams(location.search).get("next");
+      const destination =
+        mode === "login" &&
+        requested?.startsWith("/") &&
+        !requested.startsWith("//")
+          ? requested
+          : "/overview";
+      router.replace(destination);
     } catch (x) {
+      submitting.current = false;
       setError(
         x instanceof Error
           ? x.message
@@ -123,7 +134,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           {mode === "login" && (
             <div className="form-meta">
               <label className="check-label">
-                <input type="checkbox" /> Keep me signed in
+                <input name="remember" type="checkbox" /> Keep me signed in
               </label>
               <Link href="/forgot-password">Forgot password?</Link>
             </div>

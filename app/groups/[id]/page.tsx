@@ -255,6 +255,14 @@ export default function GroupDetail() {
           <PanelTitle
             title="Suggested repayments"
             meta="Simplified to the fewest useful payments"
+            action={
+              <button
+                className="text-button"
+                onClick={() => setModal("settle")}
+              >
+                <SwapOutlined /> Settle up
+              </button>
+            }
           />
           {debts.map((d, i) => (
             <article

@@ -43,15 +43,25 @@ export function AppShell({
   const { user, loading, signOut } = useSession();
   const router = useRouter();
   const path = usePathname();
-  const [theme, setTheme] = useState<"light" | "dark">("light");
   const [menu, setMenu] = useState(false);
   useEffect(() => {
     if (!loading && !user)
       router.replace(`/login?next=${encodeURIComponent(path)}`);
   }, [loading, user, router, path]);
   useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-  }, [theme]);
+    if (!menu) return;
+    const closeMenu = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenu(false);
+    };
+    document.addEventListener("keydown", closeMenu);
+    return () => document.removeEventListener("keydown", closeMenu);
+  }, [menu]);
+  const toggleTheme = () => {
+    const next =
+      document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem("settlr_theme", next);
+  };
   if (loading || !user)
     return (
       <div className="route-loading">
@@ -68,7 +78,11 @@ export function AppShell({
       <aside className={menu ? "sidebar open" : "sidebar"}>
         <div className="sidebar-mobile-head">
           <Brand />
-          <button className="icon-button" onClick={() => setMenu(false)}>
+          <button
+            className="icon-button"
+            onClick={() => setMenu(false)}
+            aria-label="Close navigation menu"
+          >
             <MenuOutlined />
           </button>
         </div>
@@ -147,10 +161,11 @@ export function AppShell({
             </Link>
             <button
               className="icon-button"
-              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+              onClick={toggleTheme}
               aria-label="Switch theme"
             >
-              {theme === "light" ? <MoonOutlined /> : <SunOutlined />}
+              <MoonOutlined className="theme-icon theme-icon-light" />
+              <SunOutlined className="theme-icon theme-icon-dark" />
             </button>
             {actions ?? (
               <Link className="button primary" href="/groups">

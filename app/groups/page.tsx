@@ -49,7 +49,7 @@ export default function Groups() {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
     try {
-      await apiFetch("/api/v1/groups", {
+      const created = await apiFetch<{ id: string }>("/api/v1/groups", {
         method: "POST",
         body: JSON.stringify({
           name: data.get("name"),
@@ -57,6 +57,10 @@ export default function Groups() {
           currency: data.get("currency"),
           information: data.get("information"),
         }),
+      });
+      await apiFetch(`/api/v1/groups/${created.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ group_type: data.get("group_type") }),
       });
       setShow(false);
       await load();
@@ -82,12 +86,7 @@ export default function Groups() {
           <PanelTitle
             title="Your groups"
             meta={`${groups.length} active ledgers`}
-            action={
-              <div className="filter-pills">
-                <button className="active">Active</button>
-                <button>Archived</button>
-              </div>
-            }
+            action={<span className="status-pill">Active</span>}
           />
           {error && <ErrorState message={error} retry={load} />}
           <div className="groups-list">

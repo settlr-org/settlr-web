@@ -14,6 +14,9 @@ export type User = {
 const ACCESS_KEY = "settlr_access_token";
 const REFRESH_KEY = "settlr_refresh_token";
 
+const readToken = (key: string) =>
+  window.localStorage.getItem(key) ?? window.sessionStorage.getItem(key);
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -22,18 +25,49 @@ export class ApiError extends Error {
     super(message);
   }
 }
+
+const REQUEST_TIMEOUT_MS = 15_000;
+
+async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init: RequestInit = {},
+) {
+  const controller = new AbortController();
+  const timeout = globalThis.setTimeout(
+    () => controller.abort(),
+    REQUEST_TIMEOUT_MS,
+  );
+  const abort = () => controller.abort();
+  init.signal?.addEventListener("abort", abort, { once: true });
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new ApiError(
+        408,
+        "The server took too long to respond. Please try again.",
+      );
+    }
+    throw error;
+  } finally {
+    globalThis.clearTimeout(timeout);
+    init.signal?.removeEventListener("abort", abort);
+  }
+}
 export const hasSession = () =>
   typeof window !== "undefined" &&
-  Boolean(
-    localStorage.getItem(REFRESH_KEY) || localStorage.getItem(ACCESS_KEY),
-  );
+  Boolean(readToken(REFRESH_KEY) || readToken(ACCESS_KEY));
 export const clearSession = () => {
-  localStorage.removeItem(ACCESS_KEY);
-  localStorage.removeItem(REFRESH_KEY);
+  window.localStorage.removeItem(ACCESS_KEY);
+  window.localStorage.removeItem(REFRESH_KEY);
+  window.sessionStorage.removeItem(ACCESS_KEY);
+  window.sessionStorage.removeItem(REFRESH_KEY);
 };
-export const saveSession = (session: Session) => {
-  localStorage.setItem(ACCESS_KEY, session.access_token);
-  localStorage.setItem(REFRESH_KEY, session.refresh_token);
+export const saveSession = (session: Session, remember = true) => {
+  clearSession();
+  const storage = remember ? window.localStorage : window.sessionStorage;
+  storage.setItem(ACCESS_KEY, session.access_token);
+  storage.setItem(REFRESH_KEY, session.refresh_token);
 };
 
 async function parseError(response: Response) {
@@ -48,9 +82,9 @@ async function parseError(response: Response) {
 }
 
 async function refreshAccessToken() {
-  const refreshToken = localStorage.getItem(REFRESH_KEY);
+  const refreshToken = readToken(REFRESH_KEY);
   if (!refreshToken) return null;
-  const response = await fetch(`${API_URL}/api/v1/auth/refresh`, {
+  const response = await fetchWithTimeout(`${API_URL}/api/v1/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ refresh_token: refreshToken }),
@@ -60,7 +94,7 @@ async function refreshAccessToken() {
     return null;
   }
   const session = (await response.json()) as Session;
-  saveSession(session);
+  saveSession(session, Boolean(window.localStorage.getItem(REFRESH_KEY)));
   return session.access_token;
 }
 
@@ -73,10 +107,12 @@ export async function apiFetch<T>(
   headers.set("Accept", "application/json");
   if (init.body && !headers.has("Content-Type"))
     headers.set("Content-Type", "application/json");
-  const token =
-    typeof window === "undefined" ? null : localStorage.getItem(ACCESS_KEY);
+  const token = typeof window === "undefined" ? null : readToken(ACCESS_KEY);
   if (token) headers.set("Authorization", `Bearer ${token}`);
-  const response = await fetch(`${API_URL}${path}`, { ...init, headers });
+  const response = await fetchWithTimeout(`${API_URL}${path}`, {
+    ...init,
+    headers,
+  });
   if (
     response.status === 401 &&
     retry &&
@@ -92,19 +128,28 @@ export async function apiFetch<T>(
 
 export async function authenticate(
   mode: "login" | "register",
-  input: { name?: string; email: string; password: string },
+  input: {
+    name?: string;
+    email: string;
+    password: string;
+    remember?: boolean;
+  },
 ) {
+  const body =
+    mode === "register"
+      ? { name: input.name, email: input.email, password: input.password }
+      : { email: input.email, password: input.password };
   const session = await apiFetch<Session>(
     `/api/v1/auth/${mode}`,
-    { method: "POST", body: JSON.stringify(input) },
+    { method: "POST", body: JSON.stringify(body) },
     false,
   );
-  saveSession(session);
+  saveSession(session, mode === "register" || Boolean(input.remember));
   return session;
 }
 
 export async function logout() {
-  const refreshToken = localStorage.getItem(REFRESH_KEY);
+  const refreshToken = readToken(REFRESH_KEY);
   try {
     await apiFetch(
       "/api/v1/auth/logout",
@@ -118,13 +163,13 @@ export async function logout() {
 
 export async function apiDownload(path: string, filename: string) {
   const headers = new Headers({ Accept: "text/csv" });
-  const token = localStorage.getItem(ACCESS_KEY);
+  const token = readToken(ACCESS_KEY);
   if (token) headers.set("Authorization", `Bearer ${token}`);
-  let response = await fetch(`${API_URL}${path}`, { headers });
+  let response = await fetchWithTimeout(`${API_URL}${path}`, { headers });
   if (response.status === 401 && (await refreshAccessToken())) {
-    const refreshed = localStorage.getItem(ACCESS_KEY);
+    const refreshed = readToken(ACCESS_KEY);
     if (refreshed) headers.set("Authorization", `Bearer ${refreshed}`);
-    response = await fetch(`${API_URL}${path}`, { headers });
+    response = await fetchWithTimeout(`${API_URL}${path}`, { headers });
   }
   if (!response.ok)
     throw new ApiError(response.status, await parseError(response));

@@ -81,7 +81,7 @@ export default function Landing() {
       <section id="how" className="landing-section">
         <p className="eyebrow">ONE SHARED SOURCE OF TRUTH</p>
         <h2>From “I’ll pay you later” to settled.</h2>
-        <div className="feature-grid">
+        <div id="features" className="feature-grid">
           <article>
             <TeamOutlined />
             <span>01</span>

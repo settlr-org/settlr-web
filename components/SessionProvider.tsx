@@ -21,7 +21,12 @@ type SessionValue = {
   loading: boolean;
   signIn: (
     mode: "login" | "register",
-    values: { name?: string; email: string; password: string },
+    values: {
+      name?: string;
+      email: string;
+      password: string;
+      remember?: boolean;
+    },
   ) => Promise<void>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -47,7 +52,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
   const signIn = async (
     mode: "login" | "register",
-    values: { name?: string; email: string; password: string },
+    values: {
+      name?: string;
+      email: string;
+      password: string;
+      remember?: boolean;
+    },
   ) => {
     const session = await authenticate(mode, values);
     setUser(
