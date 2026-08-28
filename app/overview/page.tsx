@@ -186,7 +186,7 @@ export default function Overview() {
                   <span className="avatar soft">{initials(f.name)}</span>
                   <div>
                     <strong>{f.name}</strong>
-                    <small>Shared expenses ready</small>
+                    <small>Open friend ledger</small>
                   </div>
                   <ArrowRightOutlined />
                 </Link>

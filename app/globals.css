@@ -2024,6 +2024,38 @@ legend {
   color: var(--muted);
   margin-top: 3px;
 }
+.activity-row {
+  width: 100%;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.activity-row:hover h3 {
+  color: var(--brand);
+}
+.detail-list {
+  display: grid;
+  gap: 0;
+  margin-top: 22px;
+}
+.detail-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 13px 0;
+  border-top: 1px solid var(--line);
+}
+.detail-list span {
+  color: var(--muted);
+  font-size: 11px;
+}
+.detail-list strong {
+  font-size: 12px;
+  text-align: right;
+}
 .status-pill {
   border-radius: 20px;
   background: var(--brand-soft);
@@ -2155,14 +2187,16 @@ legend {
   background: var(--brand);
   border-radius: 50%;
 }
-.timeline article {
+.timeline article,
+.timeline .activity-row {
   display: flex;
   align-items: center;
   gap: 13px;
   padding: 15px 0;
   border-top: 1px solid var(--line);
 }
-.timeline article > span {
+.timeline article > span,
+.timeline .activity-row > span {
   width: 40px;
   height: 40px;
   flex: 0 0 40px;
@@ -2172,7 +2206,8 @@ legend {
   display: grid;
   place-items: center;
 }
-.timeline article > div {
+.timeline article > div,
+.timeline .activity-row > div {
   min-width: 0;
   flex: 1;
 }

@@ -15,11 +15,19 @@ export default function AcceptInvitation() {
     setBusy(true);
     setError("");
     try {
-      const result = await apiFetch<{ group_id: string }>(
-        `/api/v1/invites/${encodeURIComponent(token)}/accept`,
-        { method: "POST" },
-      );
-      router.replace(`/groups/${result.group_id}`);
+      try {
+        const result = await apiFetch<{ user_id: string }>(
+          `/api/v1/friend-invites/${encodeURIComponent(token)}/accept`,
+          { method: "POST" },
+        );
+        router.replace(`/friends/${result.user_id}`);
+      } catch {
+        const result = await apiFetch<{ group_id: string }>(
+          `/api/v1/invites/${encodeURIComponent(token)}/accept`,
+          { method: "POST" },
+        );
+        router.replace(`/groups/${result.group_id}`);
+      }
     } catch (x) {
       setError(x instanceof Error ? x.message : "Could not accept invitation.");
       setBusy(false);
@@ -27,24 +35,24 @@ export default function AcceptInvitation() {
   };
   return (
     <AppShell
-      title="Group invitation"
+      title="Settlr invitation"
       eyebrow="YOU’RE INVITED"
-      description="Join the shared ledger linked to your email address."
+      description="Connect with the person who invited you."
     >
       <Panel className="focused-panel">
         <PanelTitle
-          title="Ready to join?"
+          title="Ready to connect?"
           meta="The invitation must match the email on your Settlr account."
         />
         {error && <ErrorState message={error} />}
         <div className="invite-accept">
           <MailOutlined />
           <p>
-            Accepting adds you to the group and makes its shared expenses
-            visible.
+            Accepting makes you friends. You can start a shared ledger whenever
+            you need one.
           </p>
           <button className="button primary" onClick={accept} disabled={busy}>
-            <CheckOutlined /> {busy ? "Joining…" : "Accept invitation"}
+            <CheckOutlined /> {busy ? "Connecting…" : "Accept invitation"}
           </button>
         </div>
       </Panel>

@@ -8,18 +8,24 @@ import {
   Loading,
   Panel,
   PanelTitle,
+  Modal,
 } from "../../components/UI";
 import { apiFetch } from "../../lib/api";
-import { Event, labelize } from "../../lib/types";
+import { Event, Group, labelize, money } from "../../lib/types";
 export default function Activity() {
   const [data, setData] = useState<Event[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [selected, setSelected] = useState<Event>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const load = useCallback(async () => {
     try {
-      setData(
-        (await apiFetch<{ data: Event[] }>("/api/v1/activity?limit=100")).data,
-      );
+      const [events, groupData] = await Promise.all([
+        apiFetch<{ data: Event[] }>("/api/v1/activity?limit=100"),
+        apiFetch<{ data: Group[] }>("/api/v1/groups"),
+      ]);
+      setData(events.data);
+      setGroups(groupData.data);
     } catch (x) {
       setError(x instanceof Error ? x.message : "Unable to load activity.");
     } finally {
@@ -46,7 +52,11 @@ export default function Activity() {
           {error && <ErrorState message={error} retry={load} />}
           <div className="timeline">
             {data.map((e) => (
-              <article key={e.id}>
+              <button
+                className="activity-row"
+                key={e.id}
+                onClick={() => setSelected(e)}
+              >
                 <span>
                   <DollarOutlined />
                 </span>
@@ -66,7 +76,7 @@ export default function Activity() {
                     minute: "2-digit",
                   })}
                 </time>
-              </article>
+              </button>
             ))}
           </div>
           {!data.length && (
@@ -76,6 +86,57 @@ export default function Activity() {
             />
           )}
         </Panel>
+      )}
+      {selected && (
+        <Modal
+          title={
+            typeof selected.payload?.description === "string"
+              ? selected.payload.description
+              : labelize(selected.type)
+          }
+          subtitle="Activity details"
+          onClose={() => setSelected(undefined)}
+        >
+          <div className="detail-list">
+            <div>
+              <span>When</span>
+              <strong>{new Date(selected.created_at).toLocaleString()}</strong>
+            </div>
+            <div>
+              <span>Type</span>
+              <strong>{labelize(selected.type)}</strong>
+            </div>
+            <div>
+              <span>Group</span>
+              <strong>
+                {groups.find((group) => group.id === selected.group_id)?.name ||
+                  (selected.group_id
+                    ? "Group unavailable"
+                    : "Personal activity")}
+              </strong>
+            </div>
+            {typeof selected.payload?.amount === "number" && (
+              <div>
+                <span>Amount</span>
+                <strong>
+                  {money(
+                    selected.payload.amount,
+                    typeof selected.payload.currency === "string"
+                      ? selected.payload.currency
+                      : "NPR",
+                  )}
+                </strong>
+              </div>
+            )}
+            {typeof selected.payload?.notes === "string" &&
+              selected.payload.notes && (
+                <div>
+                  <span>Notes</span>
+                  <strong>{selected.payload.notes}</strong>
+                </div>
+              )}
+          </div>
+        </Modal>
       )}
     </AppShell>
   );

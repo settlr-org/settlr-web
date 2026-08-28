@@ -11,7 +11,13 @@ import {
   UserAddOutlined,
 } from "@ant-design/icons";
 import { AppShell } from "../../../components/AppShell";
-import { ErrorState, Loading, Panel, PanelTitle } from "../../../components/UI";
+import {
+  ErrorState,
+  Loading,
+  Modal,
+  Panel,
+  PanelTitle,
+} from "../../../components/UI";
 import { apiFetch } from "../../../lib/api";
 import { initials } from "../../../lib/types";
 
@@ -31,6 +37,7 @@ export default function FriendDetail() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [requested, setRequested] = useState(false);
+  const [confirmation, setConfirmation] = useState<"remove" | "block">();
   const load = useCallback(async () => {
     try {
       const p = await apiFetch<Person>(`/api/v1/users/${id}`);
@@ -57,7 +64,6 @@ export default function FriendDetail() {
     }
   };
   const remove = async (block = false) => {
-    if (!confirm(`${block ? "Block" : "Remove"} ${person?.name}?`)) return;
     try {
       await apiFetch(`/api/v1/friends/${id}${block ? "/block" : ""}`, {
         method: block ? "POST" : "DELETE",
@@ -66,6 +72,11 @@ export default function FriendDetail() {
     } catch (x) {
       setError(x instanceof Error ? x.message : "Could not update friendship.");
     }
+  };
+  const confirmRemoval = async () => {
+    const block = confirmation === "block";
+    setConfirmation(undefined);
+    await remove(block);
   };
   if (loading || !person)
     return (
@@ -149,19 +160,45 @@ export default function FriendDetail() {
             <div className="stack-form">
               <button
                 className="button danger"
-                onClick={() => void remove(false)}
+                onClick={() => setConfirmation("remove")}
               >
                 <DeleteOutlined /> Remove friend
               </button>
               <button
                 className="button danger"
-                onClick={() => void remove(true)}
+                onClick={() => setConfirmation("block")}
               >
                 <SafetyCertificateOutlined /> Block user
               </button>
             </div>
           </Panel>
         </div>
+      )}
+      {confirmation && (
+        <Modal
+          title={`${confirmation === "block" ? "Block" : "Remove"} ${person.name}?`}
+          subtitle={
+            confirmation === "block"
+              ? "They will no longer be able to connect with you."
+              : "Their friendship and direct ledger will be removed from your circle."
+          }
+          onClose={() => setConfirmation(undefined)}
+        >
+          <div className="modal-actions">
+            <button
+              className="button"
+              onClick={() => setConfirmation(undefined)}
+            >
+              Cancel
+            </button>
+            <button
+              className="button danger"
+              onClick={() => void confirmRemoval()}
+            >
+              {confirmation === "block" ? "Block user" : "Remove friend"}
+            </button>
+          </div>
+        </Modal>
       )}
     </AppShell>
   );

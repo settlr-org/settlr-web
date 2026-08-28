@@ -20,41 +20,28 @@ import {
   PanelTitle,
 } from "../../components/UI";
 import { apiFetch } from "../../lib/api";
-import { Friend, FriendRequest, Group, initials } from "../../lib/types";
+import { Friend, FriendRequest, initials } from "../../lib/types";
 type SearchUser = {
   id: string;
   name: string;
   email?: string;
   avatar_url?: string;
 };
-type Invite = {
-  id: string;
-  group_name: string;
-  email: string;
-};
 export default function Friends() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [requests, setRequests] = useState<FriendRequest[]>([]);
   const [results, setResults] = useState<SearchUser[]>([]);
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [invites, setInvites] = useState<Invite[]>([]);
-  const [groupId, setGroupId] = useState("");
   const [sent, setSent] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const load = useCallback(async () => {
     try {
-      const [f, r, g, i] = await Promise.all([
+      const [f, r] = await Promise.all([
         apiFetch<{ data: Friend[] }>("/api/v1/friends"),
         apiFetch<{ data: FriendRequest[] }>("/api/v1/friends/requests"),
-        apiFetch<{ data: Group[] }>("/api/v1/groups"),
-        apiFetch<{ data: Invite[] }>("/api/v1/invites"),
       ]);
       setFriends(f.data);
       setRequests(r.data);
-      setGroups(g.data);
-      setInvites(i.data);
-      setGroupId((current) => current || g.data[0]?.id || "");
     } catch (x) {
       setError(x instanceof Error ? x.message : "Unable to load friends.");
     } finally {
@@ -92,7 +79,7 @@ export default function Friends() {
     const form = event.currentTarget;
     const email = String(new FormData(form).get("email") || "");
     try {
-      await apiFetch(`/api/v1/groups/${groupId}/invites`, {
+      await apiFetch(`/api/v1/friends/invite`, {
         method: "POST",
         body: JSON.stringify({ email }),
       });
@@ -173,7 +160,7 @@ export default function Friends() {
             <Panel>
               <PanelTitle
                 title="Invite by email"
-                meta="Bring someone into a shared ledger"
+                meta="Add a friend directly"
                 action={<MailOutlined />}
               />
               {sent && (
@@ -181,44 +168,20 @@ export default function Friends() {
                   {sent}
                 </p>
               )}
-              {groups.length ? (
-                <form className="stack-form" onSubmit={inviteByEmail}>
-                  <label>
-                    Group
-                    <select
-                      value={groupId}
-                      onChange={(event) => setGroupId(event.target.value)}
-                    >
-                      {groups.map((group) => (
-                        <option value={group.id} key={group.id}>
-                          {group.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    Friend’s email
-                    <input
-                      name="email"
-                      type="email"
-                      required
-                      placeholder="friend@example.com"
-                    />
-                  </label>
-                  <button className="button primary">
-                    <SendOutlined /> Send invitation
-                  </button>
-                </form>
-              ) : (
-                <Empty text="Create a group before inviting someone by email." />
-              )}
-              {invites.length > 0 && (
-                <p className="pending-invite-note">
-                  <MailOutlined /> {invites.length} invitation
-                  {invites.length === 1 ? " is" : "s are"} waiting for your
-                  response. Check your email to accept.
-                </p>
-              )}
+              <form className="stack-form" onSubmit={inviteByEmail}>
+                <label>
+                  Friend’s email
+                  <input
+                    name="email"
+                    type="email"
+                    required
+                    placeholder="friend@example.com"
+                  />
+                </label>
+                <button className="button primary">
+                  <SendOutlined /> Send invitation
+                </button>
+              </form>
             </Panel>
             <Panel>
               <PanelTitle
