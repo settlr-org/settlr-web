@@ -296,7 +296,8 @@ p {
   border-color: var(--brand);
   color: var(--on-brand);
 }
-:root[data-theme="dark"] .button:not(.primary, .danger) {
+:root[data-theme="dark"] .button:not(.primary, .danger),
+:root[data-theme="dark"] .icon-button:not(.primary) {
   background: var(--paper-2);
   border-color: #42564d;
   color: #f4f2e8;
@@ -830,7 +831,7 @@ p {
     height: 68px;
     z-index: 8;
     display: grid;
-    grid-template-columns: 1fr 1fr 64px 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr 64px 1fr 1fr;
     align-items: center;
     background: color-mix(in srgb, var(--paper) 94%, transparent);
     backdrop-filter: blur(14px);
@@ -840,17 +841,30 @@ p {
     padding: 5px;
   }
   .mobile-nav .nav-item {
-    padding: 6px 2px;
+    padding: 6px 1px;
     display: grid;
     place-items: center;
-    gap: 2px;
+    gap: 3px;
     font-size: 8px;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    min-width: 0;
   }
   .mobile-nav .nav-item svg {
-    font-size: 17px;
+    font-size: 18px;
+    display: block;
+  }
+  .mobile-nav .nav-item span {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
   .mobile-nav .nav-item.active {
     background: transparent;
+    color: var(--brand);
   }
   .mobile-add {
     width: 48px;
@@ -860,6 +874,11 @@ p {
     background: var(--brand);
     color: var(--on-brand);
     justify-self: center;
+    display: grid;
+    place-items: center;
+    font-size: 19px;
+  }
+  .mobile-add .anticon {
     font-size: 19px;
   }
   .loading {

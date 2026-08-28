@@ -259,6 +259,13 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
           <TeamOutlined />
           <span>Groups</span>
         </Link>
+        <Link
+          className={path === "/friends" ? "nav-item active" : "nav-item"}
+          href="/friends"
+        >
+          <UserOutlined />
+          <span>Friends</span>
+        </Link>
         <Link className="mobile-add" href="/groups" aria-label="Add expense">
           <PlusOutlined />
         </Link>
