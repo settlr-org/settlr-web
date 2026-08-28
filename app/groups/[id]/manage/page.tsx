@@ -7,10 +7,8 @@ import {
   BarChartOutlined,
   DeleteOutlined,
   DownloadOutlined,
-  MailOutlined,
   PauseCircleOutlined,
   PlayCircleOutlined,
-  SendOutlined,
   SettingOutlined,
   StopOutlined,
   TeamOutlined,
@@ -29,19 +27,13 @@ import {
   Event,
   Group,
   Member,
+  Friend,
   initials,
   labelize,
   money,
 } from "../../../../lib/types";
 import { useSession } from "../../../../components/SessionProvider";
 
-type Invite = {
-  id: string;
-  email: string;
-  status: string;
-  created_at: string;
-  expires_at: string;
-};
 type Recurring = {
   id: string;
   description: string;
@@ -70,7 +62,7 @@ export default function ManageGroup() {
   const { user } = useSession();
   const [group, setGroup] = useState<Group>();
   const [members, setMembers] = useState<Member[]>([]);
-  const [invites, setInvites] = useState<Invite[]>([]);
+  const [friends, setFriends] = useState<Friend[]>([]);
   const [recurring, setRecurring] = useState<Recurring[]>([]);
   const [stats, setStats] = useState<Stats>();
   const [events, setEvents] = useState<Event[]>([]);
@@ -79,17 +71,17 @@ export default function ManageGroup() {
   const [loading, setLoading] = useState(true);
   const load = useCallback(async () => {
     try {
-      const [g, m, i, r, s, a] = await Promise.all([
+      const [g, m, f, r, s, a] = await Promise.all([
         apiFetch<Group>(`/api/v1/groups/${id}`),
         apiFetch<{ data: Member[] }>(`/api/v1/groups/${id}/members`),
-        apiFetch<{ data: Invite[] }>(`/api/v1/groups/${id}/invites`),
+        apiFetch<{ data: Friend[] }>(`/api/v1/friends`),
         apiFetch<{ data: Recurring[] }>(`/api/v1/groups/${id}/recurring`),
         apiFetch<Stats>(`/api/v1/groups/${id}/stats?range=all`),
         apiFetch<{ data: Event[] }>(`/api/v1/groups/${id}/activity?limit=20`),
       ]);
       setGroup(g);
       setMembers(m.data);
-      setInvites(i.data);
+      setFriends(f.data);
       setRecurring(r.data);
       setStats(s);
       setEvents(a.data);
@@ -128,22 +120,18 @@ export default function ManageGroup() {
       setError(x instanceof Error ? x.message : "Could not save group.");
     }
   };
-  const invite = async (event: FormEvent<HTMLFormElement>) => {
+  const addFriend = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const form = event.currentTarget;
-    const email = new FormData(form).get("email");
+    const friendId = new FormData(event.currentTarget).get("friend_id");
     try {
-      await apiFetch(`/api/v1/groups/${id}/invites`, {
+      await apiFetch(`/api/v1/groups/${id}/members`, {
         method: "POST",
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ user_id: friendId }),
       });
-      form.reset();
-      setSaved(`Invitation sent to ${email}.`);
+      setSaved("Friend added to the group.");
       await load();
     } catch (x) {
-      setError(
-        x instanceof Error ? x.message : "Could not invite this person.",
-      );
+      setError(x instanceof Error ? x.message : "Could not add this friend.");
     }
   };
   const createRecurring = async (event: FormEvent<HTMLFormElement>) => {
@@ -302,33 +290,35 @@ export default function ManageGroup() {
         </Panel>
         <Panel>
           <PanelTitle
-            title="Invite by email"
-            meta={`${invites.length} pending`}
-            action={<MailOutlined />}
+            title="Add friends"
+            meta="Only accepted friends can join this group"
+            action={<TeamOutlined />}
           />
-          <form className="inline-form" onSubmit={invite}>
-            <input
-              name="email"
-              type="email"
-              required
-              placeholder="friend@example.com"
-            />
-            <button className="button primary">
-              <SendOutlined /> Invite
-            </button>
-          </form>
-          {invites.map((item) => (
-            <article className="compact-line" key={item.id}>
-              <MailOutlined />
-              <div>
-                <strong>{item.email}</strong>
-                <small>
-                  Expires {new Date(item.expires_at).toLocaleDateString()}
-                </small>
-              </div>
-              <span className="status-pill">Pending</span>
-            </article>
-          ))}
+          {friends.filter(
+            (friend) => !members.some((member) => member.id === friend.user_id),
+          ).length ? (
+            <form className="inline-form" onSubmit={addFriend}>
+              <select name="friend_id" required aria-label="Choose a friend">
+                {friends
+                  .filter(
+                    (friend) =>
+                      !members.some((member) => member.id === friend.user_id),
+                  )
+                  .map((friend) => (
+                    <option key={friend.user_id} value={friend.user_id}>
+                      {friend.name}
+                    </option>
+                  ))}
+              </select>
+              <button className="button primary">
+                <TeamOutlined /> Add
+              </button>
+            </form>
+          ) : (
+            <p className="muted-copy">
+              All your friends are already in this group.
+            </p>
+          )}
         </Panel>
         <Panel>
           <PanelTitle

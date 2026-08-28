@@ -19,6 +19,7 @@ import {
   PanelTitle,
 } from "../../components/UI";
 import { apiFetch, readApiCache } from "../../lib/api";
+import { useSession } from "../../components/SessionProvider";
 import {
   Balance,
   Event,
@@ -29,6 +30,7 @@ import {
   initials,
 } from "../../lib/types";
 export default function Overview() {
+  const { user } = useSession();
   const cachedBalance = readApiCache<Balance>("/api/v1/me/balances");
   const cachedEvents = readApiCache<{ data: Event[] }>(
     "/api/v1/activity?limit=6",
@@ -42,6 +44,9 @@ export default function Overview() {
   const [events, setEvents] = useState<Event[]>(cachedEvents?.data ?? []);
   const [friends, setFriends] = useState<Friend[]>(cachedFriends?.data ?? []);
   const [groups, setGroups] = useState<Group[]>(cachedGroups?.data ?? []);
+  const [friendBalances, setFriendBalances] = useState<
+    Record<string, { amount: number; currency: string }>
+  >({});
   const [loading, setLoading] = useState(!warm);
   const [error, setError] = useState("");
   const load = useCallback(async () => {
@@ -58,12 +63,42 @@ export default function Overview() {
       setEvents(a.data);
       setFriends(f.data);
       setGroups(g.data);
+      if (user?.id) {
+        const entries = await Promise.all(
+          f.data.map(async (friend) => {
+            try {
+              const ledger = await apiFetch<{ group_id: string }>(
+                `/api/v1/friends/${friend.user_id}/ledger`,
+              );
+              const balances = await apiFetch<{
+                data: { user_id: string; amount: number }[];
+                currency: string;
+              }>(`/api/v1/groups/${ledger.group_id}/balances`);
+              return [
+                friend.user_id,
+                {
+                  amount:
+                    balances.data.find((item) => item.user_id === user.id)
+                      ?.amount ?? 0,
+                  currency: balances.currency,
+                },
+              ] as const;
+            } catch {
+              return [
+                friend.user_id,
+                { amount: 0, currency: balance?.currency || "NPR" },
+              ] as const;
+            }
+          }),
+        );
+        setFriendBalances(Object.fromEntries(entries));
+      }
     } catch (x) {
       setError(x instanceof Error ? x.message : "Unable to load overview.");
     } finally {
       setLoading(false);
     }
-  }, [warm]);
+  }, [balance?.currency, user?.id, warm]);
   useEffect(() => {
     void load();
   }, [load]);
@@ -177,20 +212,32 @@ export default function Overview() {
                   </Link>
                 }
               />
-              {friends.slice(0, 5).map((f) => (
-                <Link
-                  href={`/friends?user=${f.user_id}`}
-                  className="person-row"
-                  key={f.user_id}
-                >
-                  <span className="avatar soft">{initials(f.name)}</span>
-                  <div>
-                    <strong>{f.name}</strong>
-                    <small>Open friend ledger</small>
-                  </div>
-                  <ArrowRightOutlined />
-                </Link>
-              ))}
+              {friends.slice(0, 5).map((f) =>
+                (() => {
+                  const position = friendBalances[f.user_id];
+                  const amount = position?.amount ?? 0;
+                  return (
+                    <Link
+                      href={`/friends?user=${f.user_id}`}
+                      className="person-row"
+                      key={f.user_id}
+                    >
+                      <span className="avatar soft">{initials(f.name)}</span>
+                      <div>
+                        <strong>{f.name}</strong>
+                        <small className={amount < 0 ? "negative" : "positive"}>
+                          {amount > 0
+                            ? `Owed ${money(amount, position?.currency)}`
+                            : amount < 0
+                              ? `You owe ${money(Math.abs(amount), position?.currency)}`
+                              : "Settled up"}
+                        </small>
+                      </div>
+                      <ArrowRightOutlined />
+                    </Link>
+                  );
+                })(),
+              )}
               {!friends.length && (
                 <Empty
                   icon={<TeamOutlined />}
