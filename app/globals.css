@@ -1277,8 +1277,8 @@ textarea {
 }
 .landing-nav {
   width: 100%;
-  height: 88px;
-  flex: 0 0 88px;
+  height: 64px;
+  flex: 0 0 64px;
   margin: 0;
   padding: 0 max(28px, calc((100vw - 1160px) / 2));
   border-bottom: 1px solid var(--line);
@@ -1498,7 +1498,7 @@ textarea {
   width: 100%;
   margin: auto 0 0;
   flex: 0 0 auto;
-  padding: 30px max(28px, calc((100vw - 1160px) / 2));
+  padding: 16px max(28px, calc((100vw - 1160px) / 2));
   background: var(--forest);
   color: #f7f4ea;
   display: flex;
@@ -2446,8 +2446,8 @@ legend {
     display: none;
   }
   .landing-nav {
-    height: 72px;
-    flex-basis: 72px;
+    height: 56px;
+    flex-basis: 56px;
     padding: 0 18px;
   }
   .landing-nav nav > a:not(.button) {
@@ -2487,7 +2487,7 @@ legend {
     grid-template-columns: 1fr;
   }
   .landing-footer {
-    padding: 26px 18px;
+    padding: 14px 18px;
   }
   .auth-form-wrap,
   .simple-auth {

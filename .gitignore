@@ -3,6 +3,9 @@ node_modules/
 out/
 .env*
 !.env.example
+!.env.development.example
+!.env.staging.example
+!.env.production.example
 coverage/
 .playwright-cli/
 tsconfig.tsbuildinfo
