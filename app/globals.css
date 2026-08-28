@@ -1267,18 +1267,21 @@ textarea {
 
 /* Landing */
 .landing {
-  min-height: 100vh;
-  min-height: 100svh;
+  height: 100vh;
+  height: 100svh;
+  min-height: 0;
   background: var(--paper);
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 .landing-nav {
+  width: 100%;
   height: 88px;
-  max-width: 1220px;
-  margin: auto;
-  padding: 0 28px;
+  flex: 0 0 88px;
+  margin: 0;
+  padding: 0 max(28px, calc((100vw - 1160px) / 2));
+  border-bottom: 1px solid var(--line);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1296,6 +1299,7 @@ textarea {
 .landing-hero {
   flex: 1;
   min-height: 0;
+  height: auto;
   max-width: 1220px;
   margin: auto;
   padding: 76px 34px 110px;
@@ -1346,7 +1350,7 @@ textarea {
   color: var(--brand);
 }
 .hero-visual {
-  height: 480px;
+  height: min(480px, 58vh);
   position: relative;
   background: var(--brand-soft);
   border-radius: 48% 48% 44% 56%/52% 42% 58% 48%;
@@ -1493,6 +1497,7 @@ textarea {
 .landing-footer {
   width: 100%;
   margin: auto 0 0;
+  flex: 0 0 auto;
   padding: 30px max(28px, calc((100vw - 1160px) / 2));
   background: var(--forest);
   color: #f7f4ea;
@@ -2343,8 +2348,15 @@ legend {
 }
 
 @media (max-width: 900px) {
+  .landing {
+    height: auto;
+    min-height: 100svh;
+    overflow: visible;
+  }
   .landing-hero {
     grid-template-columns: 1fr;
+    height: auto;
+    min-height: calc(100svh - 72px);
     padding-top: 45px;
   }
   .hero-visual {
@@ -2435,6 +2447,7 @@ legend {
   }
   .landing-nav {
     height: 72px;
+    flex-basis: 72px;
     padding: 0 18px;
   }
   .landing-nav nav > a:not(.button) {
