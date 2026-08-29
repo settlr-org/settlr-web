@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CheckCircleOutlined, MailOutlined } from "@ant-design/icons";
 import { Brand } from "../../components/Brand";
@@ -7,7 +7,10 @@ import { apiFetch } from "../../lib/api";
 export default function VerifyEmail() {
   const [state, setState] = useState<"loading" | "done" | "error">("loading");
   const [message, setMessage] = useState("Verifying your email address…");
+  const hasVerified = useRef(false);
   useEffect(() => {
+    if (hasVerified.current) return;
+    hasVerified.current = true;
     const token = new URLSearchParams(location.search).get("token");
     if (!token) {
       setState("error");
