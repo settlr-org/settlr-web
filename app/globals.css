@@ -691,10 +691,18 @@ p {
     padding: 25px 16px 105px;
   }
   .topbar {
+    align-items: center;
+    gap: 12px;
     margin-bottom: 23px;
   }
+  .page-heading {
+    min-width: 0;
+    flex: 1;
+  }
   .topbar h1 {
-    font-size: 29px;
+    font-size: 30px;
+    line-height: 1;
+    margin: 0;
   }
   .subtitle {
     display: none;
@@ -708,7 +716,13 @@ p {
     font-size: 16px;
   }
   .top-actions {
-    gap: 6px;
+    flex: 0 0 auto;
+    gap: 8px;
+  }
+  .top-actions .icon-button {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
   }
   .summary-grid {
     gap: 14px;
