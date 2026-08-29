@@ -270,10 +270,11 @@ p {
   border-color: var(--brand);
   color: var(--on-brand);
 }
-.button.primary > svg {
+.button.primary .anticon,
+.button.primary svg {
   display: block;
   flex: 0 0 auto;
-  color: currentColor;
+  color: var(--on-brand);
   opacity: 1;
 }
 :root[data-theme="dark"] .button:not(.primary, .danger),
