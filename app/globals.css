@@ -766,7 +766,7 @@ p {
     height: 68px;
     z-index: 8;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 64px 1fr 1fr;
+    grid-template-columns: 1fr 1fr 64px 1fr 1fr;
     align-items: center;
     background: var(--paper);
     backdrop-filter: blur(14px);
