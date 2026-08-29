@@ -2349,10 +2349,14 @@ legend {
     color: var(--ink);
   }
   .topbar {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
     align-items: center;
     gap: 11px;
+  }
+  .top-actions {
+    margin-left: auto;
   }
   .top-actions .desktop-logout {
     display: none;
