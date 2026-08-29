@@ -23,6 +23,7 @@ import {
   TeamOutlined,
   UnorderedListOutlined,
   UserOutlined,
+  WalletOutlined,
 } from "@ant-design/icons";
 import { Brand } from "./Brand";
 import { useSession } from "./SessionProvider";
@@ -239,6 +240,20 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
         >
           <PieChartOutlined />
           <span>Personal</span>
+        </Link>
+        <Link
+          className={path === "/activity" ? "nav-item active" : "nav-item"}
+          href="/activity"
+        >
+          <UnorderedListOutlined />
+          <span>Activity</span>
+        </Link>
+        <Link
+          className={path === "/settings" ? "nav-item active" : "nav-item"}
+          href="/settings"
+        >
+          <WalletOutlined />
+          <span>Settings</span>
         </Link>
       </nav>
     </div>
