@@ -14,7 +14,7 @@ import {
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { AppShell } from "../../components/AppShell";
-import { ErrorState, Panel, PanelTitle } from "../../components/UI";
+import { Panel, PanelTitle } from "../../components/UI";
 import { useSession } from "../../components/SessionProvider";
 import { apiDownload, apiFetch } from "../../lib/api";
 import { initials } from "../../lib/types";

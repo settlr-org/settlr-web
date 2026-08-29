@@ -1,3 +1,7 @@
+import type { User } from "./types";
+
+export type { User };
+
 const API_URL = "/api-proxy";
 export type Session = {
   access_token: string;
@@ -9,14 +13,6 @@ export type RegistrationResult = {
   email: string;
   verification_required: true;
   verification_token?: string;
-};
-export type User = {
-  id: string;
-  name: string;
-  email: string;
-  avatar_url?: string;
-  default_currency?: string;
-  email_verified?: boolean;
 };
 const ACCESS_KEY = "settlr_access_token";
 const REFRESH_KEY = "settlr_refresh_token";
