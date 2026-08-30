@@ -9,7 +9,6 @@ import {
 
 const session = {
   access_token: "access-token",
-  refresh_token: "refresh-token",
 };
 
 function memoryStorage(): Storage {
@@ -61,31 +60,28 @@ describe("authentication", () => {
     });
   });
 
-  it("uses session storage when keep-signed-in is off", async () => {
+  it("keeps the bearer token in memory and only a non-secret marker in session storage", async () => {
     await authenticate("login", {
       email: "person@example.com",
       password: "correct-horse-battery-staple",
       remember: false,
     });
 
-    expect(window.sessionStorage.getItem("settlr_access_token")).toBe(
-      "access-token",
-    );
-    expect(window.localStorage.getItem("settlr_access_token")).toBeNull();
+    expect(window.sessionStorage.getItem("settlr_session")).toBe("1");
+    expect(window.localStorage.getItem("settlr_session")).toBeNull();
+    expect(window.localStorage.getItem("settlr_refresh_token")).toBeNull();
     expect(hasSession()).toBe(true);
   });
 
-  it("uses durable storage when keep-signed-in is on", async () => {
+  it("uses a durable non-secret marker when keep-signed-in is on", async () => {
     await authenticate("login", {
       email: "person@example.com",
       password: "correct-horse-battery-staple",
       remember: true,
     });
 
-    expect(window.localStorage.getItem("settlr_access_token")).toBe(
-      "access-token",
-    );
-    expect(window.sessionStorage.getItem("settlr_access_token")).toBeNull();
+    expect(window.localStorage.getItem("settlr_session")).toBe("1");
+    expect(window.sessionStorage.getItem("settlr_session")).toBeNull();
   });
 
   it("keeps a newly registered account signed out until email verification", async () => {

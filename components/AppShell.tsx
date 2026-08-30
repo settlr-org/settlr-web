@@ -14,7 +14,6 @@ import {
   BellOutlined,
   HomeOutlined,
   LogoutOutlined,
-  MenuOutlined,
   MoonOutlined,
   PieChartOutlined,
   PlusOutlined,
@@ -84,7 +83,6 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
   const { user, loading, signOut } = useSession();
   const router = useRouter();
   const path = usePathname();
-  const [menu, setMenu] = useState(false);
   const [config, setConfig] = useState<ShellConfig>({
     title: "Workspace",
     eyebrow: "SETTLR",
@@ -97,14 +95,6 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
     if (workspace && !loading && !user)
       router.replace(`/login?next=${encodeURIComponent(path)}`);
   }, [workspace, loading, user, router, path]);
-  useEffect(() => {
-    if (!menu) return;
-    const closeMenu = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMenu(false);
-    };
-    document.addEventListener("keydown", closeMenu);
-    return () => document.removeEventListener("keydown", closeMenu);
-  }, [menu]);
   const toggleTheme = () => {
     const next =
       document.documentElement.dataset.theme === "dark" ? "light" : "dark";
@@ -125,17 +115,7 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
   };
   return (
     <div className="app-shell">
-      <aside className={menu ? "sidebar open" : "sidebar"}>
-        <div className="sidebar-mobile-head">
-          <Brand />
-          <button
-            className="icon-button"
-            onClick={() => setMenu(false)}
-            aria-label="Close navigation menu"
-          >
-            <MenuOutlined />
-          </button>
-        </div>
+      <aside className="sidebar">
         <Brand />
         <p className="brand-tagline">Shared money, made clear.</p>
         <nav aria-label="Primary navigation">
@@ -143,7 +123,6 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
             <Link
               key={item.href}
               href={item.href}
-              onClick={() => setMenu(false)}
               className={
                 path.startsWith(item.href) ? "nav-item active" : "nav-item"
               }
@@ -187,22 +166,8 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
           <SettingOutlined />
         </button>
       </aside>
-      {menu && (
-        <button
-          className="sidebar-scrim"
-          aria-label="Close menu"
-          onClick={() => setMenu(false)}
-        />
-      )}
       <main className="content">
         <header className="topbar">
-          <button
-            className="mobile-menu"
-            onClick={() => setMenu(true)}
-            aria-label="Open menu"
-          >
-            <MenuOutlined />
-          </button>
           <div className="page-heading">
             <p className="eyebrow">{config.eyebrow}</p>
             <h1>{config.title}</h1>
@@ -270,6 +235,13 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
           <PlusOutlined />
         </Link>
         <Link
+          className={path === "/personal" ? "nav-item active" : "nav-item"}
+          href="/personal"
+        >
+          <PieChartOutlined />
+          <span>Personal</span>
+        </Link>
+        <Link
           className={path === "/activity" ? "nav-item active" : "nav-item"}
           href="/activity"
         >
@@ -281,7 +253,7 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
           href="/settings"
         >
           <WalletOutlined />
-          <span>Account</span>
+          <span>Settings</span>
         </Link>
       </nav>
     </div>

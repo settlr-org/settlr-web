@@ -65,6 +65,9 @@ export default function Groups() {
         method: "PATCH",
         body: JSON.stringify({ group_type: data.get("group_type") }),
       });
+      const url = new URL(location.href);
+      url.searchParams.delete("create");
+      window.history.replaceState(null, "", `${url.pathname}${url.search}`);
       setShow(false);
       await load();
     } catch (x) {

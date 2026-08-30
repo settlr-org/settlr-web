@@ -5,7 +5,6 @@ export type { User };
 const API_URL = "/api-proxy";
 export type Session = {
   access_token: string;
-  refresh_token: string;
   user?: User;
 };
 export type RegistrationResult = {
@@ -14,8 +13,8 @@ export type RegistrationResult = {
   verification_required: true;
   verification_token?: string;
 };
-const ACCESS_KEY = "settlr_access_token";
-const REFRESH_KEY = "settlr_refresh_token";
+const SESSION_KEY = "settlr_session";
+let accessToken: string | null = null;
 const GET_CACHE_MS = 60_000;
 type CacheEntry = {
   expiresAt: number;
@@ -27,9 +26,6 @@ const requestCache = new Map<string, CacheEntry>();
 export const readApiCache = <T>(path: string) =>
   requestCache.get(path)?.value as T | undefined;
 export const clearApiCache = () => requestCache.clear();
-
-const readToken = (key: string) =>
-  window.localStorage.getItem(key) ?? window.sessionStorage.getItem(key);
 
 export class ApiError extends Error {
   constructor(
@@ -70,19 +66,24 @@ async function fetchWithTimeout(
 }
 export const hasSession = () =>
   typeof window !== "undefined" &&
-  Boolean(readToken(REFRESH_KEY) || readToken(ACCESS_KEY));
+  Boolean(
+    accessToken ||
+    window.localStorage.getItem(SESSION_KEY) ||
+    window.sessionStorage.getItem(SESSION_KEY),
+  );
 export const clearSession = () => {
   clearApiCache();
-  window.localStorage.removeItem(ACCESS_KEY);
-  window.localStorage.removeItem(REFRESH_KEY);
-  window.sessionStorage.removeItem(ACCESS_KEY);
-  window.sessionStorage.removeItem(REFRESH_KEY);
+  accessToken = null;
+  window.localStorage.removeItem(SESSION_KEY);
+  window.sessionStorage.removeItem(SESSION_KEY);
 };
 export const saveSession = (session: Session, remember = true) => {
   clearSession();
   const storage = remember ? window.localStorage : window.sessionStorage;
-  storage.setItem(ACCESS_KEY, session.access_token);
-  storage.setItem(REFRESH_KEY, session.refresh_token);
+  accessToken = session.access_token;
+  // This marker is not a credential. It lets a reload attempt a cookie-backed
+  // refresh before deciding the user has been signed out.
+  storage.setItem(SESSION_KEY, "1");
 };
 
 async function parseError(response: Response) {
@@ -97,19 +98,16 @@ async function parseError(response: Response) {
 }
 
 async function refreshAccessToken() {
-  const refreshToken = readToken(REFRESH_KEY);
-  if (!refreshToken) return null;
   const response = await fetchWithTimeout(`${API_URL}/api/v1/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ refresh_token: refreshToken }),
   });
   if (!response.ok) {
     clearSession();
     return null;
   }
   const session = (await response.json()) as Session;
-  saveSession(session, Boolean(window.localStorage.getItem(REFRESH_KEY)));
+  accessToken = session.access_token;
   return session.access_token;
 }
 
@@ -159,7 +157,7 @@ async function performRequest<T>(
     !headers.has("Content-Type")
   )
     headers.set("Content-Type", "application/json");
-  const token = typeof window === "undefined" ? null : readToken(ACCESS_KEY);
+  const token = typeof window === "undefined" ? null : accessToken;
   if (token) headers.set("Authorization", `Bearer ${token}`);
   const response = await fetchWithTimeout(`${API_URL}${path}`, {
     ...init,
@@ -191,9 +189,13 @@ export async function authenticate(
     mode === "register"
       ? { name: input.name, email: input.email, password: input.password }
       : { email: input.email, password: input.password };
+  const headers =
+    mode === "login"
+      ? { "X-Settlr-Session": input.remember ? "persistent" : "session" }
+      : undefined;
   const result = await apiFetch<Session | RegistrationResult>(
     `/api/v1/auth/${mode}`,
-    { method: "POST", body: JSON.stringify(body) },
+    { method: "POST", headers, body: JSON.stringify(body) },
     false,
   );
   if (mode === "login") saveSession(result as Session, Boolean(input.remember));
@@ -201,13 +203,8 @@ export async function authenticate(
 }
 
 export async function logout() {
-  const refreshToken = readToken(REFRESH_KEY);
   try {
-    await apiFetch(
-      "/api/v1/auth/logout",
-      { method: "POST", body: JSON.stringify({ refresh_token: refreshToken }) },
-      false,
-    );
+    await apiFetch("/api/v1/auth/logout", { method: "POST" }, false);
   } finally {
     clearSession();
   }
@@ -215,11 +212,11 @@ export async function logout() {
 
 export async function apiDownload(path: string, filename: string) {
   const headers = new Headers({ Accept: "text/csv" });
-  const token = readToken(ACCESS_KEY);
+  const token = accessToken;
   if (token) headers.set("Authorization", `Bearer ${token}`);
   let response = await fetchWithTimeout(`${API_URL}${path}`, { headers });
   if (response.status === 401 && (await refreshAccessToken())) {
-    const refreshed = readToken(ACCESS_KEY);
+    const refreshed = accessToken;
     if (refreshed) headers.set("Authorization", `Bearer ${refreshed}`);
     response = await fetchWithTimeout(`${API_URL}${path}`, { headers });
   }
