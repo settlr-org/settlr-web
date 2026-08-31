@@ -1,5 +1,6 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   BarChartOutlined,
   DownloadOutlined,
@@ -28,12 +29,15 @@ type Stats = {
 };
 type Budget = { month: string; amount: number; currency: string };
 export default function Personal() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [expenses, setExpenses] = useState<PersonalExpense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [stats, setStats] = useState<Stats>();
   const [budget, setBudget] = useState<Budget>();
   const [show, setShow] = useState(false);
   const [editing, setEditing] = useState<PersonalExpense>();
+  const [deleting, setDeleting] = useState<PersonalExpense>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const month = new Date().toISOString().slice(0, 7);
@@ -60,6 +64,12 @@ export default function Personal() {
   useEffect(() => {
     void load();
   }, [load]);
+  useEffect(() => {
+    if (searchParams.get("new") !== "1") return;
+    setEditing(undefined);
+    setShow(true);
+    router.replace("/personal");
+  }, [router, searchParams]);
   const create = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const d = new FormData(e.currentTarget);
@@ -108,12 +118,13 @@ export default function Personal() {
       setError(x instanceof Error ? x.message : "Could not create category.");
     }
   };
-  const removeExpense = async (expense: PersonalExpense) => {
-    if (!confirm(`Delete “${expense.description}”?`)) return;
+  const removeExpense = async () => {
+    if (!deleting) return;
     try {
-      await apiFetch(`/api/v1/personal/expenses/${expense.id}`, {
+      await apiFetch(`/api/v1/personal/expenses/${deleting.id}`, {
         method: "DELETE",
       });
+      setDeleting(undefined);
       await load();
     } catch (x) {
       setError(x instanceof Error ? x.message : "Could not delete expense.");
@@ -230,7 +241,7 @@ export default function Personal() {
                   <button
                     className="row-action"
                     aria-label={`Delete ${e.description}`}
-                    onClick={() => void removeExpense(e)}
+                    onClick={() => setDeleting(e)}
                   >
                     <DeleteOutlined />
                   </button>
@@ -348,6 +359,28 @@ export default function Personal() {
               {editing ? "Save changes" : "Save personal expense"}
             </button>
           </form>
+        </Modal>
+      )}
+      {deleting && (
+        <Modal
+          title="Delete personal expense?"
+          subtitle={`“${deleting.description}” will be permanently removed from your private ledger.`}
+          onClose={() => setDeleting(undefined)}
+        >
+          <div className="modal-actions">
+            <button
+              className="button full"
+              onClick={() => setDeleting(undefined)}
+            >
+              Keep expense
+            </button>
+            <button
+              className="button danger full"
+              onClick={() => void removeExpense()}
+            >
+              <DeleteOutlined /> Delete expense
+            </button>
+          </div>
         </Modal>
       )}
     </AppShell>
