@@ -14,7 +14,7 @@ import {
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { AppShell } from "../../components/AppShell";
-import { Panel, PanelTitle } from "../../components/UI";
+import { Panel, PanelTitle, useConfirmation } from "../../components/UI";
 import { useSession } from "../../components/SessionProvider";
 import { apiDownload, apiFetch } from "../../lib/api";
 import { initials } from "../../lib/types";
@@ -40,6 +40,7 @@ type Payment = {
   payment_handle: string;
 };
 export default function Settings() {
+  const requestConfirmation = useConfirmation();
   const { user, refresh, signOut } = useSession();
   const router = useRouter();
   const [prefs, setPrefs] = useState<Prefs>();
@@ -148,7 +149,16 @@ export default function Settings() {
     }
   };
   const revoke = async (id?: string) => {
-    if (!confirm(id ? "Revoke this session?" : "Sign out every device?"))
+    if (
+      !(await requestConfirmation({
+        title: id ? "Revoke this session?" : "Sign out every device?",
+        description: id
+          ? "This device will need to sign in again."
+          : "Every active session, including this one, will be signed out.",
+        confirmLabel: id ? "Revoke session" : "Sign out everywhere",
+        danger: true,
+      }))
+    )
       return;
     try {
       await apiFetch(
@@ -166,9 +176,13 @@ export default function Settings() {
   };
   const deleteAccount = async () => {
     if (
-      !confirm(
-        "Delete your account? Your identity will be anonymized and this cannot be undone.",
-      )
+      !(await requestConfirmation({
+        title: "Delete your account?",
+        description:
+          "Your identity will be anonymized and this cannot be undone.",
+        confirmLabel: "Delete account",
+        danger: true,
+      }))
     )
       return;
     try {

@@ -21,6 +21,7 @@ import {
   Modal,
   Panel,
   PanelTitle,
+  useConfirmation,
 } from "../../../components/UI";
 import { apiFetch } from "../../../lib/api";
 import {
@@ -47,6 +48,7 @@ type Settlement = {
 };
 type Tab = "expenses" | "balances" | "members" | "settlements";
 export default function GroupDetail() {
+  const requestConfirmation = useConfirmation();
   const { id } = useParams<{ id: string }>();
   const { user } = useSession();
   const [group, setGroup] = useState<Group>();
@@ -103,7 +105,12 @@ export default function GroupDetail() {
   );
   const removeExpense = async (expense: Expense) => {
     if (
-      !window.confirm(`Delete “${expense.description}”? This cannot be undone.`)
+      !(await requestConfirmation({
+        title: "Delete expense?",
+        description: `“${expense.description}” will be permanently removed.`,
+        confirmLabel: "Delete expense",
+        danger: true,
+      }))
     )
       return;
     try {
@@ -380,12 +387,22 @@ export default function GroupDetail() {
               <button
                 className="row-action"
                 aria-label={`Delete settlement ${money(s.amount, s.currency)}`}
-                onClick={() =>
-                  confirm("Delete this settlement?") &&
-                  void apiFetch(`/api/v1/settlements/${s.id}`, {
+                onClick={async () => {
+                  if (
+                    !(await requestConfirmation({
+                      title: "Delete settlement?",
+                      description:
+                        "This settlement will be permanently removed.",
+                      confirmLabel: "Delete settlement",
+                      danger: true,
+                    }))
+                  )
+                    return;
+                  await apiFetch(`/api/v1/settlements/${s.id}`, {
                     method: "DELETE",
-                  }).then(load)
-                }
+                  });
+                  await load();
+                }}
               >
                 <DeleteOutlined />
               </button>
