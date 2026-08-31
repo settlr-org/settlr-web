@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { SessionProvider } from "../components/SessionProvider";
 import { WorkspaceLayout } from "../components/AppShell";
+import { GoogleOAuthProvider } from "../components/GoogleOAuthProvider";
 
 export const metadata: Metadata = {
   title: "Settlr | Shared money, settled clearly",
@@ -22,9 +23,11 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <SessionProvider>
-          <WorkspaceLayout>{children}</WorkspaceLayout>
-        </SessionProvider>
+        <GoogleOAuthProvider>
+          <SessionProvider>
+            <WorkspaceLayout>{children}</WorkspaceLayout>
+          </SessionProvider>
+        </GoogleOAuthProvider>
       </body>
     </html>
   );

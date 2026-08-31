@@ -13,8 +13,9 @@ import {
 import { Brand } from "./Brand";
 import { useSession } from "./SessionProvider";
 import { apiFetch, ApiError, RegistrationResult } from "../lib/api";
+import { GoogleSignInButton } from "./GoogleSignInButton";
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
-  const { user, signIn } = useSession();
+  const { user, signIn, signInWithGoogle } = useSession();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -58,6 +59,29 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         x instanceof Error
           ? x.message
           : "We could not authenticate this account.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+  const googleSignIn = async (idToken: string) => {
+    submitting.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      await signInWithGoogle(idToken);
+      const requested = new URLSearchParams(location.search).get("next");
+      router.replace(
+        requested?.startsWith("/") && !requested.startsWith("//")
+          ? requested
+          : "/overview",
+      );
+    } catch (x) {
+      submitting.current = false;
+      setError(
+        x instanceof Error
+          ? x.message
+          : "Google sign-in could not be completed.",
       );
     } finally {
       setBusy(false);
@@ -155,6 +179,16 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
                 ? "Your groups and balances are waiting."
                 : "Start a shared ledger in less than a minute."}
             </p>
+            <GoogleSignInButton
+              disabled={busy}
+              onToken={(token) => void googleSignIn(token)}
+              onError={setError}
+            />
+            {process.env.NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID && (
+              <div className="auth-divider">
+                <span>or continue with email</span>
+              </div>
+            )}
             {mode === "register" && (
               <label>
                 <span>Your name</span>

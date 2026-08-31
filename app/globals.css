@@ -1589,6 +1589,30 @@ textarea {
 .auth-submit {
   height: 49px;
 }
+.google-signin {
+  display: flex;
+  justify-content: center;
+  margin: 16px 0 12px;
+}
+.google-signin.disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 10px;
+  margin: 4px 0 13px;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--line);
+}
 .auth-switch {
   text-align: center;
   font-size: 10px;

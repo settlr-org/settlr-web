@@ -202,6 +202,23 @@ export async function authenticate(
   return result;
 }
 
+export async function authenticateWithGoogle(
+  idToken: string,
+  remember = true,
+): Promise<Session> {
+  const result = await apiFetch<Session>(
+    "/api/v1/auth/google",
+    {
+      method: "POST",
+      headers: { "X-Settlr-Session": remember ? "persistent" : "session" },
+      body: JSON.stringify({ id_token: idToken }),
+    },
+    false,
+  );
+  saveSession(result, remember);
+  return result;
+}
+
 export async function logout() {
   try {
     await apiFetch("/api/v1/auth/logout", { method: "POST" }, false);
