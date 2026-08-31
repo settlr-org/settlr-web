@@ -1,0 +1,16 @@
+node_modules/
+.next/
+out/
+.env*
+!.env.example
+!.env.development.example
+!.env.staging.example
+!.env.production.example
+coverage/
+.playwright-cli/
+tsconfig.tsbuildinfo
+AGENTS.md
+CLAUDE.md
+.vercel
+.tmp-test/
+qa-artifacts/

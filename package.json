@@ -1,0 +1,34 @@
+{
+  "name": "settlr-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "prettier --check \"{app,components,lib,test}/**/*.{ts,tsx,css}\" \"*.{ts,js,json}\"",
+    "format": "prettier --write \"{app,components,lib,test}/**/*.{ts,tsx,css}\" \"*.{ts,js,json}\"",
+    "format:check": "npm run lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^6.3.2",
+    "@react-oauth/google": "^0.13.5",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "latest",
+    "@testing-library/react": "latest",
+    "@testing-library/user-event": "latest",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "jsdom": "latest",
+    "prettier": "^3.9.6",
+    "typescript": "latest",
+    "vitest": "latest"
+  }
+}
