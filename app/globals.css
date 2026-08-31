@@ -1166,7 +1166,7 @@ textarea {
 .sidebar-scrim {
   display: none;
 }
-.quick-card > a {
+.quick-card > :is(a, button) {
   border: 0;
   background: var(--paper-2);
   border-radius: 13px;
@@ -1180,8 +1180,10 @@ textarea {
   grid-template-areas:
     "icon title"
     "icon meta";
+  cursor: pointer;
+  font: inherit;
 }
-.quick-card > a > .anticon {
+.quick-card > :is(a, button) > .anticon {
   grid-area: icon;
   width: 34px;
   height: 34px;
@@ -1193,14 +1195,14 @@ textarea {
   color: var(--brand);
   font-size: 17px;
 }
-.quick-card > a > .anticon svg {
+.quick-card > :is(a, button) > .anticon svg {
   width: 17px;
   height: 17px;
 }
-.quick-card > a b {
+.quick-card > :is(a, button) b {
   grid-area: title;
 }
-.quick-card > a > span:not(.anticon) {
+.quick-card > :is(a, button) > span:not(.anticon) {
   grid-area: meta;
   font-size: 9px;
   color: var(--muted);
@@ -2503,7 +2505,7 @@ legend {
   .mini-search {
     display: none;
   }
-  .quick-card > a {
+  .quick-card > :is(a, button) {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -2511,7 +2513,7 @@ legend {
     text-align: center;
     gap: 6px;
   }
-  .quick-card > a > span:not(.anticon) {
+  .quick-card > :is(a, button) > span:not(.anticon) {
     display: none;
   }
 }
