@@ -26,6 +26,7 @@ import {
   WalletOutlined,
 } from "@ant-design/icons";
 import { Brand } from "./Brand";
+import { Modal } from "./UI";
 import { useSession } from "./SessionProvider";
 import { initials } from "../lib/types";
 const navigation = [
@@ -88,6 +89,7 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
     eyebrow: "SETTLR",
     description: "Shared money, made clear.",
   });
+  const [addOpen, setAddOpen] = useState(false);
   const workspace = workspacePrefixes.some(
     (prefix) => path === prefix || path.startsWith(`${prefix}/`),
   );
@@ -231,9 +233,14 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
           <UserOutlined />
           <span>Friends</span>
         </Link>
-        <Link className="mobile-add" href="/groups" aria-label="Add expense">
+        <button
+          className="mobile-add"
+          type="button"
+          onClick={() => setAddOpen(true)}
+          aria-label="Add expense"
+        >
           <PlusOutlined />
-        </Link>
+        </button>
         <Link
           className={path === "/personal" ? "nav-item active" : "nav-item"}
           href="/personal"
@@ -256,6 +263,34 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
           <span>Settings</span>
         </Link>
       </nav>
+      {addOpen && (
+        <Modal
+          title="Add an expense"
+          subtitle="Choose where this expense belongs."
+          onClose={() => setAddOpen(false)}
+        >
+          <div className="modal-actions">
+            <button
+              className="button primary full"
+              onClick={() => {
+                setAddOpen(false);
+                router.push("/groups");
+              }}
+            >
+              <TeamOutlined /> Shared expense
+            </button>
+            <button
+              className="button full"
+              onClick={() => {
+                setAddOpen(false);
+                router.push("/personal?new=1");
+              }}
+            >
+              <WalletOutlined /> Personal expense
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
