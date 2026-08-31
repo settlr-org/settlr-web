@@ -11,7 +11,7 @@ import {
   PanelTitle,
 } from "../../components/UI";
 import { apiFetch } from "../../lib/api";
-import { Group } from "../../lib/types";
+import { Friend, Group } from "../../lib/types";
 
 type Invite = {
   id: string;
@@ -23,6 +23,7 @@ type Invite = {
 
 export default function Invitations() {
   const [groups, setGroups] = useState<Group[]>([]);
+  const [friends, setFriends] = useState<Friend[]>([]);
   const [received, setReceived] = useState<Invite[]>([]);
   const [groupId, setGroupId] = useState("");
   const [sent, setSent] = useState("");
@@ -30,11 +31,13 @@ export default function Invitations() {
   const [loading, setLoading] = useState(true);
   const load = useCallback(async () => {
     try {
-      const [g, i] = await Promise.all([
+      const [g, f, i] = await Promise.all([
         apiFetch<{ data: Group[] }>("/api/v1/groups"),
+        apiFetch<{ data: Friend[] }>("/api/v1/friends"),
         apiFetch<{ data: Invite[] }>("/api/v1/invites"),
       ]);
       setGroups(g.data);
+      setFriends(f.data);
       setGroupId((current) => current || g.data[0]?.id || "");
       setReceived(i.data);
     } catch (x) {
@@ -46,16 +49,17 @@ export default function Invitations() {
   useEffect(() => void load(), [load]);
   const invite = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const form = event.currentTarget;
-    const email = String(new FormData(form).get("email") || "");
+    const friendId = String(
+      new FormData(event.currentTarget).get("friend_id") || "",
+    );
+    const friend = friends.find((item) => item.user_id === friendId);
     setError("");
     try {
       await apiFetch(`/api/v1/groups/${groupId}/invites`, {
         method: "POST",
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ user_id: friendId }),
       });
-      setSent(`Invitation sent to ${email}.`);
-      form.reset();
+      setSent(`Invitation sent to ${friend?.name || "your friend"}.`);
     } catch (x) {
       setError(x instanceof Error ? x.message : "Could not send invitation.");
     }
@@ -64,7 +68,7 @@ export default function Invitations() {
     <AppShell
       title="Invitations"
       eyebrow="BRING PEOPLE IN"
-      description="Invite anyone by email and keep pending group invitations together."
+      description="Invite accepted friends and keep pending group invitations together."
     >
       {loading ? (
         <Loading />
@@ -72,8 +76,8 @@ export default function Invitations() {
         <div className="two-column">
           <Panel>
             <PanelTitle
-              title="Invite by email"
-              meta="They will receive a secure link that expires in seven days"
+              title="Invite a friend"
+              meta="Accepted friends receive a secure link that expires in seven days"
             />
             {error && <ErrorState message={error} retry={load} />}
             {sent && (
@@ -96,18 +100,33 @@ export default function Invitations() {
                     ))}
                   </select>
                 </label>
-                <label>
-                  Email address
-                  <input
-                    name="email"
-                    type="email"
-                    required
-                    placeholder="friend@example.com"
+                {friends.length ? (
+                  <>
+                    <label>
+                      Friend
+                      <select name="friend_id" required>
+                        {friends.map((friend) => (
+                          <option key={friend.user_id} value={friend.user_id}>
+                            {friend.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <button className="button primary">
+                      <SendOutlined /> Send invitation
+                    </button>
+                  </>
+                ) : (
+                  <Empty
+                    icon={<TeamOutlined />}
+                    text="Add a friend before sending a group invitation."
+                    action={
+                      <Link className="button" href="/friends">
+                        Go to friends
+                      </Link>
+                    }
                   />
-                </label>
-                <button className="button primary">
-                  <SendOutlined /> Send invitation
-                </button>
+                )}
               </form>
             ) : (
               <Empty

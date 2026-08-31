@@ -23,9 +23,17 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const [unverifiedEmail, setUnverifiedEmail] = useState("");
   const [resent, setResent] = useState(false);
   const submitting = useRef(false);
+  const requested =
+    typeof window === "undefined"
+      ? null
+      : new URLSearchParams(location.search).get("next");
+  const next =
+    requested?.startsWith("/") && !requested.startsWith("//")
+      ? requested
+      : "/overview";
   useEffect(() => {
-    if (user && !submitting.current) router.replace("/overview");
-  }, [user, router]);
+    if (user && !submitting.current) router.replace(next);
+  }, [next, user, router]);
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
@@ -43,14 +51,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         setRegistration(result);
         return;
       }
-      const requested = new URLSearchParams(location.search).get("next");
-      const destination =
-        mode === "login" &&
-        requested?.startsWith("/") &&
-        !requested.startsWith("//")
-          ? requested
-          : "/overview";
-      router.replace(destination);
+      router.replace(next);
     } catch (x) {
       submitting.current = false;
       if (mode === "login" && x instanceof ApiError && x.status === 403)
@@ -70,12 +71,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     setError("");
     try {
       await signInWithGoogle(idToken);
-      const requested = new URLSearchParams(location.search).get("next");
-      router.replace(
-        requested?.startsWith("/") && !requested.startsWith("//")
-          ? requested
-          : "/overview",
-      );
+      router.replace(next);
     } catch (x) {
       submitting.current = false;
       setError(
@@ -149,7 +145,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
               {registration.verification_token && (
                 <Link
                   className="button primary"
-                  href={`/verify-email?token=${registration.verification_token}`}
+                  href={`/verify-email?token=${registration.verification_token}&next=${encodeURIComponent(next)}`}
                 >
                   Verify in this browser <ArrowRightOutlined />
                 </Link>
@@ -163,7 +159,10 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
               </button>
             </div>
             <p className="auth-switch">
-              Already verified? <Link href="/login">Sign in</Link>
+              Already verified?{" "}
+              <Link href={`/login?next=${encodeURIComponent(next)}`}>
+                Sign in
+              </Link>
             </p>
           </div>
         ) : (
@@ -269,11 +268,17 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
             <p className="auth-switch">
               {mode === "login" ? (
                 <>
-                  New to Settlr? <Link href="/register">Create an account</Link>
+                  New to Settlr?{" "}
+                  <Link href={`/register?next=${encodeURIComponent(next)}`}>
+                    Create an account
+                  </Link>
                 </>
               ) : (
                 <>
-                  Already registered? <Link href="/login">Sign in</Link>
+                  Already registered?{" "}
+                  <Link href={`/login?next=${encodeURIComponent(next)}`}>
+                    Sign in
+                  </Link>
                 </>
               )}
             </p>

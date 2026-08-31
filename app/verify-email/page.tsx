@@ -8,6 +8,14 @@ export default function VerifyEmail() {
   const [state, setState] = useState<"loading" | "done" | "error">("loading");
   const [message, setMessage] = useState("Verifying your email address…");
   const hasVerified = useRef(false);
+  const next =
+    typeof window === "undefined"
+      ? null
+      : new URLSearchParams(location.search).get("next");
+  const loginHref =
+    next?.startsWith("/") && !next.startsWith("//")
+      ? `/login?next=${encodeURIComponent(next)}`
+      : "/login";
   useEffect(() => {
     if (hasVerified.current) return;
     hasVerified.current = true;
@@ -51,7 +59,7 @@ export default function VerifyEmail() {
               : "We could not verify this link"}
         </h2>
         <p>{message}</p>
-        <Link className="button primary auth-submit" href="/login">
+        <Link className="button primary auth-submit" href={loginHref}>
           {state === "done" ? "Sign in" : "Back to sign in"}
         </Link>
       </section>

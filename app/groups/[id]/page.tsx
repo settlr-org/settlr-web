@@ -27,6 +27,7 @@ import { apiFetch } from "../../../lib/api";
 import {
   Debt,
   Expense,
+  Friend,
   Group,
   Member,
   money,
@@ -53,6 +54,7 @@ export default function GroupDetail() {
   const { user } = useSession();
   const [group, setGroup] = useState<Group>();
   const [members, setMembers] = useState<Member[]>([]);
+  const [friends, setFriends] = useState<Friend[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [balances, setBalances] = useState<GroupBalances>();
   const [debts, setDebts] = useState<Debt[]>([]);
@@ -69,9 +71,10 @@ export default function GroupDetail() {
     setLoading(true);
     setError("");
     try {
-      const [g, m, e, b, d, s] = await Promise.all([
+      const [g, m, f, e, b, d, s] = await Promise.all([
         apiFetch<Group>(`/api/v1/groups/${id}`),
         apiFetch<{ data: Member[] }>(`/api/v1/groups/${id}/members`),
+        apiFetch<{ data: Friend[] }>("/api/v1/friends"),
         apiFetch<{ data: Expense[] }>(
           `/api/v1/groups/${id}/expenses?limit=100`,
         ),
@@ -83,6 +86,7 @@ export default function GroupDetail() {
       ]);
       setGroup(g);
       setMembers(m.data);
+      setFriends(f.data);
       setExpenses(e.data);
       setBalances(b);
       setDebts(d.data);
@@ -445,6 +449,8 @@ export default function GroupDetail() {
       {modal === "member" && (
         <MemberModal
           groupId={id}
+          friends={friends}
+          members={members}
           onClose={() => setModal(null)}
           onDone={() => {
             setModal(null);
@@ -764,10 +770,14 @@ function SettlementModal({
 }
 function MemberModal({
   groupId,
+  friends,
+  members,
   onClose,
   onDone,
 }: {
   groupId: string;
+  friends: Friend[];
+  members: Member[];
   onClose: () => void;
   onDone: () => void;
 }) {
@@ -778,7 +788,7 @@ function MemberModal({
     try {
       await apiFetch(`/api/v1/groups/${groupId}/members`, {
         method: "POST",
-        body: JSON.stringify({ email: d.get("email") }),
+        body: JSON.stringify({ user_id: d.get("friend_id") }),
       });
       onDone();
     } catch (x) {
@@ -788,18 +798,24 @@ function MemberModal({
   return (
     <Modal
       title="Add a group member"
-      subtitle="Invite an existing Settlr user by email."
+      subtitle="Choose one of your accepted friends to add to this group."
       onClose={onClose}
     >
       <form onSubmit={submit}>
         <label>
-          Email address
-          <input
-            name="email"
-            type="email"
-            required
-            placeholder="friend@example.com"
-          />
+          Friend
+          <select name="friend_id" required>
+            {friends
+              .filter(
+                (friend) =>
+                  !members.some((member) => member.id === friend.user_id),
+              )
+              .map((friend) => (
+                <option key={friend.user_id} value={friend.user_id}>
+                  {friend.name}
+                </option>
+              ))}
+          </select>
         </label>
         {error && <p className="form-error">{error}</p>}
         <button className="button primary full">
