@@ -1,6 +1,7 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowRightOutlined,
   DollarOutlined,
@@ -32,6 +33,8 @@ import {
 } from "../../lib/types";
 export default function Overview() {
   const { user } = useSession();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const cachedBalance = readApiCache<Balance>("/api/v1/me/balances");
   const cachedEvents = readApiCache<{ data: Event[] }>(
     "/api/v1/activity?limit=6",
@@ -90,6 +93,11 @@ export default function Overview() {
   useEffect(() => {
     void load();
   }, [load]);
+  useEffect(() => {
+    if (searchParams.get("add") !== "1") return;
+    setAddExpense(true);
+    router.replace("/overview");
+  }, [router, searchParams]);
   return (
     <AppShell
       title="Overview"
@@ -137,7 +145,6 @@ export default function Overview() {
               <button onClick={() => setAddExpense(true)}>
                 <PlusOutlined />
                 <b>Add expense</b>
-                <span>Record it without leaving overview</span>
               </button>
               <Link href="/groups">
                 <SwapOutlined />

@@ -26,7 +26,7 @@ import {
   WalletOutlined,
 } from "@ant-design/icons";
 import { Brand } from "./Brand";
-import { ConfirmationProvider, Modal } from "./UI";
+import { ConfirmationProvider } from "./UI";
 import { useSession } from "./SessionProvider";
 import { initials } from "../lib/types";
 const navigation = [
@@ -89,7 +89,6 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
     eyebrow: "SETTLR",
     description: "Shared money, made clear.",
   });
-  const [addOpen, setAddOpen] = useState(false);
   const workspace = workspacePrefixes.some(
     (prefix) => path === prefix || path.startsWith(`${prefix}/`),
   );
@@ -193,9 +192,12 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
                 <SunOutlined className="theme-icon theme-icon-dark" />
               </button>
               {config.actions ?? (
-                <Link className="button primary" href="/groups">
+                <button
+                  className="button primary"
+                  onClick={() => router.push("/overview?add=1")}
+                >
                   <PlusOutlined /> Add expense
-                </Link>
+                </button>
               )}
               <button
                 className="icon-button desktop-logout"
@@ -237,7 +239,7 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
           <button
             className="mobile-add"
             type="button"
-            onClick={() => setAddOpen(true)}
+            onClick={() => router.push("/overview?add=1")}
             aria-label="Add expense"
           >
             <PlusOutlined />
@@ -264,34 +266,6 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
             <span>Settings</span>
           </Link>
         </nav>
-        {addOpen && (
-          <Modal
-            title="Add an expense"
-            subtitle="Choose where this expense belongs."
-            onClose={() => setAddOpen(false)}
-          >
-            <div className="modal-actions">
-              <button
-                className="button primary full"
-                onClick={() => {
-                  setAddOpen(false);
-                  router.push("/groups");
-                }}
-              >
-                <TeamOutlined /> Shared expense
-              </button>
-              <button
-                className="button full"
-                onClick={() => {
-                  setAddOpen(false);
-                  router.push("/personal?new=1");
-                }}
-              >
-                <WalletOutlined /> Personal expense
-              </button>
-            </div>
-          </Modal>
-        )}
       </div>
     </ConfirmationProvider>
   );
