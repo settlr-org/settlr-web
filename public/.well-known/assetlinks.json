@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.settlr.app",
+      "sha256_cert_fingerprints": [
+        "0F:1A:05:43:56:DD:F8:43:D9:9F:17:69:63:F6:E8:FB:C5:C7:CE:87:45:DF:38:DF:F2:33:10:81:6F:51:50:28"
+      ]
+    }
+  }
+]
