@@ -91,12 +91,17 @@ export default function Settings() {
       await apiFetch("/api/v1/me/password", {
         method: "PATCH",
         body: JSON.stringify({
-          current_password: d.get("current_password"),
+          current_password: user?.has_password ? d.get("current_password") : "",
           new_password: d.get("new_password"),
         }),
       });
       form.reset();
-      setSaved("Password updated.");
+      await refresh();
+      setSaved(
+        user?.has_password
+          ? "Password updated."
+          : "Password set. You can now sign in with email and password too.",
+      );
     } catch (x) {
       setError(x instanceof Error ? x.message : "Could not update password.");
     }
@@ -280,15 +285,21 @@ export default function Settings() {
           <Panel>
             <span id="security" />
             <PanelTitle
-              title="Change password"
-              meta="Use at least eight characters"
+              title={user?.has_password ? "Change password" : "Set a password"}
+              meta={
+                user?.has_password
+                  ? "Use at least eight characters"
+                  : "Add email-and-password sign-in to your Google account"
+              }
             />
             <form onSubmit={password}>
               <div className="form-grid">
-                <label>
-                  Current password
-                  <input name="current_password" type="password" required />
-                </label>
+                {user?.has_password && (
+                  <label>
+                    Current password
+                    <input name="current_password" type="password" required />
+                  </label>
+                )}
                 <label>
                   New password
                   <input
@@ -299,7 +310,9 @@ export default function Settings() {
                   />
                 </label>
               </div>
-              <button className="button">Update password</button>
+              <button className="button">
+                {user?.has_password ? "Update password" : "Set password"}
+              </button>
             </form>
           </Panel>
           <Panel>

@@ -10,6 +10,7 @@ import {
 import {
   apiFetch,
   authenticate,
+  authenticateWithGoogle,
   clearSession,
   hasSession,
   logout,
@@ -31,6 +32,7 @@ type SessionValue = {
   ) => Promise<RegistrationResult | void>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
+  signInWithGoogle: (idToken: string) => Promise<void>;
 };
 const SessionContext = createContext<SessionValue | null>(null);
 export function SessionProvider({ children }: { children: ReactNode }) {
@@ -73,9 +75,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     await logout();
     setUser(null);
   };
+  const signInWithGoogle = async (idToken: string) => {
+    const session = await authenticateWithGoogle(idToken);
+    setUser(
+      (session.user as User | undefined) ??
+        (await apiFetch<User>("/api/v1/me")),
+    );
+  };
   return (
     <SessionContext.Provider
-      value={{ user, loading, signIn, signOut, refresh }}
+      value={{ user, loading, signIn, signInWithGoogle, signOut, refresh }}
     >
       {children}
     </SessionContext.Provider>

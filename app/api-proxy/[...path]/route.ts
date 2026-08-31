@@ -73,6 +73,7 @@ async function proxy(
   });
   const loginOrRefresh =
     path.join("/") === "api/v1/auth/login" ||
+    path.join("/") === "api/v1/auth/google" ||
     path.join("/") === "api/v1/auth/refresh";
   if (!loginOrRefresh) {
     const result = new NextResponse(response.body, {

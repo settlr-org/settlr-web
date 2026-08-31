@@ -6,6 +6,7 @@ export type User = {
   default_currency?: string;
   timezone?: string;
   email_verified?: boolean;
+  has_password?: boolean;
 };
 export type Balance = {
   summary: { you_are_owed: number; you_owe: number; net_balance: number };
