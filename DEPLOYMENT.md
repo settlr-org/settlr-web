@@ -61,7 +61,7 @@ fix/y  ──●─────┘
 | Action | Web (`settlr-web`) | API (`settlr-api`) | Mobile (`settlr-mobile`) |
 |--------|--------------------|--------------------|--------------------------|
 | `git push origin feat/x` (PR branch) | CI `verify` runs (audit, format, typecheck, test, build). **No deploy.** Fix failures before merge. | CI `verify` runs (gofmt, vet, vuln, race, build, docker). **No GHCR publish.** | CI `verify` runs (audit, format, typecheck, test, export:web). **No EAS Update.** |
-| `git push origin main` (merge to main) | CI `verify` → **Vercel auto-deploys** both `settlr` (prod) **and** `settlr-staging` (staging) via Git integration (watches `main`). Wait for `● Ready` in `vercel ls`. No manual `vercel deploy`. | CI `verify` → `publish-container` → GHCR `ghcr.io/nabinkhanal00/settlr-api:main` + `sha-<hash>` + `v*` tags. **No host deploy.** You must SSH & pull. | CI `verify` → `update-production` (needs `EXPO_TOKEN`, env `production`) → `eas update --channel production --auto`. OTA to users. Binary requires manual `eas build`. |
+| `git push origin main` (merge to main) | CI `verify` → **Vercel auto-deploys** both `settlr` (prod) **and** `settlr-staging` (staging) via Git integration (watches `main`). Wait for `● Ready` in `vercel ls`. No manual `vercel deploy`. | CI `verify` → `publish-container` → GHCR `ghcr.io/settlr-org/settlr-api:main` + `sha-<hash>` + `v*` tags. **No host deploy.** You must SSH & pull. | CI `verify` → `update-production` (needs `EXPO_TOKEN`, env `production`) → `eas update --channel production --auto`. OTA to users. Binary requires manual `eas build`. |
 | `git tag v1.2.0 && git push --tags` | — (web versioned via Vercel deployment ID, not tags) | Same as `main` plus tag `v1.2.0` + `sha` to GHCR. Use for prod pinning. | — |
 
 **Rule:**
@@ -77,7 +77,7 @@ fix/y  ──●─────┘
   - `curl https://settlr-staging.vercel.app/api-proxy/health` → `{"status":"ok"}`
   - Open staging web, login, smoke: `Overview → Groups → Friends → Activity`, create group/expense, dark toggle.
   - `docker compose -f docker-compose.yml -f docker-compose.staging.yml logs --tail 50 api` no errors.
-  - If any fails: **rollback web** via Vercel Dashboard → Deployments → previous `● Ready` → Promote; **rollback API** via `docker pull ghcr.io/nabinkhanal00/settlr-api:sha-<prev> && docker compose up -d`.
+  - If any fails: **rollback web** via Vercel Dashboard → Deployments → previous `● Ready` → Promote; **rollback API** via `docker pull ghcr.io/settlr-org/settlr-api:sha-<prev> && docker compose up -d`.
 - **Production gate:** Same as staging but against `https://api.settlr.theswissknife.com` + `https://settlr.theswissknife.com`. Only promote after staging has baked ≥30 min with no errors. Announce in `#deploys` if you have Slack.
 
 ---
@@ -172,7 +172,7 @@ Use `agent-browser` for UI: test `/` (landing), `/login`, `/register`, `/overvie
 ```
 GitHub push main
   ├─→ Vercel settlr-staging (settlr-staging.vercel.app) — builds with NEXT_PUBLIC_API_URL=https://settlrapi.theswissknife.com
-  └─→ GHCR ghcr.io/nabinkhanal00/settlr-api:main|sha-* (no auto-deploy)
+  └─→ GHCR ghcr.io/settlr-org/settlr-api:main|sha-* (no auto-deploy)
 
 Internet ──Cloudflare Worker──→ nginx :80/:8443 ──→ 127.0.0.1:18080 (api, staging)
 Tailscale Funnel https://arch.tailbd5522.ts.net:443 ──→ 127.0.0.1:8443 ──→ same nginx
@@ -181,7 +181,7 @@ Expo preview channel ──→ https://settlrapi.theswissknife.com
 
 - Host: this machine (`arch.tailbd5522.ts.net` via `tailscale funnel status`)
 - Env file: **never committed**, at `./.env` or `/etc/settlr/staging.env` (`600` perms). Template `.env.staging.example`.
-- Vercel project `settlr-staging` `prj_hyQYyzxJav7m9j3Dz7PSxPlbYDpw`, linked to `nabinkhanal00/settlr-web` `main`, env `NEXT_PUBLIC_API_URL` + `API_URL` = `https://settlrapi.theswissknife.com` for `production`+`preview`.
+- Vercel project `settlr-staging` `prj_hyQYyzxJav7m9j3Dz7PSxPlbYDpw`, linked to `settlr-org/settlr-web` `main`, env `NEXT_PUBLIC_API_URL` + `API_URL` = `https://settlrapi.theswissknife.com` for `production`+`preview`.
 
 ### 4.2 Deploying to Staging
 
@@ -202,11 +202,11 @@ cd settlr-web && vercel deploy --project settlr-staging --prod --yes
 # 2. SSH to host (this machine for staging, else ssh staging-host)
 cd /home/wizard/Dev/Projects/settlr/settlr-api
 # Pull pinned SHA (from Actions run, e.g. sha-23d2861)
-docker pull ghcr.io/nabinkhanal00/settlr-api:main
+docker pull ghcr.io/settlr-org/settlr-api:main
 # or pin:
-# docker pull ghcr.io/nabinkhanal00/settlr-api:sha-23d2861
+# docker pull ghcr.io/settlr-org/settlr-api:sha-23d2861
 # Tag for compose if compose uses local build:
-docker tag ghcr.io/nabinkhanal00/settlr-api:main settlr-backend:staging
+docker tag ghcr.io/settlr-org/settlr-api:main settlr-backend:staging
 
 # 3. Up with staging compose (uses staging env, staging pgdata)
 docker compose -f docker-compose.yml -f docker-compose.staging.yml up -d
@@ -265,7 +265,7 @@ VM: Ubuntu 22.04+, Docker, Tailscale (optional), UFW 80/443, A/AAAA api.settlr.t
 apt update && apt install -y docker.io docker-compose-plugin tailscale nginx certbot
 tailscale up
 mkdir -p /etc/settlr /opt/settlr && cd /opt/settlr
-git clone git@github.com:nabinkhanal00/settlr-api.git .  # or scp compose + .env
+git clone git@github.com:settlr-org/settlr-api.git .  # or scp compose + .env
 cp .env.production.example /etc/settlr/production.env
 # EDIT: POSTGRES_PASSWORD, JWT_SECRET (openssl rand -hex 32), JWT_REFRESH_SECRET, BREVO_API_KEY
 chmod 600 /etc/settlr/production.env
@@ -298,7 +298,7 @@ curl https://api.settlr.theswissknife.com/health
 TAG=sha-23d2861
 ssh prod-vm
 cd /opt/settlr
-docker pull ghcr.io/nabinkhanal00/settlr-api:$TAG
+docker pull ghcr.io/settlr-org/settlr-api:$TAG
 TAG=$TAG docker compose -f docker-compose.production.yml --env-file /etc/settlr/production.env up -d
 # or if compose uses `image: ghcr.io/...:${TAG}`:
 # TAG=$TAG docker compose -f docker-compose.production.yml up -d
@@ -516,10 +516,10 @@ cd ../settlr-mobile && cp .env.development.example .env.local && npm i && npm st
 
 # STAGING deploy (after main push)
 vercel ls --scope nabinkhanal00
-docker pull ghcr.io/nabinkhanal00/settlr-api:main && docker compose -f docker-compose.yml -f docker-compose.staging.yml up -d && curl http://127.0.0.1:18080/health
+docker pull ghcr.io/settlr-org/settlr-api:main && docker compose -f docker-compose.yml -f docker-compose.staging.yml up -d && curl http://127.0.0.1:18080/health
 
 # PROD deploy (after staging bake, pin tag)
-TAG=sha-23d2861 ssh prod-vm 'cd /opt/settlr && docker pull ghcr.io/nabinkhanal00/settlr-api:$TAG && TAG=$TAG docker compose -f docker-compose.production.yml up -d && curl https://api.settlr.theswissknife.com/health'
+TAG=sha-23d2861 ssh prod-vm 'cd /opt/settlr && docker pull ghcr.io/settlr-org/settlr-api:$TAG && TAG=$TAG docker compose -f docker-compose.production.yml up -d && curl https://api.settlr.theswissknife.com/health'
 ```
 
 Keep this guide in repo root and link from `settlr-api/deploy/README.md` → `../../DEPLOYMENT.md`.

@@ -2,7 +2,7 @@
 
 ## Stack and boundaries
 
-Build a strict-TypeScript Next.js App Router application with the current supported Next.js release, React, the private Settlr design packages, TanStack Query, React Hook Form, Zod, and a generated `@nabinkhanal00/settlr-api-client`. Use CSS variables from the design package and keep server-only modules isolated from Client Components. Next’s App Router is the selected file-system and server/client boundary ([documentation](https://nextjs.org/docs/app)).
+Build a strict-TypeScript Next.js App Router application with the current supported Next.js release, React, the private Settlr design packages, TanStack Query, React Hook Form, Zod, and a generated `@settlr-org/settlr-api-client`. Use CSS variables from the design package and keep server-only modules isolated from Client Components. Next’s App Router is the selected file-system and server/client boundary ([documentation](https://nextjs.org/docs/app)).
 
 The browser calls `https://settlrapi.theswissknife.com` with `credentials: include`. Web login/refresh uses a host-only Secure HttpOnly refresh cookie issued by the API and keeps the short-lived access token in memory. No refresh token or secret may appear in local storage, `NEXT_PUBLIC_*`, source maps, logs, or client bundles.
 
