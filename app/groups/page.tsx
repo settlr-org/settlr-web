@@ -1,6 +1,7 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   AppstoreOutlined,
   HomeOutlined,
@@ -21,6 +22,8 @@ import {
 import { apiFetch, readApiCache } from "../../lib/api";
 import { Balance, Group, money } from "../../lib/types";
 export default function Groups() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const cachedGroups = readApiCache<{ data: Group[] }>("/api/v1/groups");
   const cachedBalance = readApiCache<Balance>("/api/v1/me/balances");
   const warm = Boolean(cachedGroups && cachedBalance);
@@ -46,8 +49,14 @@ export default function Groups() {
   }, [warm]);
   useEffect(() => {
     void load();
-    if (new URLSearchParams(location.search).has("create")) setShow(true);
   }, [load]);
+  useEffect(() => {
+    if (searchParams.get("create") === "1") setShow(true);
+  }, [searchParams]);
+  const closeShow = () => {
+    setShow(false);
+    if (searchParams.get("create") === "1") router.replace("/groups");
+  };
   const create = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
@@ -65,9 +74,7 @@ export default function Groups() {
         method: "PATCH",
         body: JSON.stringify({ group_type: data.get("group_type") }),
       });
-      const url = new URL(location.href);
-      url.searchParams.delete("create");
-      window.history.replaceState(null, "", `${url.pathname}${url.search}`);
+      if (searchParams.get("create") === "1") router.replace("/groups");
       setShow(false);
       await load();
     } catch (x) {
@@ -156,7 +163,7 @@ export default function Groups() {
         <Modal
           title="Create a new group"
           subtitle="Choose a clear name and currency. You can invite people next."
-          onClose={() => setShow(false)}
+          onClose={closeShow}
         >
           <form onSubmit={create}>
             <label>
