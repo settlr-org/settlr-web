@@ -24,6 +24,7 @@ import {
   Loading,
   Panel,
   PanelTitle,
+  useConfirmation,
 } from "../../../components/UI";
 import { apiDownload, apiFetch } from "../../../lib/api";
 import {
@@ -53,6 +54,7 @@ type Attachment = {
 };
 
 export default function ExpenseDetail() {
+  const requestConfirmation = useConfirmation();
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { user } = useSession();
@@ -159,7 +161,16 @@ export default function ExpenseDetail() {
     event.target.value = "";
   };
   const remove = async () => {
-    if (!expense || !confirm(`Delete “${expense.description}”?`)) return;
+    if (
+      !expense ||
+      !(await requestConfirmation({
+        title: "Delete expense?",
+        description: `“${expense.description}” will be permanently removed.`,
+        confirmLabel: "Delete expense",
+        danger: true,
+      }))
+    )
+      return;
     try {
       await apiFetch(`/api/v1/expenses/${id}`, { method: "DELETE" });
       router.replace(`/groups/${expense.group_id}`);
@@ -313,12 +324,22 @@ export default function ExpenseDetail() {
                 <button
                   className="row-action"
                   aria-label="Delete comment"
-                  onClick={() =>
-                    confirm("Delete this comment?") &&
-                    void apiFetch(`/api/v1/comments/${comment.id}`, {
+                  onClick={async () => {
+                    if (
+                      !(await requestConfirmation({
+                        title: "Delete comment?",
+                        description:
+                          "This comment will be permanently removed.",
+                        confirmLabel: "Delete comment",
+                        danger: true,
+                      }))
+                    )
+                      return;
+                    await apiFetch(`/api/v1/comments/${comment.id}`, {
                       method: "DELETE",
-                    }).then(load)
-                  }
+                    });
+                    await load();
+                  }}
                 >
                   <DeleteOutlined />
                 </button>
@@ -362,12 +383,21 @@ export default function ExpenseDetail() {
                 <button
                   className="row-action"
                   aria-label={`Delete ${file.file_name}`}
-                  onClick={() =>
-                    confirm(`Delete ${file.file_name}?`) &&
-                    void apiFetch(`/api/v1/attachments/${file.id}`, {
+                  onClick={async () => {
+                    if (
+                      !(await requestConfirmation({
+                        title: "Delete attachment?",
+                        description: `“${file.file_name}” will be permanently removed.`,
+                        confirmLabel: "Delete attachment",
+                        danger: true,
+                      }))
+                    )
+                      return;
+                    await apiFetch(`/api/v1/attachments/${file.id}`, {
                       method: "DELETE",
-                    }).then(load)
-                  }
+                    });
+                    await load();
+                  }}
                 >
                   <DeleteOutlined />
                 </button>

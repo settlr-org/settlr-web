@@ -21,6 +21,7 @@ import {
   Loading,
   Panel,
   PanelTitle,
+  useConfirmation,
 } from "../../../../components/UI";
 import { apiDownload, apiFetch } from "../../../../lib/api";
 import {
@@ -57,6 +58,7 @@ type Stats = {
 };
 
 export default function ManageGroup() {
+  const requestConfirmation = useConfirmation();
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { user } = useSession();
@@ -177,7 +179,18 @@ export default function ManageGroup() {
     }
   };
   const leaveOrRemove = async (kind: "archive" | "delete" | "leave") => {
-    if (!confirm(`${labelize(kind)} “${group?.name}”?`)) return;
+    if (
+      !(await requestConfirmation({
+        title: `${labelize(kind)} “${group?.name}”?`,
+        description:
+          kind === "delete"
+            ? "This group will be permanently removed."
+            : "You can change this later from the group settings.",
+        confirmLabel: labelize(kind),
+        danger: kind === "delete",
+      }))
+    )
+      return;
     try {
       if (kind === "archive")
         await apiFetch(`/api/v1/groups/${id}/archive`, { method: "POST" });
@@ -352,13 +365,22 @@ export default function ManageGroup() {
                   <button
                     className="row-action"
                     aria-label={`Remove ${member.name}`}
-                    onClick={() =>
-                      confirm(`Remove ${member.name}?`) &&
-                      void action(
+                    onClick={async () => {
+                      if (
+                        !(await requestConfirmation({
+                          title: `Remove ${member.name}?`,
+                          description:
+                            "They will no longer have access to this group.",
+                          confirmLabel: "Remove member",
+                          danger: true,
+                        }))
+                      )
+                        return;
+                      await action(
                         `/api/v1/groups/${id}/members/${member.id}`,
                         "DELETE",
-                      )
-                    }
+                      );
+                    }}
                   >
                     <UserDeleteOutlined />
                   </button>
@@ -441,10 +463,19 @@ export default function ManageGroup() {
               <button
                 className="row-action"
                 aria-label={`Delete ${item.description}`}
-                onClick={() =>
-                  confirm(`Delete ${item.description}?`) &&
-                  void action(`/api/v1/recurring/${item.id}`, "DELETE")
-                }
+                onClick={async () => {
+                  if (
+                    !(await requestConfirmation({
+                      title: `Delete ${item.description}?`,
+                      description:
+                        "This recurring expense will be permanently removed.",
+                      confirmLabel: "Delete recurring expense",
+                      danger: true,
+                    }))
+                  )
+                    return;
+                  await action(`/api/v1/recurring/${item.id}`, "DELETE");
+                }}
               >
                 <DeleteOutlined />
               </button>

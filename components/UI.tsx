@@ -1,10 +1,82 @@
 "use client";
-import { ReactNode, useEffect, useId, useRef } from "react";
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import {
   CloseOutlined,
   InboxOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
+
+type ConfirmationOptions = {
+  title: string;
+  description: string;
+  confirmLabel?: string;
+  danger?: boolean;
+};
+
+type PendingConfirmation = ConfirmationOptions & {
+  resolve: (confirmed: boolean) => void;
+};
+
+const ConfirmationContext = createContext<
+  ((options: ConfirmationOptions) => Promise<boolean>) | undefined
+>(undefined);
+
+export function ConfirmationProvider({ children }: { children: ReactNode }) {
+  const [pending, setPending] = useState<PendingConfirmation>();
+  const requestConfirmation = useCallback(
+    (options: ConfirmationOptions) =>
+      new Promise<boolean>((resolve) => setPending({ ...options, resolve })),
+    [],
+  );
+  const close = (confirmed: boolean) => {
+    if (!pending) return;
+    pending.resolve(confirmed);
+    setPending(undefined);
+  };
+
+  return (
+    <ConfirmationContext.Provider value={requestConfirmation}>
+      {children}
+      {pending && (
+        <Modal
+          title={pending.title}
+          subtitle={pending.description}
+          onClose={() => close(false)}
+        >
+          <div className="modal-actions">
+            <button className="button full" onClick={() => close(false)}>
+              Cancel
+            </button>
+            <button
+              className={
+                pending.danger ? "button danger full" : "button primary full"
+              }
+              onClick={() => close(true)}
+            >
+              {pending.confirmLabel || "Confirm"}
+            </button>
+          </div>
+        </Modal>
+      )}
+    </ConfirmationContext.Provider>
+  );
+}
+
+export function useConfirmation() {
+  const requestConfirmation = useContext(ConfirmationContext);
+  if (!requestConfirmation)
+    throw new Error("useConfirmation must be used inside ConfirmationProvider");
+  return requestConfirmation;
+}
 export function Panel({
   children,
   className = "",
