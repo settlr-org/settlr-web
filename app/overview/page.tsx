@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRightOutlined,
@@ -15,6 +15,7 @@ import {
   Empty,
   ErrorState,
   Loading,
+  Modal,
   Panel,
   PanelTitle,
 } from "../../components/UI";
@@ -49,6 +50,7 @@ export default function Overview() {
   >({});
   const [loading, setLoading] = useState(!warm);
   const [error, setError] = useState("");
+  const [addExpense, setAddExpense] = useState(false);
   const load = useCallback(async () => {
     if (!warm) setLoading(true);
     setError("");
@@ -132,11 +134,11 @@ export default function Overview() {
             </article>
             <article className="quick-card">
               <p className="eyebrow">QUICK ACTIONS</p>
-              <Link href="/groups">
+              <button onClick={() => setAddExpense(true)}>
                 <PlusOutlined />
                 <b>Add expense</b>
-                <span>Choose a group and split</span>
-              </Link>
+                <span>Record it without leaving overview</span>
+              </button>
               <Link href="/groups">
                 <SwapOutlined />
                 <b>Settle up</b>
@@ -274,8 +276,147 @@ export default function Overview() {
               })}
             </div>
           </Panel>
+          {addExpense && (
+            <QuickExpenseModal
+              groups={groups}
+              userId={user?.id || ""}
+              onClose={() => setAddExpense(false)}
+              onDone={() => {
+                setAddExpense(false);
+                void load();
+              }}
+            />
+          )}
         </>
       )}
     </AppShell>
+  );
+}
+
+function QuickExpenseModal({
+  groups,
+  userId,
+  onClose,
+  onDone,
+}: {
+  groups: Group[];
+  userId: string;
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const [kind, setKind] = useState<"choose" | "shared">("choose");
+  const [groupId, setGroupId] = useState(groups[0]?.id || "");
+  const [members, setMembers] = useState<{ id: string; name: string }[]>([]);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (!groupId) return;
+    apiFetch<{ data: { id: string; name: string }[] }>(
+      `/api/v1/groups/${groupId}/members`,
+    )
+      .then((result) => setMembers(result.data))
+      .catch((cause) =>
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : "Could not load group members.",
+        ),
+      );
+  }, [groupId]);
+  const save = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const amount = Math.round(Number(data.get("amount")) * 100);
+    if (
+      !groupId ||
+      !data.get("description") ||
+      !Number.isFinite(amount) ||
+      amount <= 0
+    ) {
+      setError("Choose a group and enter a description and amount.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      await apiFetch(`/api/v1/groups/${groupId}/expenses`, {
+        method: "POST",
+        headers: { "Idempotency-Key": `${Date.now()}-${Math.random()}` },
+        body: JSON.stringify({
+          description: data.get("description"),
+          amount,
+          currency:
+            groups.find((group) => group.id === groupId)?.currency || "NPR",
+          paid_by: userId,
+          expense_date: new Date().toISOString().slice(0, 10),
+          split_mode: "EQUAL",
+          splits: members.map((member) => ({ user_id: member.id })),
+        }),
+      });
+      onDone();
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : "Could not save expense.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+  if (kind === "choose")
+    return (
+      <Modal
+        title="Add expense"
+        subtitle="Choose where this expense belongs."
+        onClose={onClose}
+      >
+        <div className="stack-form">
+          <button className="button primary" onClick={() => setKind("shared")}>
+            <TeamOutlined /> Shared expense
+          </button>
+          <Link className="button" href="/personal?new=1">
+            <WalletOutlined /> Personal expense
+          </Link>
+        </div>
+      </Modal>
+    );
+  return (
+    <Modal
+      title="Add shared expense"
+      subtitle="Split equally with the selected group."
+      onClose={onClose}
+    >
+      <form className="stack-form" onSubmit={save}>
+        <label>
+          Group
+          <select
+            value={groupId}
+            onChange={(event) => setGroupId(event.target.value)}
+            required
+          >
+            {groups.map((group) => (
+              <option key={group.id} value={group.id}>
+                {group.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Description
+          <input
+            name="description"
+            required
+            placeholder="Dinner, taxi, groceries…"
+          />
+        </label>
+        <label>
+          Amount
+          <input name="amount" type="number" min="0.01" step="0.01" required />
+        </label>
+        {error && <p className="form-error">{error}</p>}
+        <button className="button primary" disabled={busy || !members.length}>
+          {busy ? "Saving…" : "Save expense"}
+        </button>
+      </form>
+    </Modal>
   );
 }
