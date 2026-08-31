@@ -2046,6 +2046,9 @@ legend {
   gap: 20px;
   margin-bottom: 20px;
 }
+.mobile-personal-add {
+  display: none;
+}
 .personal-summary article {
   background: var(--paper);
   border: 1px solid var(--line);
@@ -2476,6 +2479,10 @@ legend {
   .form-grid,
   .personal-summary {
     grid-template-columns: 1fr;
+  }
+  .mobile-personal-add {
+    display: inline-flex;
+    margin: 0 0 14px;
   }
   .modal {
     padding: 24px 20px;

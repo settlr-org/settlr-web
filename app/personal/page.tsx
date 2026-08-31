@@ -41,6 +41,10 @@ export default function Personal() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const month = new Date().toISOString().slice(0, 7);
+  const openNewExpense = () => {
+    setEditing(undefined);
+    setShow(true);
+  };
   const load = useCallback(async () => {
     try {
       const [e, c, s, b] = await Promise.all([
@@ -159,8 +163,7 @@ export default function Personal() {
         <button
           className="button primary"
           onClick={() => {
-            setEditing(undefined);
-            setShow(true);
+            openNewExpense();
           }}
         >
           <PlusOutlined /> Add personal expense
@@ -172,6 +175,12 @@ export default function Personal() {
       ) : (
         <>
           {error && <ErrorState message={error} retry={load} />}
+          <button
+            className="button primary mobile-personal-add"
+            onClick={openNewExpense}
+          >
+            <PlusOutlined /> Add personal expense
+          </button>
           <section className="personal-summary">
             <article>
               <span>
