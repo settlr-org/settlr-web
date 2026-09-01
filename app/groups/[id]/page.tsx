@@ -177,22 +177,24 @@ export default function GroupDetail() {
         </div>
         <div>
           <span>YOUR BALANCE</span>
-          <strong
-            className={
-              (balances?.data.find((x) => x.user_id === user?.id)?.amount ??
-                0) < 0
-                ? "negative"
-                : ""
-            }
-          >
-            {money(
-              balances?.data.find((x) => x.user_id === user?.id)?.amount ?? 0,
-              group?.currency,
-            )}
-          </strong>
+          {(() => {
+            const amt = balances?.data.find((x) => x.user_id === user?.id)?.amount ?? 0;
+            return (
+              <>
+                <strong className={amt < 0 ? "negative" : ""}>{money(Math.abs(amt), group?.currency)}</strong>
+                <p className="balance-sentence">
+                  {amt > 0
+                    ? `You are owed ${money(amt, group?.currency)}`
+                    : amt < 0
+                      ? `You owe ${money(Math.abs(amt), group?.currency)}`
+                      : "You’re settled — no one owes anything"}
+                </p>
+              </>
+            );
+          })()}
           <small>
             {debts.length
-              ? `${debts.length} payments to settle`
+              ? `${debts.length} payment${debts.length === 1 ? "" : "s"} to settle`
               : "Everyone is settled"}
           </small>
         </div>
@@ -542,11 +544,9 @@ function ExpenseModal({
             Amount
             <div className="amount-field">
               <select name="currency" defaultValue={group.currency}>
-                <option>{group.currency}</option>
-                <option>NPR</option>
-                <option>USD</option>
-                <option>EUR</option>
-                <option>INR</option>
+                {Array.from(new Set([group.currency, "NPR", "USD", "EUR", "INR"])).map((c) => (
+                  <option key={c}>{c}</option>
+                ))}
               </select>
               <input
                 name="amount"
