@@ -94,7 +94,7 @@ export default function Overview() {
     } finally {
       setLoading(false);
     }
-  }, [balance?.currency, user?.id, warm]);
+  }, [user?.id, warm]);
   useEffect(() => {
     void load();
   }, [load]);
@@ -236,9 +236,11 @@ export default function Overview() {
                         <strong>{f.name}</strong>
                         <small
                           className={
-                            amount !== undefined && amount < 0
-                              ? "negative"
-                              : "positive"
+                            amount === undefined
+                              ? "muted"
+                              : amount < 0
+                                ? "negative"
+                                : "positive"
                           }
                         >
                           {balanceLabel}
@@ -541,16 +543,13 @@ function QuickExpenseModal({
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
               >
-                <option>
-                  {groups.find((g) => g.id === groupId)?.currency || "NPR"}
-                </option>
-                <option>NPR</option>
-                <option>USD</option>
-                <option>EUR</option>
-                <option>INR</option>
-                <option>GBP</option>
-                <option>AUD</option>
-                <option>CAD</option>
+                <option value="NPR">NPR</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="INR">INR</option>
+                <option value="GBP">GBP</option>
+                <option value="AUD">AUD</option>
+                <option value="CAD">CAD</option>
               </select>
               <input
                 name="amount"
@@ -816,7 +815,15 @@ function QuickSettleModal({
           <div className="success-note">
             Suggested:{" "}
             {debts[0] &&
-              `${debts[0].from_user} pays ${debts[0].to_user} ${money(debts[0].amount, groups.find((g) => g.id === groupId)?.currency)}`}
+              (() => {
+                const fromName =
+                  members.find((m) => m.id === debts[0].from_user)?.name ??
+                  debts[0].from_user;
+                const toName =
+                  members.find((m) => m.id === debts[0].to_user)?.name ??
+                  debts[0].to_user;
+                return `${fromName} pays ${toName} ${money(debts[0].amount, groups.find((g) => g.id === groupId)?.currency)}`;
+              })()}
           </div>
         )}
         <div className="form-grid">
@@ -897,18 +904,15 @@ function QuickGroupModal({
     setBusy(true);
     setError("");
     try {
-      const created = await apiFetch<{ id: string }>("/api/v1/groups", {
+      await apiFetch<{ id: string }>("/api/v1/groups", {
         method: "POST",
         body: JSON.stringify({
           name,
           description: data.get("description"),
           currency: data.get("currency"),
+          group_type: data.get("group_type"),
           information: data.get("information"),
         }),
-      });
-      await apiFetch(`/api/v1/groups/${created.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ group_type: data.get("group_type") }),
       });
       onDone();
     } catch (x) {

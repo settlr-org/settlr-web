@@ -33,7 +33,7 @@
   --brand-strong: var(--st-primary-strong);
   --brand-soft: var(--st-surface-muted);
   --on-brand: #ffffff;
-  --accent: #eea946;
+  --accent: var(--st-accent);
   --warning: var(--st-warning);
   --positive: var(--st-positive);
   --danger: var(--st-negative);
@@ -66,7 +66,7 @@
   --brand-strong: var(--st-primary-strong);
   --brand-soft: #203c32;
   --on-brand: #10241d;
-  --accent: #f1b75f;
+  --accent: var(--st-accent);
   --warning: var(--st-warning);
   --positive: var(--st-positive);
   --danger: var(--st-negative);
@@ -311,6 +311,44 @@ p {
 .icon-button {
   width: 43px;
   padding: 0;
+}
+.icon-button.has-unread {
+  position: relative;
+}
+.notification-dot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 9px;
+  height: 9px;
+  background: #ff3b30;
+  border-radius: 50%;
+  border: 2px solid var(--paper);
+  box-shadow: 0 0 8px rgba(255, 59, 48, 0.7);
+  animation: pulse-dot 2s infinite;
+}
+.nav-item .notification-dot {
+  top: 8px;
+  right: 10px;
+  width: 8px;
+  height: 8px;
+}
+@keyframes pulse-dot {
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(255, 59, 48, 0.55),
+      0 0 8px rgba(255, 59, 48, 0.7);
+  }
+  70% {
+    box-shadow:
+      0 0 0 6px rgba(255, 59, 48, 0),
+      0 0 8px rgba(255, 59, 48, 0.7);
+  }
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(255, 59, 48, 0),
+      0 0 8px rgba(255, 59, 48, 0.7);
+  }
 }
 .button {
   padding: 0 17px;
@@ -732,7 +770,9 @@ p {
     margin: 0;
   }
   .subtitle {
-    display: none;
+    display: block;
+    font-size: 11px;
+    margin-top: 4px;
   }
   .top-actions .button.primary {
     width: 43px;
@@ -2426,11 +2466,12 @@ legend {
     display: none;
   }
   .page-heading .eyebrow {
-    display: none;
+    display: block;
+    font-size: 8px;
   }
   .page-heading h1 {
     font-size: 27px;
-    margin: 0;
+    margin: 2px 0 0;
   }
   .top-action-pair .button:first-child {
     display: none;
@@ -2497,7 +2538,8 @@ legend {
     height: 44px;
   }
   .group-position {
-    display: none;
+    display: grid;
+    text-align: right;
   }
   .group-summary {
     grid-template-columns: 1fr 1fr;
@@ -2557,7 +2599,9 @@ legend {
     padding: 12px 6px;
   }
   .quick-card > :is(a, button) > span:not(.anticon) {
-    display: none;
+    display: block;
+    font-size: 8px;
+    line-height: 1.3;
   }
 }
 
@@ -2613,6 +2657,14 @@ legend {
   background: var(--brand-soft);
   color: var(--brand);
   font-size: 25px;
+}
+@media (max-width: 720px) {
+  .verification-seal {
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+    border-radius: 11px;
+  }
 }
 .verification-pending strong {
   color: var(--ink);

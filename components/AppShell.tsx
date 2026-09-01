@@ -89,6 +89,29 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
     eyebrow: "SETTLR",
     description: "Shared money, made clear.",
   });
+  const [unread, setUnread] = useState(0);
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    const fetchUnread = async () => {
+      try {
+        const { apiFetch } = await import("../lib/api");
+        const data = await apiFetch<{ unread_count: number }>(
+          "/api/v1/notifications?limit=1",
+        );
+        if (!cancelled) setUnread(data.unread_count ?? 0);
+      } catch {}
+    };
+    void fetchUnread();
+    const id = setInterval(fetchUnread, 30000);
+    const onFocus = () => void fetchUnread();
+    window.addEventListener("focus", onFocus);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [user, path]);
   const workspace = workspacePrefixes.some(
     (prefix) => path === prefix || path.startsWith(`${prefix}/`),
   );
@@ -147,9 +170,11 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
               className={
                 path === "/notifications" ? "nav-item active" : "nav-item"
               }
+              style={{ position: "relative" }}
             >
               <BellOutlined />
               <span>Notifications</span>
+              {unread > 0 && <span className="notification-dot" aria-hidden />}
             </Link>
             <Link
               href="/settings"
@@ -177,11 +202,15 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
             </div>
             <div className="top-actions">
               <Link
-                className="icon-button"
+                className={`icon-button${unread > 0 ? " has-unread" : ""}`}
                 href="/notifications"
-                aria-label="Notifications"
+                aria-label={`Notifications${unread > 0 ? `, ${unread} unread` : ""}`}
+                style={{ position: "relative" }}
               >
                 <BellOutlined />
+                {unread > 0 && (
+                  <span className="notification-dot" aria-hidden />
+                )}
               </Link>
               <button
                 className="icon-button"
@@ -262,7 +291,7 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
             className={path === "/settings" ? "nav-item active" : "nav-item"}
             href="/settings"
           >
-            <WalletOutlined />
+            <SettingOutlined />
             <span>Settings</span>
           </Link>
         </nav>
