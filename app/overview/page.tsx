@@ -94,7 +94,7 @@ export default function Overview() {
     } finally {
       setLoading(false);
     }
-  }, [balance?.currency, user?.id, warm]);
+  }, [user?.id, warm]);
   useEffect(() => {
     void load();
   }, [load]);
