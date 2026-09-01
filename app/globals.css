@@ -33,7 +33,7 @@
   --brand-strong: var(--st-primary-strong);
   --brand-soft: var(--st-surface-muted);
   --on-brand: #ffffff;
-  --accent: #eea946;
+  --accent: var(--st-accent);
   --warning: var(--st-warning);
   --positive: var(--st-positive);
   --danger: var(--st-negative);
@@ -66,7 +66,7 @@
   --brand-strong: var(--st-primary-strong);
   --brand-soft: #203c32;
   --on-brand: #10241d;
-  --accent: #f1b75f;
+  --accent: var(--st-accent);
   --warning: var(--st-warning);
   --positive: var(--st-positive);
   --danger: var(--st-negative);
@@ -2613,6 +2613,14 @@ legend {
   background: var(--brand-soft);
   color: var(--brand);
   font-size: 25px;
+}
+@media (max-width: 720px) {
+  .verification-seal {
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+    border-radius: 11px;
+  }
 }
 .verification-pending strong {
   color: var(--ink);
