@@ -124,8 +124,15 @@ export default function Overview() {
                   (balance?.summary.net_balance ?? 0) < 0 ? "negative" : ""
                 }
               >
-                {money(balance?.summary.net_balance ?? 0, balance?.currency)}
+                {money(Math.abs(balance?.summary.net_balance ?? 0), balance?.currency)}
               </strong>
+              <p className="balance-sentence">
+                {(balance?.summary.net_balance ?? 0) > 0
+                  ? `You are owed ${money(balance?.summary.net_balance ?? 0, balance?.currency)} in total`
+                  : (balance?.summary.net_balance ?? 0) < 0
+                    ? `You owe ${money(Math.abs(balance?.summary.net_balance ?? 0), balance?.currency)} in total`
+                    : "All settled — no one owes anything"}
+              </p>
               <p>Across {balance?.data.length ?? 0} active groups</p>
               <div className="balance-split">
                 <div>
