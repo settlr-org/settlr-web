@@ -29,11 +29,15 @@ export default function Search() {
   const [error, setError] = useState("");
   const submit = async (event: FormEvent) => {
     event.preventDefault();
+    if (query.trim().length < 2) {
+      setError("Enter at least two characters.");
+      return;
+    }
     setError("");
     try {
       setResults(
         await apiFetch<Results>(
-          `/api/v1/search?q=${encodeURIComponent(query)}`,
+          `/api/v1/search?q=${encodeURIComponent(query.trim())}`,
         ),
       );
     } catch (x) {
@@ -56,6 +60,7 @@ export default function Search() {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             required
+            minLength={2}
             placeholder="Try a person, trip, or expense"
             autoFocus
           />
