@@ -1,13 +1,31 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   ArrowRightOutlined,
   CheckCircleOutlined,
   WalletOutlined,
 } from "@ant-design/icons";
 import { Brand } from "../components/Brand";
+import { useSession } from "../components/SessionProvider";
 export default function Landing() {
+  const { user, loading } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user) router.replace("/overview");
+  }, [router, user]);
+
+  if (loading || user) {
+    return (
+      <main className="landing" aria-busy="true">
+        <p className="landing-redirect">Opening your workspace…</p>
+      </main>
+    );
+  }
+
   return (
     <main className="landing">
       <header className="landing-nav">

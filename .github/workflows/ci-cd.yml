@@ -2,7 +2,7 @@ name: Web CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, staging]
   workflow_dispatch:
 permissions:
   contents: read
@@ -26,6 +26,6 @@ jobs:
       - run: npm run build
         env:
           NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || 'https://api.example.com' }}
-# The Vercel project is connected to this repository and deploys main after
-# GitHub reports this required verification job as successful. Keeping the
-# deployment in one system avoids duplicate releases and stale CLI tokens.
+# The Vercel project is connected to this repository and deploys the matching
+# Git branch after GitHub reports this required verification job as successful.
+# Keeping deployment in one system avoids duplicate releases and stale CLI tokens.
