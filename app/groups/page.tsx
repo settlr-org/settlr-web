@@ -61,18 +61,15 @@ export default function Groups() {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
     try {
-      const created = await apiFetch<{ id: string }>("/api/v1/groups", {
+      await apiFetch<{ id: string }>("/api/v1/groups", {
         method: "POST",
         body: JSON.stringify({
           name: data.get("name"),
           description: data.get("description"),
           currency: data.get("currency"),
+          group_type: data.get("group_type"),
           information: data.get("information"),
         }),
-      });
-      await apiFetch(`/api/v1/groups/${created.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ group_type: data.get("group_type") }),
       });
       if (searchParams.get("create") === "1") router.replace("/groups");
       setShow(false);
