@@ -107,12 +107,21 @@ export type PersonalExpense = {
   expense_date: string;
 };
 
-export const money = (amount: number, currency = "NPR") =>
-  new Intl.NumberFormat("en-NP", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 2,
-  }).format(amount / 100);
+export const money = (amount: number, currency = "NPR") => {
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 2,
+    }).format(amount / 100);
+  } catch {
+    return new Intl.NumberFormat("en-NP", {
+      style: "currency",
+      currency: "NPR",
+      maximumFractionDigits: 2,
+    }).format(amount / 100);
+  }
+};
 export const initials = (name = "You") =>
   name
     .split(/\s+/)
