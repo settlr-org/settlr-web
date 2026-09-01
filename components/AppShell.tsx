@@ -262,7 +262,7 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
             className={path === "/settings" ? "nav-item active" : "nav-item"}
             href="/settings"
           >
-            <WalletOutlined />
+            <SettingOutlined />
             <span>Settings</span>
           </Link>
         </nav>

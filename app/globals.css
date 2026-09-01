@@ -732,7 +732,9 @@ p {
     margin: 0;
   }
   .subtitle {
-    display: none;
+    display: block;
+    font-size: 11px;
+    margin-top: 4px;
   }
   .top-actions .button.primary {
     width: 43px;
@@ -2426,11 +2428,12 @@ legend {
     display: none;
   }
   .page-heading .eyebrow {
-    display: none;
+    display: block;
+    font-size: 8px;
   }
   .page-heading h1 {
     font-size: 27px;
-    margin: 0;
+    margin: 2px 0 0;
   }
   .top-action-pair .button:first-child {
     display: none;
@@ -2497,7 +2500,8 @@ legend {
     height: 44px;
   }
   .group-position {
-    display: none;
+    display: grid;
+    text-align: right;
   }
   .group-summary {
     grid-template-columns: 1fr 1fr;
@@ -2557,7 +2561,9 @@ legend {
     padding: 12px 6px;
   }
   .quick-card > :is(a, button) > span:not(.anticon) {
-    display: none;
+    display: block;
+    font-size: 8px;
+    line-height: 1.3;
   }
 }
 
