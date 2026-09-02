@@ -178,10 +178,13 @@ export default function GroupDetail() {
         <div>
           <span>YOUR BALANCE</span>
           {(() => {
-            const amt = balances?.data.find((x) => x.user_id === user?.id)?.amount ?? 0;
+            const amt =
+              balances?.data.find((x) => x.user_id === user?.id)?.amount ?? 0;
             return (
               <>
-                <strong className={amt < 0 ? "negative" : ""}>{money(Math.abs(amt), group?.currency)}</strong>
+                <strong className={amt < 0 ? "negative" : ""}>
+                  {money(Math.abs(amt), group?.currency)}
+                </strong>
                 <p className="balance-sentence">
                   {amt > 0
                     ? `You are owed ${money(amt, group?.currency)}`
@@ -544,7 +547,9 @@ function ExpenseModal({
             Amount
             <div className="amount-field">
               <select name="currency" defaultValue={group.currency}>
-                {Array.from(new Set([group.currency, "NPR", "USD", "EUR", "INR"])).map((c) => (
+                {Array.from(
+                  new Set([group.currency, "NPR", "USD", "EUR", "INR"]),
+                ).map((c) => (
                   <option key={c}>{c}</option>
                 ))}
               </select>

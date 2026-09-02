@@ -124,7 +124,10 @@ export default function Overview() {
                   (balance?.summary.net_balance ?? 0) < 0 ? "negative" : ""
                 }
               >
-                {money(Math.abs(balance?.summary.net_balance ?? 0), balance?.currency)}
+                {money(
+                  Math.abs(balance?.summary.net_balance ?? 0),
+                  balance?.currency,
+                )}
               </strong>
               <p className="balance-sentence">
                 {(balance?.summary.net_balance ?? 0) > 0
