@@ -147,25 +147,15 @@ p {
   border-radius: 12px;
   background: var(--brand);
   display: inline-flex;
-  transform: rotate(-8deg);
+  align-items: center;
+  justify-content: center;
 }
-.brand-mark i {
-  position: absolute;
-  width: 20px;
-  height: 11px;
+.brand-mark-circle {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
   border: 2.5px solid var(--paper);
-  border-radius: 10px 10px 4px 10px;
-}
-.brand-mark i:first-child {
   display: block;
-  top: 8px;
-  left: 7px;
-  border-right-color: transparent;
-}
-.brand-mark i:last-child {
-  bottom: 8px;
-  right: 7px;
-  border-left-color: transparent;
 }
 .brand-tagline {
   color: var(--muted);
