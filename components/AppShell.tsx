@@ -125,6 +125,32 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
     document.documentElement.dataset.theme = next;
     localStorage.setItem("settlr_theme", next);
   };
+  useEffect(() => {
+    if (!workspace || !user) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const isTyping = Boolean(
+        target?.closest("input, textarea, select, [contenteditable='true']"),
+      );
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        router.push("/search");
+        return;
+      }
+      if (
+        !isTyping &&
+        !event.metaKey &&
+        !event.ctrlKey &&
+        !event.altKey &&
+        event.key.toLowerCase() === "c"
+      ) {
+        event.preventDefault();
+        router.push("/overview?add=1");
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [router, user, workspace]);
   if (!workspace) return children;
   if (loading || !user)
     return (
@@ -201,6 +227,14 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
               <p className="subtitle">{config.description}</p>
             </div>
             <div className="top-actions">
+              <Link
+                className="icon-button top-search"
+                href="/search"
+                aria-label="Search workspace"
+                title="Search workspace (Ctrl K)"
+              >
+                <SearchOutlined />
+              </Link>
               <Link
                 className={`icon-button${unread > 0 ? " has-unread" : ""}`}
                 href="/notifications"

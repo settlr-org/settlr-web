@@ -479,11 +479,11 @@ describe("group PATCH atomicity — app/groups/[id]/manage/page.tsx:108", () => 
   });
 });
 
-// ---------- accent token (app/globals.css:13,53) ----------
-describe("accent token — app/globals.css:13", () => {
-  it("light accent #82d9b7 and dark #3aa982 (app/globals.css:13,53)", () => {
-    expect(css).toContain("--st-accent: #82d9b7");
-    expect(css).toContain("--st-accent: #3aa982");
+// ---------- color token contract ----------
+describe("color token contract", () => {
+  it("defines the field-ledger light and dark accents", () => {
+    expect(css).toContain("--st-accent: #9ce5d0");
+    expect(css).toContain("--st-accent: #7edbc2");
   });
 
   it("--accent alias maps to --st-accent (app/globals.css:36,69)", () => {
@@ -495,11 +495,29 @@ describe("accent token — app/globals.css:13", () => {
     expect(css).toContain("linear-gradient(var(--brand), var(--accent))");
   });
 
-  it("dark theme primary flips to accent color (app/globals.css:51-52)", () => {
-    expect(css).toContain("--st-primary: #82d9b7");
-    // dark primary should be light accent value
+  it("dark theme has its own accessible primary", () => {
+    expect(css).toContain("--st-primary: #aeb9ff");
     const darkBlock = css.slice(css.indexOf(':root[data-theme="dark"]'));
-    expect(darkBlock).toContain("--st-primary: #82d9b7");
+    expect(darkBlock).toContain("--st-primary: #aeb9ff");
+  });
+});
+
+describe("workspace shortcuts", () => {
+  const shell = fs.readFileSync(
+    path.join(process.cwd(), "components/AppShell.tsx"),
+    "utf8",
+  );
+
+  it("offers keyboard routes for search and the primary creation action", () => {
+    expect(shell).toContain('router.push("/search")');
+    expect(shell).toContain('router.push("/overview?add=1")');
+    expect(shell).toContain('event.key.toLowerCase() === "k"');
+    expect(shell).toContain('event.key.toLowerCase() === "c"');
+  });
+
+  it("keeps focus states visible and respects motion preferences", () => {
+    expect(css).toContain("button:focus-visible");
+    expect(css).toContain("@media (prefers-reduced-motion: reduce)");
   });
 });
 

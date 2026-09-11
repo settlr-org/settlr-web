@@ -1,25 +1,26 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap");
 
 :root {
   /* Design system tokens — single source (DESIGN_DOCUMENT + settlr-design/tokens.css) */
-  --st-canvas: #f5f7f3;
+  --st-canvas: #f4f6fb;
   --st-surface: #ffffff;
-  --st-surface-muted: #eaf0ec;
-  --st-ink: #16231d;
-  --st-muted: #66736d;
-  --st-border: #d4ded8;
-  --st-primary: #0b6b57;
-  --st-primary-strong: #074a3d;
-  --st-accent: #82d9b7;
-  --st-positive: #167653;
-  --st-negative: #b94a42;
-  --st-warning: #8a5a0a;
+  --st-surface-muted: #e9edf8;
+  --st-ink: #17233f;
+  --st-muted: #64708a;
+  --st-border: #d7deed;
+  --st-primary: #3f50bd;
+  --st-primary-strong: #293990;
+  --st-accent: #9ce5d0;
+  --st-positive: #18775e;
+  --st-negative: #bd4c5a;
+  --st-warning: #9a6510;
   --st-radius-sm: 8px;
   --st-radius-md: 14px;
   --st-radius-lg: 22px;
-  --st-shadow: 0 12px 32px rgba(22, 35, 29, 0.08);
-  --st-font-sans: "Manrope", "Plus Jakarta Sans", sans-serif;
-  --st-font-display: "DM Serif Display", serif;
+  --st-shadow: 0 14px 34px rgba(30, 45, 87, 0.08);
+  --st-font-sans: "DM Sans", system-ui, sans-serif;
+  --st-font-display: "Fraunces", Georgia, serif;
+  --st-font-data: "DM Mono", ui-monospace, monospace;
 
   /* Legacy aliases — keep workspace code stable while deriving from tokens */
   --bg: var(--st-canvas);
@@ -42,19 +43,19 @@
 }
 
 :root[data-theme="dark"] {
-  --st-canvas: #0b1411;
-  --st-surface: #121f1a;
-  --st-surface-muted: #1b2c25;
-  --st-ink: #f2f7f4;
-  --st-muted: #a2b4ab;
-  --st-border: #2b4036;
-  --st-primary: #82d9b7;
-  --st-primary-strong: #b2ebd2;
-  --st-accent: #3aa982;
-  --st-positive: #82d9b7;
-  --st-negative: #f28b80;
-  --st-warning: #f2c66d;
-  --st-shadow: 0 16px 36px rgba(0, 0, 0, 0.24);
+  --st-canvas: #10182e;
+  --st-surface: #17213c;
+  --st-surface-muted: #202d50;
+  --st-ink: #f1f4ff;
+  --st-muted: #aeb9d1;
+  --st-border: #334268;
+  --st-primary: #aeb9ff;
+  --st-primary-strong: #d3d9ff;
+  --st-accent: #7edbc2;
+  --st-positive: #7edbc2;
+  --st-negative: #ff9ba7;
+  --st-warning: #f5cc75;
+  --st-shadow: 0 16px 38px rgba(0, 0, 0, 0.28);
 
   --bg: var(--st-canvas);
   --paper: var(--st-surface);
@@ -64,8 +65,8 @@
   --line: var(--st-border);
   --brand: var(--st-primary);
   --brand-strong: var(--st-primary-strong);
-  --brand-soft: #203c32;
-  --on-brand: #10241d;
+  --brand-soft: #29385f;
+  --on-brand: #17213c;
   --accent: var(--st-accent);
   --warning: var(--st-warning);
   --positive: var(--st-positive);
@@ -106,6 +107,21 @@ select {
 button {
   cursor: pointer;
 }
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--brand) 54%, transparent);
+  outline-offset: 3px;
+}
 button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
@@ -126,7 +142,7 @@ p {
   inset: 0 auto 0 0;
   width: 248px;
   padding: 30px 24px 22px;
-  background: var(--paper);
+  background: color-mix(in srgb, var(--paper) 88%, var(--brand-soft));
   border-right: 1px solid var(--line);
   display: flex;
   flex-direction: column;
@@ -144,7 +160,7 @@ p {
   position: relative;
   width: 38px;
   height: 38px;
-  border-radius: 12px;
+  border-radius: 11px 11px 11px 3px;
   background: var(--brand);
   display: inline-flex;
   align-items: center;
@@ -173,7 +189,7 @@ p {
   display: flex;
   align-items: center;
   gap: 13px;
-  border-radius: 13px;
+  border-radius: 10px;
   padding: 13px 14px;
   text-align: left;
   font-size: 13px;
@@ -183,8 +199,12 @@ p {
   font-size: 18px;
 }
 .nav-item.active {
-  background: var(--brand-soft);
+  background: color-mix(in srgb, var(--brand) 11%, var(--paper));
   color: var(--brand);
+}
+.nav-item:not(.active):hover {
+  background: color-mix(in srgb, var(--brand) 5%, var(--paper));
+  color: var(--ink);
 }
 .profile {
   border: 0;
@@ -248,9 +268,9 @@ p {
   font-weight: 800;
 }
 .topbar h1 {
-  font-family: "DM Serif Display", serif;
-  font-size: 34px;
-  font-weight: 400;
+  font-family: var(--st-font-display);
+  font-size: 36px;
+  font-weight: 600;
   letter-spacing: -0.02em;
   margin: 5px 0;
 }
@@ -288,7 +308,7 @@ p {
 .button {
   height: 43px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--paper);
   color: var(--ink);
   display: inline-flex;
@@ -297,6 +317,11 @@ p {
   gap: 8px;
   font-size: 12px;
   font-weight: 800;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
 }
 .icon-button {
   width: 43px;
@@ -363,6 +388,13 @@ p {
 }
 .button.primary:hover {
   background: var(--brand-strong);
+  box-shadow: 0 7px 16px color-mix(in srgb, var(--brand) 27%, transparent);
+  transform: translateY(-1px);
+}
+.icon-button:hover,
+.button:not(.primary):hover {
+  border-color: color-mix(in srgb, var(--brand) 35%, var(--line));
+  background: color-mix(in srgb, var(--brand) 5%, var(--paper));
 }
 .button.danger {
   color: var(--danger);
@@ -400,23 +432,39 @@ p {
 .account-card {
   background: var(--paper);
   border: 1px solid var(--line);
-  border-radius: 22px;
+  border-radius: 18px;
   box-shadow: var(--shadow);
 }
 .balance-card {
   padding: 28px;
   overflow: hidden;
   position: relative;
+  background: linear-gradient(
+    135deg,
+    var(--paper) 0%,
+    color-mix(in srgb, var(--paper) 88%, var(--brand-soft)) 100%
+  );
 }
 .balance-card:after {
   content: "";
   position: absolute;
   width: 190px;
   height: 190px;
-  border-radius: 50%;
+  border-radius: 44% 56% 62% 38%;
   right: -70px;
   top: -100px;
-  background: var(--brand-soft);
+  background: color-mix(in srgb, var(--brand) 12%, transparent);
+}
+.balance-card:before {
+  content: "";
+  position: absolute;
+  inset: 16px auto 16px 14px;
+  width: 1px;
+  background: repeating-linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--brand) 24%, transparent) 0 3px,
+    transparent 3px 9px
+  );
 }
 .card-title {
   display: flex;
@@ -435,9 +483,9 @@ p {
 }
 .balance-card > strong {
   display: block;
-  font-family: "DM Serif Display", serif;
-  font-size: 44px;
-  font-weight: 400;
+  font-family: var(--st-font-display);
+  font-size: 46px;
+  font-weight: 600;
   color: var(--brand);
   margin: 20px 0 4px;
   letter-spacing: -0.02em;
@@ -461,6 +509,7 @@ p {
   gap: 5px;
 }
 .balance-split span {
+  font-family: var(--st-font-data);
   font-size: 8px;
   letter-spacing: 1.5px;
   color: var(--muted);
@@ -494,9 +543,9 @@ p {
   margin-bottom: 17px;
 }
 .panel-title h2 {
-  font-family: "DM Serif Display", serif;
+  font-family: var(--st-font-display);
   font-size: 21px;
-  font-weight: 400;
+  font-weight: 600;
 }
 .panel-title p {
   font-size: 10px;
@@ -587,6 +636,16 @@ p {
   align-items: center;
   gap: 13px;
   background: var(--bg);
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+.group-card:hover,
+.group-list-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--brand) 38%, var(--line));
+  box-shadow: 0 10px 20px rgba(30, 45, 87, 0.08);
 }
 .group-icon {
   width: 42px;
@@ -642,7 +701,7 @@ p {
   box-shadow: 0 30px 100px rgba(0, 0, 0, 0.3);
 }
 .modal h2 {
-  font-family: "DM Serif Display", serif;
+  font-family: var(--st-font-display);
   font-size: 29px;
   font-weight: 400;
   margin: 6px 0;
@@ -1112,7 +1171,7 @@ p {
   height: 56px;
 }
 .friend-profile strong {
-  font-family: "DM Serif Display", serif;
+  font-family: var(--st-font-display);
   font-size: 23px;
   font-weight: 400;
 }
@@ -1276,6 +1335,9 @@ textarea {
   display: flex;
   gap: 8px;
 }
+.top-search {
+  display: inline-flex;
+}
 .group-strip {
   margin-top: 22px;
 }
@@ -1353,7 +1415,7 @@ textarea {
   gap: 70px;
 }
 .landing-hero h1 {
-  font-family: "DM Serif Display", serif;
+  font-family: var(--st-font-display);
   font-weight: 400;
   font-size: clamp(55px, 6vw, 82px);
   line-height: 0.98;
@@ -1428,7 +1490,7 @@ textarea {
   font-weight: 800;
 }
 .visual-main > strong {
-  font-family: "DM Serif Display", serif;
+  font-family: var(--st-font-display);
   font-size: 40px;
   font-weight: 400;
   display: block;
@@ -1566,7 +1628,7 @@ textarea {
   margin-top: 70px;
 }
 .auth-story h1 {
-  font-family: "DM Serif Display", serif;
+  font-family: var(--st-font-display);
   font-size: 49px;
   line-height: 1.05;
   font-weight: 400;
@@ -1580,7 +1642,7 @@ textarea {
   max-width: 470px;
 }
 .auth-story blockquote {
-  font-family: "DM Serif Display", serif;
+  font-family: var(--st-font-display);
   color: #d5e0da;
   font-size: 17px;
   line-height: 1.5;
@@ -1600,7 +1662,7 @@ textarea {
   gap: 16px;
 }
 .auth-form h2 {
-  font-family: "DM Serif Display", serif;
+  font-family: var(--st-font-display);
   font-size: 37px;
   font-weight: 400;
   margin: 4px 0 -8px;
@@ -1872,7 +1934,7 @@ legend {
   font-weight: 800;
 }
 .group-summary strong {
-  font-family: "DM Serif Display", serif;
+  font-family: var(--st-font-display);
   font-size: 27px;
   font-weight: 400;
   color: #7ed3b2;
@@ -2149,7 +2211,7 @@ legend {
   font-weight: 800;
 }
 .personal-summary strong {
-  font-family: "DM Serif Display", serif;
+  font-family: var(--st-font-display);
   font-size: 26px;
   font-weight: 400;
   color: var(--brand);
