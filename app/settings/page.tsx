@@ -15,6 +15,7 @@ import {
 import { useRouter } from "next/navigation";
 import { AppShell } from "../../components/AppShell";
 import { Panel, PanelTitle, useConfirmation } from "../../components/UI";
+import { PasswordInput } from "../../components/PasswordInput";
 import { useSession } from "../../components/SessionProvider";
 import { apiDownload, apiFetch } from "../../lib/api";
 import { initials } from "../../lib/types";
@@ -311,17 +312,12 @@ export default function Settings() {
                 {user?.has_password && (
                   <label>
                     Current password
-                    <input name="current_password" type="password" required />
+                    <PasswordInput name="current_password" required />
                   </label>
                 )}
                 <label>
                   New password
-                  <input
-                    name="new_password"
-                    type="password"
-                    minLength={8}
-                    required
-                  />
+                  <PasswordInput name="new_password" minLength={8} required />
                 </label>
               </div>
               <button className="button">

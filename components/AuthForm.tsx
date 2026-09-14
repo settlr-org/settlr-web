@@ -14,6 +14,7 @@ import { Brand } from "./Brand";
 import { useSession } from "./SessionProvider";
 import { apiFetch, ApiError, RegistrationResult } from "../lib/api";
 import { GoogleSignInButton } from "./GoogleSignInButton";
+import { PasswordInput } from "./PasswordInput";
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const { user, signIn, signInWithGoogle } = useSession();
   const router = useRouter();
@@ -219,9 +220,8 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
               <span>Password</span>
               <div>
                 <LockOutlined />
-                <input
+                <PasswordInput
                   name="password"
-                  type="password"
                   minLength={8}
                   required
                   autoComplete={

@@ -3,6 +3,7 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { LockOutlined } from "@ant-design/icons";
 import { Brand } from "../../components/Brand";
+import { PasswordInput } from "../../components/PasswordInput";
 import { apiFetch } from "../../lib/api";
 export default function ResetPassword() {
   const [token, setToken] = useState("");
@@ -64,7 +65,7 @@ export default function ResetPassword() {
               <span>New password</span>
               <div>
                 <LockOutlined />
-                <input name="password" type="password" minLength={8} required />
+                <PasswordInput name="password" minLength={8} required />
               </div>
             </label>
             {error && <p className="form-error">{error}</p>}

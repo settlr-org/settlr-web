@@ -1700,6 +1700,37 @@ textarea {
   width: 100%;
   font-size: 12px;
 }
+.password-input {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+.password-input input {
+  width: 100%;
+  padding-right: 42px !important;
+}
+.password-visibility-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  place-items: center;
+  transform: translateY(-50%);
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+}
+.password-visibility-toggle:hover {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--brand) 8%, transparent);
+}
+.password-visibility-toggle:focus-visible {
+  outline-offset: -2px;
+}
 .form-meta {
   display: flex;
   align-items: center;
@@ -1857,6 +1888,12 @@ textarea {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+}
+.settings-layout .password-input {
+  width: 100%;
+}
+.settings-layout .password-input input {
+  box-sizing: border-box;
 }
 .amount-field {
   display: flex !important;
