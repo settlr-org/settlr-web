@@ -41,7 +41,10 @@ export default function Personal() {
   const [deleting, setDeleting] = useState<PersonalExpense>();
   const { user } = useSession();
   // Budget follows the saved budget, else the user's default currency (was hard-coded NPR).
-  const budgetCurrency = budget?.currency || user?.default_currency || "NPR";
+  const budgetCurrency =
+    (budget?.amount ? budget.currency : undefined) ||
+    user?.default_currency ||
+    "NPR";
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const month = new Date().toISOString().slice(0, 7);
