@@ -11,6 +11,7 @@ import {
   WalletOutlined,
 } from "@ant-design/icons";
 import { AppShell } from "../../components/AppShell";
+import { useSession } from "../../components/SessionProvider";
 import {
   Empty,
   ErrorState,
@@ -38,6 +39,9 @@ export default function Personal() {
   const [show, setShow] = useState(false);
   const [editing, setEditing] = useState<PersonalExpense>();
   const [deleting, setDeleting] = useState<PersonalExpense>();
+  const { user } = useSession();
+  // Budget follows the saved budget, else the user's default currency (was hard-coded NPR).
+  const budgetCurrency = budget?.currency || user?.default_currency || "NPR";
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const month = new Date().toISOString().slice(0, 7);
@@ -142,7 +146,7 @@ export default function Personal() {
         method: "PUT",
         body: JSON.stringify({
           amount: Math.round(Number(d.get("budget")) * 100),
-          currency: "NPR",
+          currency: budgetCurrency,
         }),
       });
       await load();
@@ -187,7 +191,7 @@ export default function Personal() {
                 <WalletOutlined />
               </span>
               <p>SPENT THIS MONTH</p>
-              <strong>{money(spent, budget?.currency || "NPR")}</strong>
+              <strong>{money(spent, budgetCurrency)}</strong>
               <small>{expenses.length} expenses</small>
             </article>
             <article>
@@ -195,9 +199,7 @@ export default function Personal() {
                 <BarChartOutlined />
               </span>
               <p>MONTHLY BUDGET</p>
-              <strong>
-                {money(budget?.amount ?? 0, budget?.currency || "NPR")}
-              </strong>
+              <strong>{money(budget?.amount ?? 0, budgetCurrency)}</strong>
               <div className="progress">
                 <i style={{ width: `${percent}%` }} />
               </div>
@@ -266,7 +268,7 @@ export default function Personal() {
                 <label>
                   Monthly limit
                   <div className="amount-field">
-                    <span>NPR</span>
+                    <span>{budgetCurrency}</span>
                     <input
                       name="budget"
                       type="number"
@@ -326,12 +328,17 @@ export default function Personal() {
                 Currency
                 <select
                   name="currency"
-                  defaultValue={editing?.currency || "NPR"}
+                  defaultValue={
+                    editing?.currency || user?.default_currency || "NPR"
+                  }
                 >
                   <option>NPR</option>
                   <option>USD</option>
                   <option>EUR</option>
                   <option>INR</option>
+                  <option>GBP</option>
+                  <option>AUD</option>
+                  <option>CAD</option>
                 </select>
               </label>
               <label>

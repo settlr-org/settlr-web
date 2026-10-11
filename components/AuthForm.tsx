@@ -198,7 +198,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
                     name="name"
                     required
                     autoComplete="name"
-                    placeholder="Nabin Khanal"
+                    placeholder="Alex Morgan"
                   />
                 </div>
               </label>

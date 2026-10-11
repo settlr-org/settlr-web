@@ -970,6 +970,7 @@ function QuickGroupModal({
               <option value="TRIP">Trip</option>
               <option value="HOME">Home</option>
               <option value="COUPLE">Couple</option>
+              <option value="EVENT">Event</option>
               <option value="OTHER">Other</option>
             </select>
           </label>

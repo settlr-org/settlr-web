@@ -423,7 +423,16 @@ export default function Settings() {
                   onClick={() =>
                     void apiFetch("/api/v1/auth/resend-verification", {
                       method: "POST",
-                    }).then(() => setSaved("Verification email sent."))
+                      body: JSON.stringify({ email: user?.email }),
+                    })
+                      .then(() => setSaved("Verification email sent."))
+                      .catch((x) =>
+                        setError(
+                          x instanceof Error
+                            ? x.message
+                            : "Could not resend the email.",
+                        ),
+                      )
                   }
                 >
                   <BellOutlined /> Resend verification
