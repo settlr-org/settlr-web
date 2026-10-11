@@ -5,7 +5,8 @@
       "namespace": "android_app",
       "package_name": "com.settlr.app",
       "sha256_cert_fingerprints": [
-        "0F:1A:05:43:56:DD:F8:43:D9:9F:17:69:63:F6:E8:FB:C5:C7:CE:87:45:DF:38:DF:F2:33:10:81:6F:51:50:28"
+        "0F:1A:05:43:56:DD:F8:43:D9:9F:17:69:63:F6:E8:FB:C5:C7:CE:87:45:DF:38:DF:F2:33:10:81:6F:51:50:28",
+        "7C:E5:71:89:D3:81:81:BD:06:A6:03:E6:44:9D:77:75:C0:BB:D0:0E:1F:63:BB:4D:FC:82:79:11:72:2E:BB:96"
       ]
     }
   }

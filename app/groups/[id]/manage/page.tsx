@@ -265,7 +265,7 @@ export default function ManageGroup() {
                   defaultValue={group.group_type}
                   disabled={!admin}
                 >
-                  {["HOME", "TRIP", "COUPLE", "OTHER"].map((x) => (
+                  {["HOME", "TRIP", "COUPLE", "EVENT", "OTHER"].map((x) => (
                     <option key={x}>{x}</option>
                   ))}
                 </select>

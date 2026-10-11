@@ -100,14 +100,14 @@ export default function Groups() {
           />
           {error && <ErrorState message={error} retry={load} />}
           <div className="groups-list">
-            {groups.map((g, i) => {
+            {groups.map((g) => {
               const b = balance?.data.find((x) => x.group_id === g.id);
               const Icon =
                 g.group_type === "HOME"
                   ? HomeOutlined
                   : g.group_type === "TRIP"
                     ? RocketOutlined
-                    : i % 2
+                    : g.group_type === "COUPLE"
                       ? TeamOutlined
                       : AppstoreOutlined;
               return (
@@ -195,6 +195,7 @@ export default function Groups() {
                   <option value="TRIP">Trip</option>
                   <option value="HOME">Home</option>
                   <option value="COUPLE">Couple</option>
+                  <option value="EVENT">Event</option>
                   <option value="OTHER">Other</option>
                 </select>
               </label>

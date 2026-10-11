@@ -139,15 +139,18 @@ export type PersonalExpense = {
 
 export const money = (amount: number, currency = "NPR") => {
   try {
+    // Design rule: always show the currency code (e.g. "USD 12.00", never a bare "$").
     return new Intl.NumberFormat(undefined, {
       style: "currency",
       currency,
+      currencyDisplay: "code",
       maximumFractionDigits: 2,
     }).format(amount / 100);
   } catch {
     return new Intl.NumberFormat("en-NP", {
       style: "currency",
       currency: "NPR",
+      currencyDisplay: "code",
       maximumFractionDigits: 2,
     }).format(amount / 100);
   }

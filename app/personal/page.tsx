@@ -11,6 +11,7 @@ import {
   WalletOutlined,
 } from "@ant-design/icons";
 import { AppShell } from "../../components/AppShell";
+import { useSession } from "../../components/SessionProvider";
 import {
   Empty,
   ErrorState,
@@ -25,7 +26,7 @@ type Stats = {
   total: number;
   by_category:
     Record<string, number> | { category_id: string; total: number }[];
-  by_month: unknown;
+  by_month: { month: string; total: number }[];
 };
 type Budget = { month: string; amount: number; currency: string };
 export default function Personal() {
@@ -38,6 +39,12 @@ export default function Personal() {
   const [show, setShow] = useState(false);
   const [editing, setEditing] = useState<PersonalExpense>();
   const [deleting, setDeleting] = useState<PersonalExpense>();
+  const { user } = useSession();
+  // Budget follows the saved budget, else the user's default currency (was hard-coded NPR).
+  const budgetCurrency =
+    (budget?.amount ? budget.currency : undefined) ||
+    user?.default_currency ||
+    "NPR";
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const month = new Date().toISOString().slice(0, 7);
@@ -142,7 +149,7 @@ export default function Personal() {
         method: "PUT",
         body: JSON.stringify({
           amount: Math.round(Number(d.get("budget")) * 100),
-          currency: "NPR",
+          currency: budgetCurrency,
         }),
       });
       await load();
@@ -150,7 +157,14 @@ export default function Personal() {
       setError(x instanceof Error ? x.message : "Could not save budget.");
     }
   };
-  const spent = stats?.total ?? expenses.reduce((n, e) => n + e.amount, 0);
+  // "Spent this month": stats.total is all-time, so take this month's bucket.
+  const spent =
+    (Array.isArray(stats?.by_month)
+      ? stats.by_month.find((m) => m.month === month)?.total
+      : undefined) ??
+    expenses
+      .filter((e) => e.expense_date?.startsWith(month))
+      .reduce((n, e) => n + e.amount, 0);
   const percent = budget?.amount
     ? Math.min(100, Math.round((spent / budget.amount) * 100))
     : 0;
@@ -187,7 +201,7 @@ export default function Personal() {
                 <WalletOutlined />
               </span>
               <p>SPENT THIS MONTH</p>
-              <strong>{money(spent, budget?.currency || "NPR")}</strong>
+              <strong>{money(spent, budgetCurrency)}</strong>
               <small>{expenses.length} expenses</small>
             </article>
             <article>
@@ -195,9 +209,7 @@ export default function Personal() {
                 <BarChartOutlined />
               </span>
               <p>MONTHLY BUDGET</p>
-              <strong>
-                {money(budget?.amount ?? 0, budget?.currency || "NPR")}
-              </strong>
+              <strong>{money(budget?.amount ?? 0, budgetCurrency)}</strong>
               <div className="progress">
                 <i style={{ width: `${percent}%` }} />
               </div>
@@ -266,7 +278,7 @@ export default function Personal() {
                 <label>
                   Monthly limit
                   <div className="amount-field">
-                    <span>NPR</span>
+                    <span>{budgetCurrency}</span>
                     <input
                       name="budget"
                       type="number"
@@ -326,12 +338,17 @@ export default function Personal() {
                 Currency
                 <select
                   name="currency"
-                  defaultValue={editing?.currency || "NPR"}
+                  defaultValue={
+                    editing?.currency || user?.default_currency || "NPR"
+                  }
                 >
                   <option>NPR</option>
                   <option>USD</option>
                   <option>EUR</option>
                   <option>INR</option>
+                  <option>GBP</option>
+                  <option>AUD</option>
+                  <option>CAD</option>
                 </select>
               </label>
               <label>
