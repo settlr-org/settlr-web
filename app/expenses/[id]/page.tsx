@@ -117,7 +117,8 @@ export default function ExpenseDetail() {
           currency: expense.currency,
           paid_by: data.get("paid_by"),
           expense_date: data.get("expense_date"),
-          category_id: data.get("category_id") || null,
+          // "" clears; the API keeps a category when the field is omitted/null.
+          category_id: data.get("category_id") || "",
           notes: data.get("notes"),
           split_mode: expense.split_mode,
           splits,
