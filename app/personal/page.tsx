@@ -26,7 +26,7 @@ type Stats = {
   total: number;
   by_category:
     Record<string, number> | { category_id: string; total: number }[];
-  by_month: unknown;
+  by_month: { month: string; total: number }[];
 };
 type Budget = { month: string; amount: number; currency: string };
 export default function Personal() {
@@ -154,7 +154,14 @@ export default function Personal() {
       setError(x instanceof Error ? x.message : "Could not save budget.");
     }
   };
-  const spent = stats?.total ?? expenses.reduce((n, e) => n + e.amount, 0);
+  // "Spent this month": stats.total is all-time, so take this month's bucket.
+  const spent =
+    (Array.isArray(stats?.by_month)
+      ? stats.by_month.find((m) => m.month === month)?.total
+      : undefined) ??
+    expenses
+      .filter((e) => e.expense_date?.startsWith(month))
+      .reduce((n, e) => n + e.amount, 0);
   const percent = budget?.amount
     ? Math.min(100, Math.round((spent / budget.amount) * 100))
     : 0;
