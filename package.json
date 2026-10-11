@@ -15,9 +15,9 @@
   "dependencies": {
     "@ant-design/icons": "^6.3.2",
     "@react-oauth/google": "^0.13.5",
-    "next": "latest",
-    "react": "latest",
-    "react-dom": "latest"
+    "next": "16.4.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "latest",
