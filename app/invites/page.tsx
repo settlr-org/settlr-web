@@ -2,6 +2,7 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { MailOutlined, SendOutlined, TeamOutlined } from "@ant-design/icons";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AppShell } from "../../components/AppShell";
 import {
   Empty,
@@ -19,6 +20,7 @@ type Invite = {
   group_name: string;
   email: string;
   created_at: string;
+  inviter_name?: string;
 };
 
 export default function Invitations() {
@@ -29,6 +31,8 @@ export default function Invitations() {
   const [sent, setSent] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [accepting, setAccepting] = useState("");
+  const router = useRouter();
   const load = useCallback(async () => {
     try {
       const [g, f, i] = await Promise.all([
@@ -62,6 +66,20 @@ export default function Invitations() {
       setSent(`Invitation sent to ${friend?.name || "your friend"}.`);
     } catch (x) {
       setError(x instanceof Error ? x.message : "Could not send invitation.");
+    }
+  };
+  const accept = async (inviteId: string) => {
+    setError("");
+    setAccepting(inviteId);
+    try {
+      const result = await apiFetch<{ group_id: string }>(
+        `/api/v1/invites/id/${inviteId}/accept`,
+        { method: "POST" },
+      );
+      router.push(`/groups/${result.group_id}`);
+    } catch (x) {
+      setError(x instanceof Error ? x.message : "Could not accept invitation.");
+      setAccepting("");
     }
   };
   return (
@@ -152,9 +170,19 @@ export default function Invitations() {
                 </span>
                 <div>
                   <strong>{invite.group_name}</strong>
-                  <p>Sent to {invite.email}</p>
+                  <p>
+                    {invite.inviter_name
+                      ? `From ${invite.inviter_name} · sent to ${invite.email}`
+                      : `Sent to ${invite.email}`}
+                  </p>
                 </div>
-                <small>Open the link from your email to accept</small>
+                <button
+                  className="button primary"
+                  disabled={accepting === invite.id}
+                  onClick={() => void accept(invite.id)}
+                >
+                  {accepting === invite.id ? "Joining…" : "Accept"}
+                </button>
               </article>
             ))}
             {!received.length && (
