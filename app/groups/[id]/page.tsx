@@ -258,9 +258,9 @@ export default function GroupDetail() {
               <Link
                 className="row-action"
                 href={`/expenses/${e.id}`}
-                aria-label={`Open ${e.description}`}
+                aria-label={`Edit ${e.description}`}
               >
-                <SettingOutlined />
+                <EditOutlined />
               </Link>
               <button
                 className="row-action"

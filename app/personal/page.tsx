@@ -298,7 +298,12 @@ export default function Personal() {
                 action={<TagOutlined />}
               />
               <form className="inline-form" onSubmit={createCategory}>
-                <input name="name" required placeholder="e.g. Subscriptions" />
+                <input
+                  name="name"
+                  required
+                  placeholder="e.g. Subscriptions"
+                  aria-label="Category name"
+                />
                 <button className="button">Add</button>
               </form>
             </Panel>
