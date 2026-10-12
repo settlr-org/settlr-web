@@ -168,6 +168,10 @@ async function performRequest<T>(
     !headers.has("Content-Type")
   )
     headers.set("Content-Type", "application/json");
+  // After a reload the access token is gone but the refresh cookie usually
+  // is not: refresh first instead of sending a request that is sure to 401.
+  if (retry && typeof window !== "undefined" && !accessToken && hasSession())
+    await refreshAccessToken();
   const token = typeof window === "undefined" ? null : accessToken;
   if (token) headers.set("Authorization", `Bearer ${token}`);
   const response = await fetchWithTimeout(`${API_URL}${path}`, {
