@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap");
-
 :root {
   /* Colour tokens (--st-<key>) come from theme/theme.json via app/theme.generated.css.
      Never write colour literals here: add a token to theme.json instead. */
@@ -7,9 +5,9 @@
   --st-radius-md: 14px;
   --st-radius-lg: 22px;
   --st-shadow: 0 14px 34px var(--st-shadow-color);
-  --st-font-sans: "DM Sans", system-ui, sans-serif;
-  --st-font-display: "Fraunces", Georgia, serif;
-  --st-font-data: "DM Mono", ui-monospace, monospace;
+  --st-font-sans: var(--font-dm-sans), system-ui, sans-serif;
+  --st-font-display: var(--font-fraunces), Georgia, serif;
+  --st-font-data: var(--font-dm-mono), ui-monospace, monospace;
 
   /* Legacy aliases — keep workspace code stable while deriving from tokens */
   --bg: var(--st-canvas);
@@ -27,6 +25,9 @@
   --warning: var(--st-warning);
   --positive: var(--st-positive);
   --danger: var(--st-negative);
+  /* Text-safe variants for tinted surfaces (keep WCAG AA 4.5:1 on paper-2 / soft tints) */
+  --muted-strong: color-mix(in srgb, var(--muted) 80%, var(--ink));
+  --danger-strong: color-mix(in srgb, var(--danger) 85%, var(--ink));
   --shadow: var(--st-shadow);
   color-scheme: light;
 }
@@ -160,7 +161,7 @@ p {
 }
 .nav-item.active {
   background: color-mix(in srgb, var(--brand) 11%, var(--paper));
-  color: var(--brand);
+  color: var(--brand-strong);
 }
 .nav-item:not(.active):hover {
   background: color-mix(in srgb, var(--brand) 5%, var(--paper));
@@ -193,7 +194,7 @@ p {
   font-size: 11px;
 }
 .profile small {
-  font-size: 9px;
+  font-size: 11px;
   color: var(--muted);
 }
 .avatar {
@@ -222,7 +223,7 @@ p {
   margin-bottom: 34px;
 }
 .eyebrow {
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 2px;
   color: var(--brand);
   font-weight: 800;
@@ -372,7 +373,7 @@ p {
   padding: 12px 15px;
   border-radius: 12px;
   font-size: 12px;
-  color: var(--danger);
+  color: var(--danger-strong);
   display: flex;
   justify-content: space-between;
 }
@@ -432,7 +433,7 @@ p {
   justify-content: space-between;
   align-items: center;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 1.5px;
   font-weight: 800;
   position: relative;
@@ -471,7 +472,7 @@ p {
 }
 .balance-split span {
   font-family: var(--st-font-data);
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1.5px;
   color: var(--muted);
   font-weight: 800;
@@ -509,7 +510,7 @@ p {
   font-weight: 600;
 }
 .panel-title p {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
   margin-top: 3px;
 }
@@ -552,12 +553,11 @@ p {
 .event-row strong,
 .person-row strong {
   font-size: 12px;
-  text-transform: capitalize;
 }
 .event-row small,
 .person-row small,
 .event-row time {
-  font-size: 9px;
+  font-size: 11px;
   color: var(--muted);
 }
 .person-row > svg {
@@ -565,7 +565,7 @@ p {
 }
 .avatar.soft {
   background: var(--paper-2);
-  color: var(--brand);
+  color: var(--brand-strong);
 }
 .empty {
   text-align: center;
@@ -623,7 +623,7 @@ p {
   flex: 1;
 }
 .group-card p {
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1.3px;
   color: var(--brand);
   font-weight: 800;
@@ -632,13 +632,14 @@ p {
   font-size: 13px;
   margin: 4px 0;
 }
-.group-card span {
-  font-size: 9px;
+.group-card div > span {
+  font-size: 11px;
   color: var(--muted);
 }
 .group-card > strong {
   font-size: 11px;
   color: var(--brand);
+  white-space: nowrap;
 }
 .modal-backdrop {
   position: fixed;
@@ -692,7 +693,7 @@ p {
   display: grid;
   gap: 6px;
   color: var(--ink);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
 }
 .modal input,
@@ -712,7 +713,7 @@ p {
   box-shadow: 0 0 0 3px var(--brand-soft);
 }
 .form-error {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--danger);
 }
 
@@ -784,12 +785,14 @@ p {
     font-size: 11px;
     margin-top: 4px;
   }
-  .top-actions .button.primary {
+  .top-actions .button.primary,
+  .top-actions .button.danger {
     width: 43px;
     padding: 0;
     font-size: 0;
   }
-  .top-actions .button.primary svg {
+  .top-actions .button.primary svg,
+  .top-actions .button.danger svg {
     font-size: 16px;
   }
   .top-actions {
@@ -821,9 +824,6 @@ p {
   .panel {
     padding: 19px;
   }
-  .group-card > strong {
-    display: none;
-  }
   .account-card {
     flex-direction: column;
     text-align: center;
@@ -850,8 +850,9 @@ p {
     display: grid;
     place-items: center;
     gap: 3px;
-    font-size: 8px;
+    font-size: 10px;
     font-weight: 700;
+    letter-spacing: -0.02em;
     line-height: 1;
     text-align: center;
     min-width: 0;
@@ -886,7 +887,9 @@ p {
   .mobile-add .anticon {
     font-size: 19px;
   }
-  .top-actions .button.primary {
+  /* The floating add button covers the generic action; page-specific
+     actions (New group, Add personal expense…) stay as icon buttons. */
+  .top-actions .default-add {
     display: none;
   }
   .loading {
@@ -931,7 +934,7 @@ p {
   border: 1px solid color-mix(in srgb, var(--brand) 25%, var(--line));
   border-radius: 12px;
   background: var(--brand-soft);
-  color: var(--brand);
+  color: var(--brand-strong);
   font-size: 11px;
   font-weight: 700;
 }
@@ -962,6 +965,20 @@ p {
   display: grid;
   gap: 4px;
 }
+.invite-line {
+  flex-wrap: wrap;
+}
+.invite-line > .invite-actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+}
+@media (max-width: 520px) {
+  .invite-line > .invite-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
 .invite-line strong,
 .compact-line strong,
 .comment-line strong {
@@ -975,7 +992,7 @@ p {
 .comment-line small,
 .muted-copy {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.5;
 }
 .invite-line > small {
@@ -1019,7 +1036,7 @@ p {
   border-top: 1px solid var(--line);
   padding: 14px 12px 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 11px;
 }
 .search-results-grid,
 .management-grid {
@@ -1052,7 +1069,7 @@ p {
 }
 .result-line small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 11px;
 }
 .management-grid > .panel {
   position: relative;
@@ -1087,13 +1104,13 @@ p {
   background: var(--paper-2);
 }
 .stats-strip span {
-  color: var(--muted);
-  font-size: 8px;
+  color: var(--muted-strong);
+  font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 .stats-strip strong {
-  color: var(--brand);
+  color: var(--brand-strong);
   font-size: 14px;
 }
 .danger-zone {
@@ -1115,7 +1132,7 @@ p {
 .danger-inline p {
   margin-top: 5px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 11px;
 }
 .friend-profile {
   display: flex;
@@ -1140,7 +1157,7 @@ p {
 .payment-card span {
   margin-top: 4px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 11px;
 }
 .payment-card {
   display: grid;
@@ -1182,6 +1199,10 @@ p {
   }
   .stats-strip {
     grid-template-columns: 1fr;
+  }
+  /* Give the description room on phones; the amount and actions already identify the row. */
+  .expense-line > .expense-category {
+    display: none;
   }
   .invite-line > small {
     display: none;
@@ -1260,8 +1281,8 @@ textarea {
 }
 .quick-card > :is(a, button) > span:not(.anticon) {
   grid-area: meta;
-  font-size: 9px;
-  color: var(--muted);
+  font-size: 11px;
+  color: var(--muted-strong);
   line-height: 1.4;
 }
 .quick-card > :is(a, button) {
@@ -1406,7 +1427,7 @@ textarea {
   display: flex;
   gap: 20px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 11px;
 }
 .trust-row span {
   display: flex;
@@ -1445,7 +1466,7 @@ textarea {
   transform: rotate(-3deg);
 }
 .visual-label {
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1.8px;
   color: var(--brand);
   font-weight: 800;
@@ -1459,7 +1480,7 @@ textarea {
 }
 .visual-main > p {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 11px;
 }
 .visual-members {
   display: flex;
@@ -1473,20 +1494,21 @@ textarea {
   border-radius: 50%;
   margin-right: -8px;
   background: var(--accent);
+  color: var(--st-on-accent);
   display: grid;
   place-items: center;
   font-style: normal;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 800;
 }
 .visual-members i:nth-child(2) {
-  background: var(--brand-soft);
+  background: var(--st-avatar-cool);
 }
 .visual-members i:nth-child(3) {
   background: var(--st-avatar-warm);
 }
 .visual-members span {
-  font-size: 9px;
+  font-size: 11px;
   color: var(--muted);
   margin-left: 15px;
 }
@@ -1509,7 +1531,7 @@ textarea {
   gap: 3px;
 }
 .visual-float span {
-  font-size: 8px;
+  font-size: 10px;
   color: var(--muted);
 }
 .visual-float strong {
@@ -1569,7 +1591,7 @@ textarea {
   color: var(--st-band-text);
 }
 .back-link {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
   font-weight: 800;
   display: inline-flex;
@@ -1639,7 +1661,7 @@ textarea {
 .settings-layout form label {
   display: grid;
   gap: 7px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
 }
 .auth-form label > div {
@@ -1696,7 +1718,7 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 10px;
+  font-size: 11px;
 }
 .check-label {
   display: flex !important;
@@ -1730,7 +1752,7 @@ textarea {
   align-items: center;
   gap: 10px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 11px;
   margin: 4px 0 13px;
 }
 .auth-divider::before,
@@ -1742,7 +1764,7 @@ textarea {
 }
 .auth-switch {
   text-align: center;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
 }
 .simple-auth {
@@ -1780,7 +1802,7 @@ textarea {
   font-size: 21px;
 }
 .group-list-card p {
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1.3px;
   color: var(--brand);
   font-weight: 800;
@@ -1790,7 +1812,7 @@ textarea {
   margin: 4px 0;
 }
 .group-list-card div > span {
-  font-size: 9px;
+  font-size: 11px;
   color: var(--muted);
 }
 .group-position {
@@ -1799,13 +1821,14 @@ textarea {
   gap: 4px;
 }
 .group-position small {
-  font-size: 7px;
+  font-size: 10px;
   letter-spacing: 1px;
   color: var(--muted);
 }
 .group-position strong {
   font-size: 12px;
   color: var(--brand);
+  white-space: nowrap;
 }
 .segmented {
   display: flex;
@@ -1816,10 +1839,10 @@ textarea {
 .segmented button {
   border: 0;
   background: transparent;
-  color: var(--muted);
+  color: var(--muted-strong);
   border-radius: 8px;
   padding: 7px 11px;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 800;
 }
 .segmented button.active {
@@ -1874,7 +1897,7 @@ textarea {
 }
 .amount-field span {
   padding-left: 12px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   color: var(--brand);
 }
@@ -1884,7 +1907,7 @@ fieldset {
   padding: 14px;
 }
 legend {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   padding: 0 6px;
 }
@@ -1926,7 +1949,7 @@ legend {
   gap: 5px;
 }
 .group-summary span {
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1.4px;
   color: var(--st-band-muted);
   font-weight: 800;
@@ -1938,7 +1961,7 @@ legend {
   color: var(--st-band-amount);
 }
 .group-summary small {
-  font-size: 9px;
+  font-size: 11px;
   color: var(--st-band-muted);
 }
 .member-stack {
@@ -1952,11 +1975,11 @@ legend {
   border: 3px solid var(--forest);
   border-radius: 50%;
   background: var(--accent);
-  color: var(--ink);
+  color: var(--st-on-accent);
   display: grid;
   place-items: center;
   font-style: normal;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 800;
   margin-left: -8px;
 }
@@ -1964,7 +1987,7 @@ legend {
   background: var(--st-avatar-cool);
 }
 .member-stack b {
-  font-size: 9px;
+  font-size: 11px;
   color: var(--st-band-muted);
   margin-left: 10px;
 }
@@ -1981,7 +2004,7 @@ legend {
   color: var(--muted);
   padding: 12px 15px;
   text-transform: capitalize;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
 }
 .tabs button.active {
@@ -2001,7 +2024,7 @@ legend {
   border: 0;
   background: transparent;
   outline: 0;
-  font-size: 9px;
+  font-size: 11px;
   color: var(--ink);
 }
 .expense-line,
@@ -2029,6 +2052,11 @@ legend {
 .debt-line > div,
 .session-row > div {
   flex: 1;
+  min-width: 0;
+}
+.member-line small,
+.request-card small {
+  display: block;
 }
 .expense-line h3,
 .member-line strong,
@@ -2041,7 +2069,7 @@ legend {
 .member-line small,
 .debt-line p,
 .session-row p {
-  font-size: 9px;
+  font-size: 11px;
   color: var(--muted);
   margin-top: 4px;
 }
@@ -2115,7 +2143,7 @@ legend {
 }
 .friend-card p,
 .request-card small {
-  font-size: 9px;
+  font-size: 11px;
   color: var(--muted);
   margin-top: 3px;
 }
@@ -2154,14 +2182,14 @@ legend {
 .status-pill {
   border-radius: 20px;
   background: var(--brand-soft);
-  color: var(--brand);
-  font-size: 8px;
+  color: var(--brand-strong);
+  font-size: 10px;
   font-weight: 800;
   padding: 6px 9px;
 }
 .status-pill.muted {
   background: var(--paper-2);
-  color: var(--muted);
+  color: var(--muted-strong);
 }
 .accept,
 .reject {
@@ -2174,7 +2202,7 @@ legend {
 }
 .accept {
   background: var(--brand-soft);
-  color: var(--brand);
+  color: var(--brand-strong);
 }
 .reject {
   background: color-mix(in srgb, var(--danger) 10%, var(--paper));
@@ -2210,7 +2238,7 @@ legend {
   place-items: center;
 }
 .personal-summary p {
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 1.2px;
   color: var(--muted);
   font-weight: 800;
@@ -2223,7 +2251,7 @@ legend {
   margin: 4px 0;
 }
 .personal-summary small {
-  font-size: 8px;
+  font-size: 10px;
   color: var(--muted);
 }
 .progress {
@@ -2275,7 +2303,7 @@ legend {
 }
 .notification-row p,
 .notification-row small {
-  font-size: 9px;
+  font-size: 11px;
   color: var(--muted);
   margin-top: 4px;
 }
@@ -2318,7 +2346,7 @@ legend {
 .timeline p,
 .timeline time {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 11px;
 }
 .timeline p {
   margin-top: 4px;
@@ -2349,13 +2377,13 @@ legend {
   align-items: center;
   padding: 11px;
   border-radius: 10px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   color: var(--muted);
 }
 .settings-nav a:hover {
   background: var(--brand-soft);
-  color: var(--brand);
+  color: var(--brand-strong);
 }
 .settings-layout > div {
   display: grid;
@@ -2378,7 +2406,7 @@ legend {
   font-size: 14px;
 }
 .profile-hero p {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
 }
 .settings-layout form {
@@ -2396,7 +2424,7 @@ legend {
   font-size: 11px;
 }
 .setting-row p {
-  font-size: 9px;
+  font-size: 11px;
   color: var(--muted);
   margin-top: 3px;
 }
@@ -2431,7 +2459,7 @@ legend {
   border: 1px solid color-mix(in srgb, var(--brand) 30%, var(--line));
   border-radius: 12px;
   background: var(--brand-soft);
-  color: var(--brand);
+  color: var(--brand-strong);
   font-size: 11px;
   font-weight: 700;
 }
@@ -2530,7 +2558,7 @@ legend {
   }
   .page-heading .eyebrow {
     display: block;
-    font-size: 8px;
+    font-size: 10px;
   }
   .page-heading h1 {
     font-size: 27px;
@@ -2594,15 +2622,23 @@ legend {
     font-size: 32px;
   }
   .group-list-card {
-    grid-template-columns: 48px 1fr 15px;
+    grid-template-columns: 44px minmax(0, 1fr) 15px;
+    gap: 10px 14px;
   }
   .group-cover {
     width: 44px;
     height: 44px;
   }
+  .group-list-card > .anticon {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
   .group-position {
-    display: grid;
-    text-align: right;
+    grid-column: 2;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    text-align: left;
   }
   .group-summary {
     grid-template-columns: 1fr 1fr;
@@ -2663,7 +2699,7 @@ legend {
   }
   .quick-card > :is(a, button) > span:not(.anticon) {
     display: block;
-    font-size: 8px;
+    font-size: 10px;
     line-height: 1.3;
   }
 }
@@ -2674,7 +2710,7 @@ legend {
   display: grid;
   gap: 7px;
   color: var(--ink);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
 }
 .stack-form input,

@@ -167,3 +167,11 @@ export const labelize = (value: string) =>
     .toLowerCase()
     .replaceAll("_", " ")
     .replace(/\b\w/g, (c) => c.toUpperCase());
+
+/** Today's date as YYYY-MM-DD in the user's own time zone (toISOString would use UTC). */
+export const todayISO = (date = new Date()) =>
+  [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");

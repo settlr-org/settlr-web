@@ -33,6 +33,7 @@ import {
   labelize,
   money,
   initials,
+  todayISO,
 } from "../../lib/types";
 export default function Overview() {
   const { user } = useSession();
@@ -136,7 +137,7 @@ export default function Overview() {
                     ? `You owe ${money(Math.abs(balance?.summary.net_balance ?? 0), balance?.currency)} in total`
                     : "All settled — no one owes anything"}
               </p>
-              <p>Across {balance?.data.length ?? 0} active groups</p>
+              <p>{ledgerSummary(groups, balance)}</p>
               <div className="balance-split">
                 <div>
                   <span>YOU ARE OWED</span>
@@ -367,9 +368,7 @@ function QuickExpenseModal({
     "EQUAL",
   );
   const [paidBy, setPaidBy] = useState(userId);
-  const [expenseDate, setExpenseDate] = useState(
-    new Date().toISOString().slice(0, 10),
-  );
+  const [expenseDate, setExpenseDate] = useState(todayISO());
   const [notes, setNotes] = useState("");
   const [currency, setCurrency] = useState(
     groups.find((g) => g.id === groupId)?.currency || "NPR",
@@ -603,6 +602,7 @@ function QuickExpenseModal({
                 type="button"
                 key={x}
                 className={mode === x ? "active" : ""}
+                aria-pressed={mode === x}
                 onClick={() => setMode(x)}
               >
                 {x.toLowerCase()}
@@ -989,4 +989,16 @@ function QuickGroupModal({
       </form>
     </Modal>
   );
+}
+
+/** "Across 4 groups and 3 friends": /me/balances also counts direct friend ledgers. */
+function ledgerSummary(groups: Group[], balance?: Balance): string {
+  const groupIds = new Set(groups.map((g) => g.id));
+  const direct = (balance?.data ?? []).filter(
+    (b) => !groupIds.has(b.group_id),
+  ).length;
+  const g = `${groups.length} ${groups.length === 1 ? "group" : "groups"}`;
+  return direct
+    ? `Across ${g} and ${direct} ${direct === 1 ? "friend" : "friends"}`
+    : `Across ${g}`;
 }

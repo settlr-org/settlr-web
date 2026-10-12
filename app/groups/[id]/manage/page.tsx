@@ -32,6 +32,7 @@ import {
   initials,
   labelize,
   money,
+  todayISO,
 } from "../../../../lib/types";
 import { useSession } from "../../../../components/SessionProvider";
 
@@ -434,7 +435,7 @@ export default function ManageGroup() {
                 <input
                   name="start_date"
                   type="date"
-                  defaultValue={new Date().toISOString().slice(0, 10)}
+                  defaultValue={todayISO()}
                 />
               </label>
             </div>
@@ -509,7 +510,9 @@ export default function ManageGroup() {
               {stats.by_category.map((row) => (
                 <article className="compact-line" key={row.category}>
                   <strong>{row.category}</strong>
-                  <span>{row.count} entries</span>
+                  <span>
+                    {row.count} {row.count === 1 ? "entry" : "entries"}
+                  </span>
                   <b>{money(row.total, group.currency)}</b>
                 </article>
               ))}

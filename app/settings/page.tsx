@@ -46,6 +46,10 @@ export default function Settings() {
   const router = useRouter();
   const [prefs, setPrefs] = useState<Prefs>();
   const [sessions, setSessions] = useState<Session[]>([]);
+  // Refresh-token rotation leaves a revoked row per refresh; only live ones are useful here.
+  const activeSessions = sessions.filter(
+    (s) => !s.revoked_at && new Date(s.expires_at) > new Date(),
+  );
   const [payment, setPayment] = useState<Payment>();
   const [error, setError] = useState("");
   const [saved, setSaved] = useState("");
@@ -370,9 +374,9 @@ export default function Settings() {
             <span id="sessions" />
             <PanelTitle
               title="Active sessions"
-              meta={`${sessions.filter((s) => !s.revoked_at).length} active`}
+              meta={`${activeSessions.length} active`}
             />
-            {sessions.map((s) => (
+            {activeSessions.map((s) => (
               <article className="session-row" key={s.id}>
                 <WalletOutlined />
                 <div>
@@ -382,20 +386,14 @@ export default function Settings() {
                     {new Date(s.last_used_at).toLocaleDateString()}
                   </p>
                 </div>
-                <span
-                  className={s.revoked_at ? "status-pill muted" : "status-pill"}
+                <span className="status-pill">Active</span>
+                <button
+                  className="row-action"
+                  aria-label="Revoke session"
+                  onClick={() => void revoke(s.id)}
                 >
-                  {s.revoked_at ? "Revoked" : "Active"}
-                </span>
-                {!s.revoked_at && (
-                  <button
-                    className="row-action"
-                    aria-label="Revoke session"
-                    onClick={() => void revoke(s.id)}
-                  >
-                    <LogoutOutlined />
-                  </button>
-                )}
+                  <LogoutOutlined />
+                </button>
               </article>
             ))}
             <div className="button-row">

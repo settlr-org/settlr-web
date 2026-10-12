@@ -22,6 +22,7 @@ import {
   SunOutlined,
   TeamOutlined,
   UnorderedListOutlined,
+  MailOutlined,
   UserOutlined,
   WalletOutlined,
 } from "@ant-design/icons";
@@ -35,6 +36,7 @@ const navigation = [
   { href: "/friends", label: "Friends", icon: <UserOutlined /> },
   { href: "/personal", label: "Personal", icon: <PieChartOutlined /> },
   { href: "/activity", label: "Activity", icon: <UnorderedListOutlined /> },
+  { href: "/invites", label: "Invites", icon: <MailOutlined /> },
 ];
 type ShellConfig = {
   title: string;
@@ -256,7 +258,7 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
               </button>
               {config.actions ?? (
                 <button
-                  className="button primary"
+                  className="button primary default-add"
                   onClick={() => router.push("/overview?add=1")}
                 >
                   <PlusOutlined /> Add expense

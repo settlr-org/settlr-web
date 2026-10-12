@@ -97,7 +97,18 @@ async function parseError(response: Response) {
   }
 }
 
-async function refreshAccessToken() {
+// Refresh tokens rotate on every use, so concurrent 401s must share one
+// refresh call; a second call would present the already-rotated cookie,
+// fail, and sign the user out.
+let refreshInFlight: Promise<string | null> | null = null;
+function refreshAccessToken() {
+  refreshInFlight ??= requestAccessToken().finally(() => {
+    refreshInFlight = null;
+  });
+  return refreshInFlight;
+}
+
+async function requestAccessToken() {
   const response = await fetchWithTimeout(`${API_URL}/api/v1/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -157,6 +168,10 @@ async function performRequest<T>(
     !headers.has("Content-Type")
   )
     headers.set("Content-Type", "application/json");
+  // After a reload the access token is gone but the refresh cookie usually
+  // is not: refresh first instead of sending a request that is sure to 401.
+  if (retry && typeof window !== "undefined" && !accessToken && hasSession())
+    await refreshAccessToken();
   const token = typeof window === "undefined" ? null : accessToken;
   if (token) headers.set("Authorization", `Bearer ${token}`);
   const response = await fetchWithTimeout(`${API_URL}${path}`, {

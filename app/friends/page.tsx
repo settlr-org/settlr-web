@@ -109,6 +109,7 @@ export default function Friends() {
                   required
                   minLength={2}
                   placeholder="Name or email address"
+                  aria-label="Find people by name or email"
                 />
                 <button className="button primary">Search</button>
               </form>

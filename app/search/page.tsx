@@ -62,6 +62,7 @@ export default function Search() {
             required
             minLength={2}
             placeholder="Try a person, trip, or expense"
+            aria-label="Search people, groups, and expenses"
             autoFocus
           />
           <button className="button primary">Search</button>
