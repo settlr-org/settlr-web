@@ -34,7 +34,11 @@
       "toggleKnob": "#FFFFFF",
       "notificationDot": "#FF3B30",
       "mediaScrim": "#000000EB",
-      "onMedia": "#FFFFFF"
+      "onMedia": "#FFFFFF",
+      "navIndicator": "#CDE7E3",
+      "divider": "#E6EFED",
+      "onAccent": "#2A1208",
+      "borderStrong": "#B8CFCB"
     },
     "dark": {
       "canvas": "#0A1716",
@@ -68,7 +72,11 @@
       "toggleKnob": "#FFFFFF",
       "notificationDot": "#FF3B30",
       "mediaScrim": "#000000EB",
-      "onMedia": "#FFFFFF"
+      "onMedia": "#FFFFFF",
+      "navIndicator": "#1D4744",
+      "divider": "#1A3331",
+      "onAccent": "#2A1208",
+      "borderStrong": "#3A5A56"
     }
   },
   "brand": {
