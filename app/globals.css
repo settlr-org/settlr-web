@@ -1,46 +1,28 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap");
 
 :root {
-  /* Design system tokens — the shipped palette. settlr-android ui/theme/Color.kt mirrors these;
-     settlr-design still documents the older green palette. */
-  --st-canvas: #f4f6fb;
-  --st-surface: #ffffff;
-  --st-surface-muted: #e9edf8;
-  --st-ink: #17233f;
-  --st-muted: #64708a;
-  --st-border: #d7deed;
-  --st-primary: #3f50bd;
-  --st-primary-strong: #293990;
-  --st-accent: #9ce5d0;
-  --st-positive: #18775e;
-  --st-negative: #bd4c5a;
-  --st-warning: #9a6510;
+  /* Colour tokens (--st-<key>) come from theme/theme.json via app/theme.generated.css.
+     Never write colour literals here: add a token to theme.json instead. */
   --st-radius-sm: 8px;
   --st-radius-md: 14px;
   --st-radius-lg: 22px;
-  --st-shadow: 0 14px 34px rgba(30, 45, 87, 0.08);
+  --st-shadow: 0 14px 34px var(--st-shadow-color);
   --st-font-sans: "DM Sans", system-ui, sans-serif;
   --st-font-display: "Fraunces", Georgia, serif;
   --st-font-data: "DM Mono", ui-monospace, monospace;
-  /* Always-dark navy bands (group summary, auth story, landing footer) and their text.
-     Not derived from --st-ink, which flips to near-white in dark mode. */
-  --st-band: #17233f;
-  --st-band-text: #f1f4ff;
-  --st-band-muted: #aeb9d1;
-  --st-band-amount: #7edbc2;
 
   /* Legacy aliases — keep workspace code stable while deriving from tokens */
   --bg: var(--st-canvas);
   --paper: var(--st-surface);
   --paper-2: var(--st-surface-muted);
   --ink: var(--st-ink);
-  --forest: var(--st-ink);
+  --forest: var(--st-band);
   --muted: var(--st-muted);
   --line: var(--st-border);
   --brand: var(--st-primary);
   --brand-strong: var(--st-primary-strong);
-  --brand-soft: var(--st-surface-muted);
-  --on-brand: #ffffff;
+  --brand-soft: var(--st-brand-soft);
+  --on-brand: var(--st-on-brand);
   --accent: var(--st-accent);
   --warning: var(--st-warning);
   --positive: var(--st-positive);
@@ -50,36 +32,6 @@
 }
 
 :root[data-theme="dark"] {
-  --st-canvas: #10182e;
-  --st-surface: #17213c;
-  --st-surface-muted: #202d50;
-  --st-ink: #f1f4ff;
-  --st-muted: #aeb9d1;
-  --st-border: #334268;
-  --st-primary: #aeb9ff;
-  --st-primary-strong: #d3d9ff;
-  --st-accent: #7edbc2;
-  --st-positive: #7edbc2;
-  --st-negative: #ff9ba7;
-  --st-warning: #f5cc75;
-  --st-shadow: 0 16px 38px rgba(0, 0, 0, 0.28);
-  --st-band: #0b1226;
-
-  --bg: var(--st-canvas);
-  --paper: var(--st-surface);
-  --paper-2: var(--st-surface-muted);
-  --ink: var(--st-ink);
-  --muted: var(--st-muted);
-  --line: var(--st-border);
-  --brand: var(--st-primary);
-  --brand-strong: var(--st-primary-strong);
-  --brand-soft: #29385f;
-  --on-brand: #17213c;
-  --accent: var(--st-accent);
-  --warning: var(--st-warning);
-  --positive: var(--st-positive);
-  --danger: var(--st-negative);
-  --shadow: var(--st-shadow);
   color-scheme: dark;
 }
 .theme-icon-dark {
@@ -344,10 +296,11 @@ p {
   right: 7px;
   width: 9px;
   height: 9px;
-  background: #ff3b30;
+  background: var(--st-notification-dot);
   border-radius: 50%;
   border: 2px solid var(--paper);
-  box-shadow: 0 0 8px rgba(255, 59, 48, 0.7);
+  box-shadow: 0 0 8px
+    color-mix(in srgb, var(--st-notification-dot) 70%, transparent);
   animation: pulse-dot 2s infinite;
 }
 .nav-item .notification-dot {
@@ -359,18 +312,18 @@ p {
 @keyframes pulse-dot {
   0% {
     box-shadow:
-      0 0 0 0 rgba(255, 59, 48, 0.55),
-      0 0 8px rgba(255, 59, 48, 0.7);
+      0 0 0 0 color-mix(in srgb, var(--st-notification-dot) 55%, transparent),
+      0 0 8px color-mix(in srgb, var(--st-notification-dot) 70%, transparent);
   }
   70% {
     box-shadow:
-      0 0 0 6px rgba(255, 59, 48, 0),
-      0 0 8px rgba(255, 59, 48, 0.7);
+      0 0 0 6px transparent,
+      0 0 8px color-mix(in srgb, var(--st-notification-dot) 70%, transparent);
   }
   100% {
     box-shadow:
-      0 0 0 0 rgba(255, 59, 48, 0),
-      0 0 8px rgba(255, 59, 48, 0.7);
+      0 0 0 0 transparent,
+      0 0 8px color-mix(in srgb, var(--st-notification-dot) 70%, transparent);
   }
 }
 .button {
@@ -653,7 +606,7 @@ p {
 .group-list-card:hover {
   transform: translateY(-2px);
   border-color: color-mix(in srgb, var(--brand) 38%, var(--line));
-  box-shadow: 0 10px 20px rgba(30, 45, 87, 0.08);
+  box-shadow: 0 10px 20px var(--st-shadow-color);
 }
 .group-icon {
   width: 42px;
@@ -690,7 +643,7 @@ p {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(10, 16, 34, 0.64);
+  background: var(--st-scrim);
   backdrop-filter: blur(7px);
   z-index: 20;
   display: grid;
@@ -706,7 +659,7 @@ p {
   border: 1px solid var(--line);
   border-radius: 24px;
   padding: 30px;
-  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 30px 100px var(--st-shadow-strong);
 }
 .modal h2 {
   font-family: var(--st-font-display);
@@ -1483,7 +1436,7 @@ textarea {
   z-index: 2;
   background: var(--paper);
   border: 1px solid var(--line);
-  box-shadow: 0 35px 80px rgba(30, 45, 87, 0.18);
+  box-shadow: 0 35px 80px var(--st-shadow-strong);
 }
 .visual-main {
   width: 300px;
@@ -1530,7 +1483,7 @@ textarea {
   background: var(--brand-soft);
 }
 .visual-members i:nth-child(3) {
-  background: #d6e3f4;
+  background: var(--st-avatar-warm);
 }
 .visual-members span {
   font-size: 9px;
@@ -1567,7 +1520,7 @@ textarea {
   margin: auto 0 0;
   flex: 0 0 auto;
   padding: 16px max(28px, calc((100vw - 1160px) / 2));
-  background: var(--st-band);
+  background: var(--forest);
   color: var(--st-band-text);
   display: flex;
   align-items: center;
@@ -1579,7 +1532,7 @@ textarea {
   flex: 1;
 }
 .landing-footer .brand {
-  color: #fff;
+  color: var(--st-band-text);
 }
 
 /* Authentication */
@@ -1591,7 +1544,7 @@ textarea {
 }
 .auth-story {
   padding: 48px clamp(34px, 6vw, 86px);
-  background: var(--st-band);
+  background: var(--forest);
   color: var(--st-band-text);
   display: flex;
   flex-direction: column;
@@ -1604,16 +1557,16 @@ textarea {
   position: absolute;
   width: 430px;
   height: 430px;
-  border: 1px solid #ffffff25;
+  border: 1px solid var(--st-band-line);
   border-radius: 50%;
   right: -220px;
   bottom: -100px;
   box-shadow:
-    0 0 0 70px #ffffff05,
-    0 0 0 140px #ffffff04;
+    0 0 0 70px var(--st-band-glow),
+    0 0 0 140px var(--st-band-glow);
 }
 .auth-story .brand {
-  color: #fff;
+  color: var(--st-band-text);
 }
 .back-link {
   font-size: 10px;
@@ -1632,7 +1585,7 @@ textarea {
   z-index: 1;
 }
 .auth-story .eyebrow {
-  color: var(--st-band-amount);
+  color: var(--st-band-eyebrow);
   margin-top: 70px;
 }
 .auth-story h1 {
@@ -1651,7 +1604,7 @@ textarea {
 }
 .auth-story blockquote {
   font-family: var(--st-font-display);
-  color: var(--st-band-muted);
+  color: var(--st-band-text);
   font-size: 17px;
   line-height: 1.5;
   margin: 0;
@@ -1872,7 +1825,7 @@ textarea {
 .segmented button.active {
   background: var(--paper);
   color: var(--brand);
-  box-shadow: 0 2px 8px #0000000e;
+  box-shadow: 0 2px 8px var(--st-shadow-color);
 }
 .modal-wide {
   width: min(720px, 100%);
@@ -1958,8 +1911,8 @@ legend {
   width: auto;
 }
 .group-summary {
-  background: var(--st-band);
-  color: #fff;
+  background: var(--forest);
+  color: var(--st-band-text);
   border-radius: 22px;
   padding: 24px 27px;
   display: grid;
@@ -2008,7 +1961,7 @@ legend {
   margin-left: -8px;
 }
 .member-stack i:nth-child(2n) {
-  background: #cbdceb;
+  background: var(--st-avatar-cool);
 }
 .member-stack b {
   font-size: 9px;
@@ -2283,7 +2236,7 @@ legend {
 .progress i {
   display: block;
   height: 100%;
-  background: var(--accent);
+  background: var(--brand);
 }
 .budget-form {
   display: grid;
@@ -2460,7 +2413,7 @@ legend {
   width: 17px;
   height: 17px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--st-toggle-knob);
   transition: transform 0.2s;
 }
 .toggle.active {
@@ -2549,7 +2502,7 @@ legend {
     position: fixed;
     inset: 0;
     border: 0;
-    background: rgba(10, 16, 34, 0.65);
+    background: var(--st-scrim);
     z-index: 29;
   }
   .mobile-menu {

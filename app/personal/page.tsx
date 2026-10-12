@@ -22,6 +22,7 @@ import {
 } from "../../components/UI";
 import { apiDownload, apiFetch } from "../../lib/api";
 import { Category, PersonalExpense, money } from "../../lib/types";
+import theme from "../../theme/theme.json";
 type Stats = {
   total: number;
   by_category:
@@ -120,7 +121,7 @@ export default function Personal() {
         body: JSON.stringify({
           name: d.get("name"),
           icon: "tag",
-          color: "#176b54",
+          color: theme.modes.light.primary,
         }),
       });
       form.reset();

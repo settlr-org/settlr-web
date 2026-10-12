@@ -14,3 +14,7 @@ CLAUDE.md
 .vercel
 .tmp-test/
 qa-artifacts/
+
+# Generated from theme/theme.json by scripts/gen-theme.mjs
+app/theme.generated.css
+app/icon.svg
