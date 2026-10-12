@@ -33,6 +33,7 @@ import {
   labelize,
   money,
   initials,
+  todayISO,
 } from "../../lib/types";
 export default function Overview() {
   const { user } = useSession();
@@ -367,9 +368,7 @@ function QuickExpenseModal({
     "EQUAL",
   );
   const [paidBy, setPaidBy] = useState(userId);
-  const [expenseDate, setExpenseDate] = useState(
-    new Date().toISOString().slice(0, 10),
-  );
+  const [expenseDate, setExpenseDate] = useState(todayISO());
   const [notes, setNotes] = useState("");
   const [currency, setCurrency] = useState(
     groups.find((g) => g.id === groupId)?.currency || "NPR",
@@ -603,6 +602,7 @@ function QuickExpenseModal({
                 type="button"
                 key={x}
                 className={mode === x ? "active" : ""}
+                aria-pressed={mode === x}
                 onClick={() => setMode(x)}
               >
                 {x.toLowerCase()}

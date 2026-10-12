@@ -21,7 +21,7 @@ import {
   PanelTitle,
 } from "../../components/UI";
 import { apiDownload, apiFetch } from "../../lib/api";
-import { Category, PersonalExpense, money } from "../../lib/types";
+import { Category, PersonalExpense, money, todayISO } from "../../lib/types";
 import theme from "../../theme/theme.json";
 type Stats = {
   total: number;
@@ -376,10 +376,7 @@ export default function Personal() {
                 <input
                   name="expense_date"
                   type="date"
-                  defaultValue={
-                    editing?.expense_date ||
-                    new Date().toISOString().slice(0, 10)
-                  }
+                  defaultValue={editing?.expense_date || todayISO()}
                 />
               </label>
             </div>

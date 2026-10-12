@@ -32,6 +32,7 @@ import {
   initials,
   labelize,
   money,
+  todayISO,
 } from "../../../../lib/types";
 import { useSession } from "../../../../components/SessionProvider";
 
@@ -434,7 +435,7 @@ export default function ManageGroup() {
                 <input
                   name="start_date"
                   type="date"
-                  defaultValue={new Date().toISOString().slice(0, 10)}
+                  defaultValue={todayISO()}
                 />
               </label>
             </div>

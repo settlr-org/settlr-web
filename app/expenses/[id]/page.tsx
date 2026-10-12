@@ -310,6 +310,7 @@ export default function ExpenseDetail() {
               required
               maxLength={2000}
               placeholder="Add context or ask a question"
+              aria-label="Comment"
             />
             <button className="button primary">Comment</button>
           </form>

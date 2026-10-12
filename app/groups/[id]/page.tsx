@@ -32,6 +32,7 @@ import {
   Member,
   money,
   initials,
+  todayISO,
 } from "../../../lib/types";
 import { useSession } from "../../../components/SessionProvider";
 type GroupBalances = {
@@ -575,11 +576,7 @@ function ExpenseModal({
           </label>
           <label>
             Date
-            <input
-              name="expense_date"
-              type="date"
-              defaultValue={new Date().toISOString().slice(0, 10)}
-            />
+            <input name="expense_date" type="date" defaultValue={todayISO()} />
           </label>
         </div>
         <fieldset>
@@ -590,6 +587,7 @@ function ExpenseModal({
                 type="button"
                 key={x}
                 className={mode === x ? "active" : ""}
+                aria-pressed={mode === x}
                 onClick={() => setMode(x)}
               >
                 {x.toLowerCase()}
