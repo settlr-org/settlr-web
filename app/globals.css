@@ -1,24 +1,30 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap");
 
 :root {
-  /* Design system tokens — the shipped palette. settlr-android ui/theme/Color.kt mirrors these;
-     settlr-design still documents the older green palette. */
-  --st-canvas: #f4f6fb;
+  /* Design system tokens — the shipped "Deep Teal & Coral" palette. settlr-android
+     ui/theme/Color.kt mirrors these; settlr-design still documents the older green palette. */
+  --st-canvas: #f2f7f6;
   --st-surface: #ffffff;
-  --st-surface-muted: #e9edf8;
-  --st-ink: #17233f;
-  --st-muted: #64708a;
-  --st-border: #d7deed;
-  --st-primary: #3f50bd;
-  --st-primary-strong: #293990;
-  --st-accent: #9ce5d0;
-  --st-positive: #18775e;
-  --st-negative: #bd4c5a;
+  --st-surface-muted: #e2eeec;
+  --st-ink: #0f2e2d;
+  --st-muted: #56706d;
+  --st-border: #d2e2df;
+  --st-primary: #0e7c7b;
+  --st-primary-strong: #095e5d;
+  --st-accent: #ff8a65;
+  --st-positive: #157347;
+  --st-negative: #c2453d;
   --st-warning: #9a6510;
+  /* Deep-teal band (group summary, auth story, landing footer) */
+  --st-band: #0f3d3c;
+  --st-band-text: #f1faf8;
+  --st-band-muted: #9fc3bf;
+  --st-band-amount: #ffb199;
+  --st-band-eyebrow: #ffb199;
   --st-radius-sm: 8px;
   --st-radius-md: 14px;
   --st-radius-lg: 22px;
-  --st-shadow: 0 14px 34px rgba(30, 45, 87, 0.08);
+  --st-shadow: 0 14px 34px rgba(15, 46, 45, 0.08);
   --st-font-sans: "DM Sans", system-ui, sans-serif;
   --st-font-display: "Fraunces", Georgia, serif;
   --st-font-data: "DM Mono", ui-monospace, monospace;
@@ -28,7 +34,7 @@
   --paper: var(--st-surface);
   --paper-2: var(--st-surface-muted);
   --ink: var(--st-ink);
-  --forest: var(--st-ink);
+  --forest: var(--st-band);
   --muted: var(--st-muted);
   --line: var(--st-border);
   --brand: var(--st-primary);
@@ -44,30 +50,32 @@
 }
 
 :root[data-theme="dark"] {
-  --st-canvas: #10182e;
-  --st-surface: #17213c;
-  --st-surface-muted: #202d50;
-  --st-ink: #f1f4ff;
-  --st-muted: #aeb9d1;
-  --st-border: #334268;
-  --st-primary: #aeb9ff;
-  --st-primary-strong: #d3d9ff;
-  --st-accent: #7edbc2;
-  --st-positive: #7edbc2;
-  --st-negative: #ff9ba7;
+  --st-canvas: #0a1716;
+  --st-surface: #112322;
+  --st-surface-muted: #1b3230;
+  --st-ink: #e9f4f2;
+  --st-muted: #98b3af;
+  --st-border: #23403d;
+  --st-primary: #4fd1c5;
+  --st-primary-strong: #8ae3da;
+  --st-accent: #ff9e80;
+  --st-positive: #6fd39a;
+  --st-negative: #ff948a;
   --st-warning: #f5cc75;
+  --st-band: #123533;
   --st-shadow: 0 16px 38px rgba(0, 0, 0, 0.28);
 
   --bg: var(--st-canvas);
   --paper: var(--st-surface);
   --paper-2: var(--st-surface-muted);
   --ink: var(--st-ink);
+  --forest: var(--st-band);
   --muted: var(--st-muted);
   --line: var(--st-border);
   --brand: var(--st-primary);
   --brand-strong: var(--st-primary-strong);
-  --brand-soft: #29385f;
-  --on-brand: #17213c;
+  --brand-soft: #173c39;
+  --on-brand: #062220;
   --accent: var(--st-accent);
   --warning: var(--st-warning);
   --positive: var(--st-positive);
@@ -384,8 +392,8 @@ p {
 :root[data-theme="dark"] .button:not(.primary, .danger),
 :root[data-theme="dark"] .icon-button:not(.primary) {
   background: var(--paper-2);
-  border-color: #42564d;
-  color: #f4f2e8;
+  border-color: var(--line);
+  color: var(--ink);
 }
 .button.primary:hover {
   background: var(--brand-strong);
@@ -646,7 +654,7 @@ p {
 .group-list-card:hover {
   transform: translateY(-2px);
   border-color: color-mix(in srgb, var(--brand) 38%, var(--line));
-  box-shadow: 0 10px 20px rgba(30, 45, 87, 0.08);
+  box-shadow: 0 10px 20px rgba(15, 46, 45, 0.08);
 }
 .group-icon {
   width: 42px;
@@ -1476,7 +1484,7 @@ textarea {
   z-index: 2;
   background: var(--paper);
   border: 1px solid var(--line);
-  box-shadow: 0 35px 80px rgba(20, 67, 51, 0.18);
+  box-shadow: 0 35px 80px rgba(15, 61, 60, 0.18);
 }
 .visual-main {
   width: 300px;
@@ -1523,7 +1531,7 @@ textarea {
   background: var(--brand-soft);
 }
 .visual-members i:nth-child(3) {
-  background: #d6e3f4;
+  background: #ffd8c9;
 }
 .visual-members span {
   font-size: 9px;
@@ -1561,13 +1569,13 @@ textarea {
   flex: 0 0 auto;
   padding: 16px max(28px, calc((100vw - 1160px) / 2));
   background: var(--forest);
-  color: #f7f4ea;
+  color: var(--st-band-text);
   display: flex;
   align-items: center;
   gap: 24px;
 }
 .landing-footer p {
-  color: #bdcac4;
+  color: var(--st-band-muted);
   font-size: 11px;
   flex: 1;
 }
@@ -1585,7 +1593,7 @@ textarea {
 .auth-story {
   padding: 48px clamp(34px, 6vw, 86px);
   background: var(--forest);
-  color: #f7f4ea;
+  color: var(--st-band-text);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1618,14 +1626,14 @@ textarea {
   margin-bottom: 15px;
 }
 .auth-story > .back-link {
-  color: #d7e2dd;
+  color: var(--st-band-muted);
 }
 .auth-story > div {
   position: relative;
   z-index: 1;
 }
 .auth-story .eyebrow {
-  color: #71c9a8;
+  color: var(--st-band-eyebrow);
   margin-top: 70px;
 }
 .auth-story h1 {
@@ -1637,14 +1645,14 @@ textarea {
   max-width: 540px;
 }
 .auth-story > div > p:last-child {
-  color: #bdcac4;
+  color: var(--st-band-muted);
   line-height: 1.7;
   font-size: 13px;
   max-width: 470px;
 }
 .auth-story blockquote {
   font-family: var(--st-font-display);
-  color: #d5e0da;
+  color: var(--st-band-text);
   font-size: 17px;
   line-height: 1.5;
   margin: 0;
@@ -1968,18 +1976,18 @@ legend {
 .group-summary span {
   font-size: 8px;
   letter-spacing: 1.4px;
-  color: #a8bbb2;
+  color: var(--st-band-muted);
   font-weight: 800;
 }
 .group-summary strong {
   font-family: var(--st-font-display);
   font-size: 27px;
   font-weight: 400;
-  color: #7ed3b2;
+  color: var(--st-band-amount);
 }
 .group-summary small {
   font-size: 9px;
-  color: #a8bbb2;
+  color: var(--st-band-muted);
 }
 .member-stack {
   display: flex;
@@ -2001,11 +2009,11 @@ legend {
   margin-left: -8px;
 }
 .member-stack i:nth-child(2n) {
-  background: #cbdceb;
+  background: #cfe7e3;
 }
 .member-stack b {
   font-size: 9px;
-  color: #c3d1ca;
+  color: var(--st-band-muted);
   margin-left: 10px;
 }
 .tabs {
@@ -2276,7 +2284,7 @@ legend {
 .progress i {
   display: block;
   height: 100%;
-  background: var(--accent);
+  background: var(--brand);
 }
 .budget-form {
   display: grid;

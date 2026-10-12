@@ -481,9 +481,9 @@ describe("group PATCH atomicity — app/groups/[id]/manage/page.tsx:108", () => 
 
 // ---------- color token contract ----------
 describe("color token contract", () => {
-  it("defines the field-ledger light and dark accents", () => {
-    expect(css).toContain("--st-accent: #9ce5d0");
-    expect(css).toContain("--st-accent: #7edbc2");
+  it("defines the teal-and-coral light and dark accents", () => {
+    expect(css).toContain("--st-accent: #ff8a65");
+    expect(css).toContain("--st-accent: #ff9e80");
   });
 
   it("--accent alias maps to --st-accent (app/globals.css:36,69)", () => {
@@ -496,9 +496,9 @@ describe("color token contract", () => {
   });
 
   it("dark theme has its own accessible primary", () => {
-    expect(css).toContain("--st-primary: #aeb9ff");
+    expect(css).toContain("--st-primary: #4fd1c5");
     const darkBlock = css.slice(css.indexOf(':root[data-theme="dark"]'));
-    expect(darkBlock).toContain("--st-primary: #aeb9ff");
+    expect(darkBlock).toContain("--st-primary: #4fd1c5");
   });
 });
 
