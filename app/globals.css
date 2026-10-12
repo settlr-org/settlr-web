@@ -965,6 +965,20 @@ p {
   display: grid;
   gap: 4px;
 }
+.invite-line {
+  flex-wrap: wrap;
+}
+.invite-line > .invite-actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+}
+@media (max-width: 520px) {
+  .invite-line > .invite-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
 .invite-line strong,
 .compact-line strong,
 .comment-line strong {

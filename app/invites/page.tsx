@@ -68,6 +68,22 @@ export default function Invitations() {
       setError(x instanceof Error ? x.message : "Could not send invitation.");
     }
   };
+  const decline = async (inviteId: string) => {
+    setError("");
+    setAccepting(inviteId);
+    try {
+      await apiFetch(`/api/v1/invites/id/${inviteId}/decline`, {
+        method: "POST",
+      });
+      setReceived((list) => list.filter((invite) => invite.id !== inviteId));
+    } catch (x) {
+      setError(
+        x instanceof Error ? x.message : "Could not decline invitation.",
+      );
+    } finally {
+      setAccepting("");
+    }
+  };
   const accept = async (inviteId: string) => {
     setError("");
     setAccepting(inviteId);
@@ -176,13 +192,22 @@ export default function Invitations() {
                       : `Sent to ${invite.email}`}
                   </p>
                 </div>
-                <button
-                  className="button primary"
-                  disabled={accepting === invite.id}
-                  onClick={() => void accept(invite.id)}
-                >
-                  {accepting === invite.id ? "Joining…" : "Accept"}
-                </button>
+                <div className="invite-actions">
+                  <button
+                    className="button"
+                    disabled={accepting === invite.id}
+                    onClick={() => void decline(invite.id)}
+                  >
+                    Decline
+                  </button>
+                  <button
+                    className="button primary"
+                    disabled={accepting === invite.id}
+                    onClick={() => void accept(invite.id)}
+                  >
+                    {accepting === invite.id ? "Joining…" : "Accept"}
+                  </button>
+                </div>
               </article>
             ))}
             {!received.length && (

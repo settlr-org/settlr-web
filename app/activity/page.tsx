@@ -66,7 +66,7 @@ export default function Activity() {
                       ? e.payload.description
                       : labelize(e.type)}
                   </h3>
-                  <p>{labelize(e.type)}</p>
+                  <p>{activityMeta(e)}</p>
                 </div>
                 <time>
                   {new Date(e.created_at).toLocaleString(undefined, {
@@ -140,4 +140,17 @@ export default function Activity() {
       )}
     </AppShell>
   );
+}
+
+/** Second line of an activity row: the event type, unless the title already is the type. */
+function activityMeta(e: Event): string {
+  const hasTitle = typeof e.payload?.description === "string";
+  if (hasTitle) return labelize(e.type);
+  const amount = e.payload?.amount;
+  const currency = e.payload?.currency;
+  return typeof amount === "number"
+    ? money(amount, typeof currency === "string" ? currency : undefined)
+    : new Date(e.created_at).toLocaleDateString(undefined, {
+        weekday: "long",
+      });
 }
