@@ -579,17 +579,17 @@ describe("mobile hides — app/globals.css:2606 @media 720px", () => {
     expect(css).toMatch(/\.search\s*\{[^}]*display:\s*none/);
   });
 
-  it("top-actions primary button hidden on mobile (app/globals.css:879)", () => {
-    const hideCount = (
-      css.match(/\.top-actions \.button\.primary\s*\{[^}]*display:\s*none/g) ||
-      []
-    ).length;
-    expect(hideCount).toBeGreaterThanOrEqual(1);
+  it("only the generic add-expense action is hidden on mobile; page actions stay reachable", () => {
+    expect(appShell).toContain("button primary default-add");
+    expect(css).toMatch(/\.top-actions \.default-add\s*\{[^}]*display:\s*none/);
+    expect(css).not.toMatch(
+      /\.top-actions \.button\.primary\s*\{[^}]*display:\s*none/,
+    );
   });
 
-  it("group-card strong hidden on mobile (app/globals.css:815)", () => {
+  it("group-card balance stays visible on mobile", () => {
     expect(css).toContain(".group-card > strong");
-    expect(css).toContain("display: none");
+    expect(css).not.toMatch(/\.group-card > strong\s*\{[^}]*display:\s*none/);
   });
 
   it("stats-strip and management-grid collapse to 1fr on mobile (app/globals.css:1163-1175)", () => {

@@ -256,7 +256,7 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
               </button>
               {config.actions ?? (
                 <button
-                  className="button primary"
+                  className="button primary default-add"
                   onClick={() => router.push("/overview?add=1")}
                 >
                   <PlusOutlined /> Add expense
