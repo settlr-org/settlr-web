@@ -175,3 +175,49 @@ export const todayISO = (date = new Date()) =>
     String(date.getMonth() + 1).padStart(2, "0"),
     String(date.getDate()).padStart(2, "0"),
   ].join("-");
+
+/** Friendly name for a session's user agent, e.g. "Chrome on macOS" (matches Android's deviceLabel). */
+export function deviceLabel(userAgent?: string | null): string {
+  const ua = (userAgent ?? "").trim();
+  if (!ua) return "Unknown device";
+  if (/^settlr-android/i.test(ua)) return "Settlr for Android";
+  if (/^mozilla\//i.test(ua)) {
+    const browser = /Edg\//.test(ua)
+      ? "Edge"
+      : /OPR\/|Opera/.test(ua)
+        ? "Opera"
+        : /Firefox\//.test(ua)
+          ? "Firefox"
+          : /Chrome\/|CriOS\//.test(ua)
+            ? "Chrome"
+            : /Safari\//.test(ua)
+              ? "Safari"
+              : "Browser";
+    const os = /Android/.test(ua)
+      ? "Android"
+      : /iPhone|iPad/.test(ua)
+        ? "iOS"
+        : /Windows/.test(ua)
+          ? "Windows"
+          : /Mac OS X|Macintosh/.test(ua)
+            ? "macOS"
+            : /Linux/.test(ua)
+              ? "Linux"
+              : null;
+    return os ? `${browser} on ${os}` : browser;
+  }
+  return ua.slice(0, 60);
+}
+
+/** Session IP without its port: "[::1]:5718" → "::1", "10.0.0.2:443" → "10.0.0.2". */
+export function displayIp(ip?: string | null): string {
+  const v = (ip ?? "").trim();
+  if (!v) return "";
+  if (v.startsWith("["))
+    return v.slice(1, v.indexOf("]") > 0 ? v.indexOf("]") : undefined);
+  return v.split(":").length === 2 ? v.split(":")[0] : v;
+}
+
+/** True for user agents from phones/tablets, so the session row can show a phone icon. */
+export const isMobileAgent = (userAgent?: string | null) =>
+  /android|iphone|ipad|mobile/i.test(userAgent ?? "");

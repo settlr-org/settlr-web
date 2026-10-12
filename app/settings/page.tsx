@@ -5,12 +5,13 @@ import {
   BankOutlined,
   CheckCircleOutlined,
   DeleteOutlined,
+  DesktopOutlined,
   DownloadOutlined,
   LockOutlined,
   LogoutOutlined,
+  MobileOutlined,
   SafetyCertificateOutlined,
   UserOutlined,
-  WalletOutlined,
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { AppShell } from "../../components/AppShell";
@@ -18,7 +19,12 @@ import { Panel, PanelTitle, useConfirmation } from "../../components/UI";
 import { PasswordInput } from "../../components/PasswordInput";
 import { useSession } from "../../components/SessionProvider";
 import { apiDownload, apiFetch } from "../../lib/api";
-import { initials } from "../../lib/types";
+import {
+  deviceLabel,
+  displayIp,
+  initials,
+  isMobileAgent,
+} from "../../lib/types";
 type Prefs = {
   email_enabled: boolean;
   push_enabled: boolean;
@@ -376,28 +382,42 @@ export default function Settings() {
               title="Active sessions"
               meta={`${activeSessions.length} active`}
             />
-            {activeSessions.map((s) => (
-              <article className="session-row" key={s.id}>
-                <WalletOutlined />
-                <div>
-                  <strong>{s.user_agent || "Unknown device"}</strong>
-                  <p>
-                    {s.ip} · Last used{" "}
-                    {new Date(s.last_used_at).toLocaleDateString()}
-                  </p>
-                </div>
-                <span className="status-pill">Active</span>
-                <button
-                  className="row-action"
-                  aria-label="Revoke session"
-                  onClick={() => void revoke(s.id)}
-                >
-                  <LogoutOutlined />
-                </button>
-              </article>
-            ))}
-            <div className="button-row">
-              <button className="button danger settings-logout" onClick={leave}>
+            {activeSessions.map((s) => {
+              const device = deviceLabel(s.user_agent);
+              return (
+                <article className="session-row" key={s.id}>
+                  <span className="session-icon" aria-hidden="true">
+                    {isMobileAgent(s.user_agent) ? (
+                      <MobileOutlined />
+                    ) : (
+                      <DesktopOutlined />
+                    )}
+                  </span>
+                  <div>
+                    <strong title={s.user_agent || undefined}>{device}</strong>
+                    <p>
+                      {[
+                        displayIp(s.ip),
+                        `Last used ${new Date(s.last_used_at).toLocaleDateString()}`,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="session-revoke"
+                    aria-label={`Revoke session on ${device}`}
+                    title="Revoke session"
+                    onClick={() => void revoke(s.id)}
+                  >
+                    <LogoutOutlined />
+                  </button>
+                </article>
+              );
+            })}
+            <div className="button-row session-actions">
+              <button className="button danger" onClick={leave}>
                 <LogoutOutlined /> Sign out of this device
               </button>
               <button className="button danger" onClick={() => void revoke()}>
