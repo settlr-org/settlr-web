@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import "./theme.generated.css";
 import "./globals.css";
 import { SessionProvider } from "../components/SessionProvider";
 import { WorkspaceLayout } from "../components/AppShell";

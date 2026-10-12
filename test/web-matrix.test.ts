@@ -271,7 +271,7 @@ describe("notification dot — components/AppShell.tsx:177 app/globals.css:318",
   it("CSS dot exists with pulse animation (app/globals.css:318,336)", () => {
     expect(css).toContain(".notification-dot");
     expect(css).toContain("pulse-dot");
-    expect(css).toContain("background: #ff3b30");
+    expect(css).toContain("background: var(--st-notification-dot)");
     expect(appShell).toContain("notification-dot");
   });
 
@@ -480,25 +480,68 @@ describe("group PATCH atomicity — app/groups/[id]/manage/page.tsx:108", () => 
 });
 
 // ---------- color token contract ----------
+// theme/theme.json is the single colour source shared with settlr-android.
 describe("color token contract", () => {
-  it("defines the teal-and-coral light and dark accents", () => {
-    expect(css).toContain("--st-accent: #ff8a65");
-    expect(css).toContain("--st-accent: #ff9e80");
+  const theme = JSON.parse(
+    fs.readFileSync(path.join(process.cwd(), "theme/theme.json"), "utf8"),
+  ) as {
+    modes: Record<string, Record<string, string>>;
+    brand: Record<string, string>;
+  };
+  const generated = fs.readFileSync(
+    path.join(process.cwd(), "app/theme.generated.css"),
+    "utf8",
+  );
+  const kebab = (k: string) =>
+    k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
+  const colourLiteral =
+    /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?)\(|\b(?:white|black)\b(?!-)/i;
+
+  it("light and dark define the same tokens", () => {
+    expect(Object.keys(theme.modes.dark).sort()).toEqual(
+      Object.keys(theme.modes.light).sort(),
+    );
   });
 
-  it("--accent alias maps to --st-accent (app/globals.css:36,69)", () => {
+  it("generated CSS carries every theme.json token per mode", () => {
+    const darkBlock = generated.slice(
+      generated.indexOf(':root[data-theme="dark"]'),
+    );
+    for (const [k, v] of Object.entries(theme.modes.light)) {
+      expect(generated).toContain(`--st-${kebab(k)}: ${v.toLowerCase()};`);
+    }
+    for (const [k, v] of Object.entries(theme.modes.dark)) {
+      expect(darkBlock).toContain(`--st-${kebab(k)}: ${v.toLowerCase()};`);
+    }
+  });
+
+  it("globals.css has no colour literals (tokens only)", () => {
+    const offending = css
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("@import"))
+      .filter((line) => colourLiteral.test(line.replace(/white-space/g, "")));
+    expect(offending).toEqual([]);
+  });
+
+  it("app, components and lib have no colour literals", () => {
+    const walk = (dir: string): string[] =>
+      fs.readdirSync(dir, { withFileTypes: true }).flatMap((d) => {
+        const p = path.join(dir, d.name);
+        if (d.isDirectory()) return walk(p);
+        return /\.(tsx?|css)$/.test(d.name) && !d.name.includes(".generated.")
+          ? [p]
+          : [];
+      });
+    const offending = ["app", "components", "lib"]
+      .flatMap((d) => walk(path.join(process.cwd(), d)))
+      .filter((f) => !f.endsWith("globals.css"))
+      .filter((f) => /#[0-9a-fA-F]{6}\b/.test(fs.readFileSync(f, "utf8")));
+    expect(offending).toEqual([]);
+  });
+
+  it("--accent alias maps to --st-accent", () => {
     expect(css).toContain("--accent: var(--st-accent)");
-  });
-
-  it("accent used in gradient and avatar backgrounds (app/globals.css:1056,1456,1898)", () => {
-    expect(css).toContain("var(--accent)");
     expect(css).toContain("linear-gradient(var(--brand), var(--accent))");
-  });
-
-  it("dark theme has its own accessible primary", () => {
-    expect(css).toContain("--st-primary: #4fd1c5");
-    const darkBlock = css.slice(css.indexOf(':root[data-theme="dark"]'));
-    expect(darkBlock).toContain("--st-primary: #4fd1c5");
   });
 });
 

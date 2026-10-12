@@ -3,14 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "theme": "node scripts/gen-theme.mjs",
+    "dev": "npm run theme && next dev",
+    "build": "npm run theme && next build",
     "start": "next start",
     "lint": "prettier --check \"{app,components,lib,test}/**/*.{ts,tsx,css}\" \"*.{ts,js,json}\"",
     "format": "prettier --write \"{app,components,lib,test}/**/*.{ts,tsx,css}\" \"*.{ts,js,json}\"",
     "format:check": "npm run lint",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "typecheck": "npm run theme && tsc --noEmit",
+    "test": "npm run theme && vitest run"
   },
   "dependencies": {
     "@ant-design/icons": "^6.3.2",

@@ -2,3 +2,5 @@
 node_modules
 coverage
 output
+app/theme.generated.css
+app/icon.svg
