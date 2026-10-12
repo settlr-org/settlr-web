@@ -2085,10 +2085,17 @@ legend {
   color: var(--muted);
   margin-top: 4px;
 }
-.expense-line > div:nth-last-child(2) {
+/* Amount column: icon, details, amount, then 0–2 row actions. Positional from the start so the
+   number of trailing actions doesn't matter (it previously missed rows with two actions). */
+.expense-line > div:nth-child(3) {
   display: grid;
   text-align: right;
   gap: 3px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.expense-line > div:nth-child(2) {
+  min-width: 0;
 }
 .row-action {
   border: 0;
