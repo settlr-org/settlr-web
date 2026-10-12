@@ -97,7 +97,18 @@ async function parseError(response: Response) {
   }
 }
 
-async function refreshAccessToken() {
+// Refresh tokens rotate on every use, so concurrent 401s must share one
+// refresh call; a second call would present the already-rotated cookie,
+// fail, and sign the user out.
+let refreshInFlight: Promise<string | null> | null = null;
+function refreshAccessToken() {
+  refreshInFlight ??= requestAccessToken().finally(() => {
+    refreshInFlight = null;
+  });
+  return refreshInFlight;
+}
+
+async function requestAccessToken() {
   const response = await fetchWithTimeout(`${API_URL}/api/v1/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },

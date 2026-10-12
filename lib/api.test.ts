@@ -129,4 +129,30 @@ describe("authentication", () => {
       readApiCache<{ data: string[] }>("/api/v1/cache-probe")?.data,
     ).toEqual(["warm"]);
   });
+  it("shares one token refresh between concurrent 401 responses", async () => {
+    const json = (body: unknown, status = 200) =>
+      new Response(JSON.stringify(body), {
+        status,
+        headers: { "Content-Type": "application/json" },
+      });
+    vi.mocked(fetch).mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.endsWith("/auth/refresh")) return json(session);
+      return vi
+        .mocked(fetch)
+        .mock.calls.some(([u]) => String(u).endsWith("/auth/refresh"))
+        ? json({ ok: true })
+        : json({ error: { message: "expired" } }, 401);
+    });
+
+    await Promise.all([
+      apiFetch("/api/v1/refresh-probe-a"),
+      apiFetch("/api/v1/refresh-probe-b"),
+    ]);
+
+    const refreshes = vi
+      .mocked(fetch)
+      .mock.calls.filter(([u]) => String(u).endsWith("/auth/refresh"));
+    expect(refreshes).toHaveLength(1);
+  });
 });
