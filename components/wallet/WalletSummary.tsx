@@ -12,17 +12,25 @@ import {
   WalletSettings,
 } from "../../lib/wallet";
 
+/** Last day of a period whose `to` is exclusive, e.g. "31 Oct". */
+const projectedBy = (to: string) => {
+  const end = new Date(new Date(to).getTime() - 1);
+  return end.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+};
+
 /** Total balance (base currency), income and spending for a period. */
 export function WalletSummary({
   overview,
   settings,
   accountCount,
   onToggleHidden,
+  showProjected = true,
 }: {
   overview?: Overview;
   settings: WalletSettings;
   accountCount: number;
   onToggleHidden: () => void;
+  showProjected?: boolean;
 }) {
   const currency = overview?.currency || "NPR";
   const hidden = settings.hide_balance;
@@ -53,6 +61,15 @@ export function WalletSummary({
         >
           {overview ? formatMoney(overview.balance, currency, { hidden }) : "…"}
         </strong>
+        {showProjected &&
+          overview?.projected_balance != null &&
+          overview.projected_balance !== overview.balance && (
+            <p className="wallet-sub">
+              Projected{" "}
+              {formatMoney(overview.projected_balance, currency, { hidden })} by{" "}
+              {projectedBy(overview.to)} · after planned payments
+            </p>
+          )}
         {missing.length > 0 && (
           <p className="wallet-missing">
             <WarningOutlined aria-hidden="true" /> Some amounts are left out: no

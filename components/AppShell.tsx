@@ -29,10 +29,28 @@ import { Brand } from "./Brand";
 import { ConfirmationProvider } from "./UI";
 import { useSession } from "./SessionProvider";
 import { initials } from "../lib/types";
-const navigation = [
+type NavChild = { href: string; label: string; match: string[] };
+const navigation: {
+  href: string;
+  label: string;
+  icon: ReactNode;
+  children?: NavChild[];
+}[] = [
   { href: "/overview", label: "Overview", icon: <HomeOutlined /> },
   // Personal folded into Wallet; /personal stays reachable from the Wallet page.
-  { href: "/wallet", label: "Wallet", icon: <WalletOutlined /> },
+  {
+    href: "/wallet",
+    label: "Wallet",
+    icon: <WalletOutlined />,
+    children: [
+      {
+        href: "/wallet/budgets",
+        label: "Budgets & planned",
+        match: ["/wallet/budgets", "/wallet/planned"],
+      },
+      { href: "/wallet/loans", label: "Loans", match: ["/wallet/loans"] },
+    ],
+  },
   { href: "/groups", label: "Groups", icon: <TeamOutlined /> },
   { href: "/friends", label: "Friends", icon: <UserOutlined /> },
   { href: "/activity", label: "Activity", icon: <UnorderedListOutlined /> },
@@ -173,22 +191,41 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
           <Brand />
           <p className="brand-tagline">Shared money, made clear.</p>
           <nav aria-label="Primary navigation">
-            {navigation.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={
-                  path.startsWith(item.href) ||
-                  (item.href === "/wallet" && path.startsWith("/personal"))
-                    ? "nav-item active"
-                    : "nav-item"
-                }
-                aria-current={path.startsWith(item.href) ? "page" : undefined}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </Link>
-            ))}
+            {navigation.map((item) => {
+              const under = (prefix: string) =>
+                path === prefix || path.startsWith(`${prefix}/`);
+              const child = item.children?.find((c) => c.match.some(under));
+              const active =
+                !child &&
+                (path.startsWith(item.href) ||
+                  (item.href === "/wallet" && path.startsWith("/personal")));
+              return (
+                <Fragment key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={active ? "nav-item active" : "nav-item"}
+                    aria-current={path === item.href ? "page" : undefined}
+                  >
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </Link>
+                  {item.children?.map((c) => (
+                    <Link
+                      key={c.href}
+                      href={c.href}
+                      className={
+                        c === child
+                          ? "nav-item nav-sub active"
+                          : "nav-item nav-sub"
+                      }
+                      aria-current={c === child ? "page" : undefined}
+                    >
+                      <span>{c.label}</span>
+                    </Link>
+                  ))}
+                </Fragment>
+              );
+            })}
           </nav>
           <div className="sidebar-secondary">
             <Link
