@@ -1,5 +1,6 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   BarChartOutlined,
@@ -190,6 +191,12 @@ export default function Personal() {
       ) : (
         <>
           {error && <ErrorState message={error} retry={load} />}
+          <div className="success-note moved-note" role="note">
+            Personal expenses now live in your{" "}
+            <Link href="/wallet">Wallet</Link> as expense transactions (on your
+            default account). This page keeps your monthly budget, stats and CSV
+            export until budgets arrive in Wallet.
+          </div>
           <button
             className="button primary mobile-personal-add"
             onClick={openNewExpense}
