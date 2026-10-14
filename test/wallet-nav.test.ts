@@ -8,8 +8,8 @@ const shell = read("components/AppShell.tsx");
 
 describe("wallet navigation", () => {
   const nav = shell.slice(
-    shell.indexOf("const navigation = ["),
-    shell.indexOf("];", shell.indexOf("const navigation = [")),
+    shell.indexOf("const navigation"),
+    shell.indexOf("type ShellConfig"),
   );
 
   it("puts Wallet between Overview and Groups in the sidebar", () => {

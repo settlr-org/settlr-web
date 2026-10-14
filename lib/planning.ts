@@ -318,6 +318,7 @@ export const loanWords = (type: LoanType) =>
         kind: "Lent",
         paid: "back",
         left: "to collect",
+        remaining: "Still to collect",
         increase: "Lent more",
         decrease: "Got paid back",
       }
@@ -325,6 +326,7 @@ export const loanWords = (type: LoanType) =>
         kind: "Borrowed",
         paid: "repaid",
         left: "left to repay",
+        remaining: "Left to repay",
         increase: "Borrowed more",
         decrease: "Paid back",
       };

@@ -195,7 +195,7 @@ export default function LoanDetail() {
           <section className="wallet-summary" aria-label="Loan summary">
             <article className="wallet-total">
               <div className="wallet-total-head">
-                <span>{loan.paid_off ? "Paid off" : words.left}</span>
+                <span>{loan.paid_off ? "Paid off" : words.remaining}</span>
               </div>
               <strong>{formatMoney(loan.remaining, loan.currency)}</strong>
               <span

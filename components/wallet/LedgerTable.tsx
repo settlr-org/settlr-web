@@ -128,7 +128,8 @@ export function LedgerTable({
                 ? "Transfer"
                 : entry.type === "SETTLEMENT"
                   ? "Settlement"
-                  : (category?.name ?? "Uncategorized");
+                  : (category?.name ??
+                    (entry.source === "LOAN" ? "Loan" : "Uncategorized"));
             const groupHref = entry.loan_id
               ? `/wallet/loans/${entry.loan_id}`
               : entry.kind === "GROUP_EXPENSE" && entry.expense_id
