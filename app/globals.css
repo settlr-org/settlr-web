@@ -4270,3 +4270,6 @@ a.account-row:hover {
 .plan-tabs a {
   justify-content: center;
 }
+.planned-panel + .history-panel {
+  margin-top: 20px;
+}
