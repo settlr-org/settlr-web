@@ -21,6 +21,25 @@ import {
   PanelTitle,
 } from "../../components/UI";
 import { apiFetch, readApiCache } from "../../lib/api";
+import {
+  buildLedgerQuery,
+  LedgerEntry,
+  Overview as WalletOverview,
+  Page,
+  periodContaining,
+} from "../../lib/wallet";
+import {
+  accountMap,
+  categoryMap,
+  useWalletRefs,
+} from "../../components/wallet/data";
+import { WalletSummary } from "../../components/wallet/WalletSummary";
+import { LedgerTable } from "../../components/wallet/LedgerTable";
+import { TransactionEditor } from "../../components/wallet/TransactionEditor";
+import {
+  AccountSelect,
+  useAccounts,
+} from "../../components/wallet/AccountSelect";
 import { useSession } from "../../components/SessionProvider";
 import {
   Balance,
@@ -35,6 +54,17 @@ import {
   initials,
   todayISO,
 } from "../../lib/types";
+/** Values carried over from the wallet editor's "Split with a group". */
+type ExpensePrefill = {
+  amount?: string;
+  description?: string;
+  currency?: string;
+  date?: string;
+  category?: string;
+  notes?: string;
+  account?: string;
+};
+
 export default function Overview() {
   const { user } = useSession();
   const router = useRouter();
@@ -60,6 +90,37 @@ export default function Overview() {
   const [addExpense, setAddExpense] = useState(false);
   const [settleOpen, setSettleOpen] = useState(false);
   const [groupOpen, setGroupOpen] = useState(false);
+  const [prefill, setPrefill] = useState<ExpensePrefill>();
+  const {
+    refs: walletRefs,
+    updateSettings,
+    reload: reloadWallet,
+  } = useWalletRefs();
+  const [walletOverview, setWalletOverview] = useState<WalletOverview>();
+  const [recent, setRecent] = useState<LedgerEntry[]>([]);
+  const [walletKey, setWalletKey] = useState(0);
+  const [editingEntry, setEditingEntry] = useState<string>();
+  const startDay = walletRefs?.settings.month_start_day;
+  useEffect(() => {
+    if (startDay === undefined) return;
+    let cancelled = false;
+    const period = periodContaining(new Date(), startDay);
+    Promise.all([
+      apiFetch<WalletOverview>(
+        `/api/v1/overview${buildLedgerQuery({ period })}`,
+      ),
+      apiFetch<Page<LedgerEntry>>("/api/v1/ledger?limit=6"),
+    ])
+      .then(([o, l]) => {
+        if (cancelled) return;
+        setWalletOverview(o);
+        setRecent(l.data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [startDay, walletKey]);
   const load = useCallback(async () => {
     if (!warm) setLoading(true);
     setError("");
@@ -100,7 +161,20 @@ export default function Overview() {
     void load();
   }, [load]);
   useEffect(() => {
-    if (searchParams.get("add") !== "1") return;
+    const add = searchParams.get("add");
+    if (add !== "1" && add !== "shared") return;
+    if (add === "shared") {
+      const get = (key: string) => searchParams.get(key) || undefined;
+      setPrefill({
+        amount: get("amount"),
+        description: get("description"),
+        currency: get("currency"),
+        date: get("date"),
+        category: get("category"),
+        notes: get("notes"),
+        account: get("account"),
+      });
+    }
     setAddExpense(true);
     router.replace("/overview");
   }, [router, searchParams]);
@@ -114,6 +188,30 @@ export default function Overview() {
       ) : (
         <>
           {error && <ErrorState message={error} retry={load} />}
+          {walletRefs && (
+            <div className="overview-wallet">
+              <div className="overview-wallet-head">
+                <p className="eyebrow">THIS MONTH IN YOUR WALLET</p>
+                <Link className="text-button" href="/wallet">
+                  Open wallet <ArrowRightOutlined />
+                </Link>
+              </div>
+              <WalletSummary
+                overview={walletOverview}
+                settings={walletRefs.settings}
+                accountCount={
+                  walletRefs.accounts.filter(
+                    (a) => !a.archived && a.include_in_balance,
+                  ).length
+                }
+                onToggleHidden={() =>
+                  void updateSettings({
+                    hide_balance: !walletRefs.settings.hide_balance,
+                  })
+                }
+              />
+            </div>
+          )}
           <section className="summary-grid">
             <article className="balance-card">
               <div className="card-title">
@@ -175,6 +273,33 @@ export default function Overview() {
               </button>
             </article>
           </section>
+          {walletRefs && (
+            <Panel className="history-panel overview-history">
+              <PanelTitle
+                title="Recent transactions"
+                meta="Wallet entries and your group shares"
+                action={
+                  <Link className="text-button" href="/wallet">
+                    View all <ArrowRightOutlined />
+                  </Link>
+                }
+              />
+              {recent.length ? (
+                <LedgerTable
+                  entries={recent}
+                  accounts={accountMap(walletRefs.accounts)}
+                  categories={categoryMap(walletRefs.categories)}
+                  onOpen={(entry) => setEditingEntry(entry.id)}
+                  caption="Recent transactions"
+                />
+              ) : (
+                <Empty
+                  icon={<WalletOutlined />}
+                  text="Add a transaction or a group expense to see it here."
+                />
+              )}
+            </Panel>
+          )}
           <section className="dashboard-grid">
             <Panel>
               <PanelTitle
@@ -302,14 +427,34 @@ export default function Overview() {
               })}
             </div>
           </Panel>
+          {editingEntry && walletRefs && (
+            <TransactionEditor
+              transactionId={editingEntry}
+              accounts={walletRefs.accounts}
+              categories={walletRefs.categories}
+              tags={walletRefs.tags}
+              onClose={() => setEditingEntry(undefined)}
+              onSaved={() => {
+                setEditingEntry(undefined);
+                void reloadWallet();
+                setWalletKey((k) => k + 1);
+              }}
+            />
+          )}
           {addExpense && (
             <QuickExpenseModal
               groups={groups}
               userId={user?.id || ""}
-              onClose={() => setAddExpense(false)}
+              prefill={prefill}
+              onClose={() => {
+                setAddExpense(false);
+                setPrefill(undefined);
+              }}
               onDone={() => {
                 setAddExpense(false);
+                setPrefill(undefined);
                 void load();
+                setWalletKey((k) => k + 1);
               }}
               onNeedGroup={() => {
                 setAddExpense(false);
@@ -320,10 +465,12 @@ export default function Overview() {
           {settleOpen && (
             <QuickSettleModal
               groups={groups}
+              userId={user?.id || ""}
               onClose={() => setSettleOpen(false)}
               onDone={() => {
                 setSettleOpen(false);
                 void load();
+                setWalletKey((k) => k + 1);
               }}
               onNeedGroup={() => {
                 setSettleOpen(false);
@@ -349,17 +496,23 @@ export default function Overview() {
 function QuickExpenseModal({
   groups,
   userId,
+  prefill,
   onClose,
   onDone,
   onNeedGroup,
 }: {
   groups: Group[];
   userId: string;
+  prefill?: ExpensePrefill;
   onClose: () => void;
   onDone: () => void;
   onNeedGroup: () => void;
 }) {
-  const [kind, setKind] = useState<"choose" | "shared">("choose");
+  const [kind, setKind] = useState<"choose" | "shared">(
+    prefill ? "shared" : "choose",
+  );
+  const accounts = useAccounts();
+  const [payerAccount, setPayerAccount] = useState(prefill?.account || "");
   const [groupId, setGroupId] = useState(groups[0]?.id || "");
   const [members, setMembers] = useState<Member[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
@@ -368,10 +521,12 @@ function QuickExpenseModal({
     "EQUAL",
   );
   const [paidBy, setPaidBy] = useState(userId);
-  const [expenseDate, setExpenseDate] = useState(todayISO());
-  const [notes, setNotes] = useState("");
+  const [expenseDate, setExpenseDate] = useState(prefill?.date || todayISO());
+  const [notes, setNotes] = useState(prefill?.notes || "");
   const [currency, setCurrency] = useState(
-    groups.find((g) => g.id === groupId)?.currency || "NPR",
+    prefill?.currency ||
+      groups.find((g) => g.id === groupId)?.currency ||
+      "NPR",
   );
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState("");
@@ -386,7 +541,7 @@ function QuickExpenseModal({
   useEffect(() => {
     if (!groupId) return;
     const grp = groups.find((g) => g.id === groupId);
-    if (grp) setCurrency(grp.currency);
+    if (grp && !prefill?.currency) setCurrency(grp.currency);
     apiFetch<{ data: Member[] }>(`/api/v1/groups/${groupId}/members`)
       .then((result) => {
         setMembers(result.data);
@@ -402,7 +557,7 @@ function QuickExpenseModal({
             : "Could not load group members.",
         ),
       );
-  }, [groupId, groups, paidBy, userId]);
+  }, [groupId, groups, paidBy, userId, prefill?.currency]);
 
   useEffect(() => {
     if (groups.length && !groupId) setGroupId(groups[0].id);
@@ -464,6 +619,9 @@ function QuickExpenseModal({
           expense_date: String(data.get("expense_date") || expenseDate),
           split_mode: mode,
           splits,
+          ...(payerAccount && String(data.get("paid_by") || paidBy) === userId
+            ? { payer_account_id: payerAccount }
+            : {}),
         }),
       });
       onDone();
@@ -507,8 +665,8 @@ function QuickExpenseModal({
           <button className="button primary" onClick={() => setKind("shared")}>
             <TeamOutlined /> Shared expense
           </button>
-          <Link className="button" href="/personal?new=1">
-            <WalletOutlined /> Personal expense
+          <Link className="button" href="/wallet?add=expense">
+            <WalletOutlined /> Personal expense (Wallet)
           </Link>
         </div>
       </Modal>
@@ -541,6 +699,7 @@ function QuickExpenseModal({
             <input
               name="description"
               required
+              defaultValue={prefill?.description}
               placeholder="Dinner, taxi, groceries…"
             />
           </label>
@@ -559,6 +718,10 @@ function QuickExpenseModal({
                 <option value="GBP">GBP</option>
                 <option value="AUD">AUD</option>
                 <option value="CAD">CAD</option>
+                {currency &&
+                  !["NPR", "USD", "EUR", "INR", "GBP", "AUD", "CAD"].includes(
+                    currency,
+                  ) && <option value={currency}>{currency}</option>}
               </select>
               <input
                 name="amount"
@@ -566,6 +729,7 @@ function QuickExpenseModal({
                 min="0.01"
                 step="0.01"
                 required
+                defaultValue={prefill?.amount}
                 placeholder="0.00"
               />
             </div>
@@ -593,6 +757,15 @@ function QuickExpenseModal({
               onChange={(e) => setExpenseDate(e.target.value)}
             />
           </label>
+          {paidBy === userId && accounts.length > 0 && (
+            <AccountSelect
+              label="Paid from"
+              value={payerAccount}
+              onChange={setPayerAccount}
+              accounts={accounts}
+              currency={currency}
+            />
+          )}
         </div>
         <fieldset>
           <legend>How should it be split?</legend>
@@ -655,7 +828,7 @@ function QuickExpenseModal({
         </fieldset>
         <label>
           Category
-          <select name="category_id" defaultValue="">
+          <select name="category_id" defaultValue={prefill?.category || ""}>
             <option value="">No category</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
@@ -697,11 +870,13 @@ function QuickExpenseModal({
 
 function QuickSettleModal({
   groups,
+  userId,
   onClose,
   onDone,
   onNeedGroup,
 }: {
   groups: Group[];
+  userId: string;
   onClose: () => void;
   onDone: () => void;
   onNeedGroup: () => void;
@@ -715,6 +890,8 @@ function QuickSettleModal({
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const accounts = useAccounts();
+  const [fromAccount, setFromAccount] = useState("");
 
   useEffect(() => {
     if (!groupId) return;
@@ -781,17 +958,29 @@ function QuickSettleModal({
     setError("");
     try {
       const grp = groups.find((g) => g.id === groupId);
-      await apiFetch(`/api/v1/groups/${groupId}/settlements`, {
-        method: "POST",
-        body: JSON.stringify({
-          from_user: fromUser,
-          to_user: toUser,
-          amount: amt,
-          currency: grp?.currency || "NPR",
-          note: note || undefined,
-          settled_at: new Date().toISOString(),
-        }),
-      });
+      const created = await apiFetch<{ id: string }>(
+        `/api/v1/groups/${groupId}/settlements`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            from_user: fromUser,
+            to_user: toUser,
+            amount: amt,
+            currency: grp?.currency || "NPR",
+            note: note || undefined,
+            settled_at: new Date().toISOString(),
+            ...(fromAccount && fromUser === userId
+              ? { from_account_id: fromAccount }
+              : {}),
+          }),
+        },
+      );
+      // The receiver links their account separately (it is per-user).
+      if (fromAccount && toUser === userId && created?.id)
+        await apiFetch(`/api/v1/settlements/${created.id}/account`, {
+          method: "PUT",
+          body: JSON.stringify({ account_id: fromAccount }),
+        });
       onDone();
     } catch (x) {
       setError(x instanceof Error ? x.message : "Could not record settlement.");
@@ -885,6 +1074,20 @@ function QuickSettleModal({
             placeholder="Bank transfer, cash…"
           />
         </label>
+        {(fromUser === userId || toUser === userId) && accounts.length > 0 && (
+          <AccountSelect
+            label={fromUser === userId ? "Paid from" : "Received into"}
+            value={fromAccount}
+            onChange={setFromAccount}
+            accounts={accounts}
+            currency={groups.find((g) => g.id === groupId)?.currency}
+            hint={
+              fromUser === userId
+                ? "Leaves this account; it is not counted as spending."
+                : "Arrives in this account; it is not counted as income."
+            }
+          />
+        )}
         {error && <p className="form-error">{error}</p>}
         <button className="button primary full" disabled={busy}>
           {busy ? "Saving…" : "Record settlement"}
