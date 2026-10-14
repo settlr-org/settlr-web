@@ -4267,3 +4267,6 @@ a.account-row:hover {
     min-height: 44px;
   }
 }
+.plan-tabs a {
+  justify-content: center;
+}
