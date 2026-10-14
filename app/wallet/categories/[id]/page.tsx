@@ -170,7 +170,7 @@ export default function CategoryDetail() {
             </div>
           )}
           <PlannedPanel
-            scoped
+            scope={{ categories: [id] }}
             hideWhenEmpty
             upcoming={summary?.upcoming}
             overdue={summary?.overdue}

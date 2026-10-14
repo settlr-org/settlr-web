@@ -298,6 +298,22 @@ export function buildLoanQuery(options: {
   return query ? `?${query}` : "";
 }
 
+/** Query for POST /transactions/skip-overdue, optionally limited to accounts / categories. */
+export function buildSkipOverdueQuery(scope: {
+  accounts?: string[];
+  categories?: string[];
+}): string {
+  const params = new URLSearchParams();
+  const list = (key: string, values?: string[]) => {
+    const clean = Array.from(new Set((values ?? []).filter(Boolean)));
+    if (clean.length) params.set(key, clean.join(","));
+  };
+  list("account", scope.accounts);
+  list("category", scope.categories);
+  const query = params.toString();
+  return query ? `?${query}` : "";
+}
+
 /** Query for GET /planned. */
 export function buildPlannedQuery(options: {
   type?: TxnType;

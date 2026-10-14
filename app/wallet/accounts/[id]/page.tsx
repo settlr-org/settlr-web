@@ -247,7 +247,7 @@ export default function AccountDetail() {
             </article>
           </section>
           <PlannedPanel
-            scoped
+            scope={{ accounts: [account.id] }}
             hideWhenEmpty
             upcoming={summary?.upcoming}
             overdue={summary?.overdue}

@@ -5,6 +5,7 @@ import {
   buildBudgetQuery,
   buildLoanQuery,
   buildPlannedQuery,
+  buildSkipOverdueQuery,
   cadenceLabel,
   daysLeft,
   dueLabel,
@@ -319,6 +320,15 @@ describe("query building", () => {
     expect(buildLoanQuery({ type: "BORROW", includePaidOff: true })).toBe(
       "?type=BORROW&include_paid_off=true",
     );
+  });
+  it("skip-overdue scopes by account and category", () => {
+    expect(buildSkipOverdueQuery({})).toBe("");
+    expect(buildSkipOverdueQuery({ accounts: ["a", "a", ""] })).toBe(
+      "?account=a",
+    );
+    expect(
+      buildSkipOverdueQuery({ accounts: ["a", "b"], categories: ["c"] }),
+    ).toBe("?account=a%2Cb&category=c");
   });
   it("planned filters by type and active", () => {
     expect(buildPlannedQuery({})).toBe("");

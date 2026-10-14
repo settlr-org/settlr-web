@@ -7,7 +7,7 @@ import {
   PlusOutlined,
 } from "@ant-design/icons";
 import { Modal, Panel, PanelTitle, useConfirmation } from "../UI";
-import { apiFetch } from "../../lib/api";
+import { apiFetch, ApiError } from "../../lib/api";
 import {
   Account,
   convertMinor,
@@ -23,9 +23,9 @@ import {
 } from "../../lib/wallet";
 import {
   applyPlannedResult,
+  buildSkipOverdueQuery,
   cadenceLabel,
   dueLabel,
-  isOverdue,
   PayResult,
   PlannedItem,
   PlannedLists,
@@ -161,7 +161,11 @@ export function PayDialog({
       );
       onPaid(result);
     } catch (cause) {
-      setError(errorText(cause, "Could not record the payment."));
+      setError(
+        cause instanceof ApiError && cause.code === "RATES_UNAVAILABLE"
+          ? `No ${item.currency}→${payCurrency} exchange rate — type the amount in ${payCurrency}, or add a rate in Settings.`
+          : errorText(cause, "Could not record the payment."),
+      );
       setBusy(false);
     }
   };
@@ -236,9 +240,8 @@ export function PayDialog({
 }
 
 /**
- * Overdue and upcoming planned items with Pay / Skip. `scoped` lists (an
- * account's or a category's) skip their own overdue items one by one; the
- * wallet-wide list uses POST /transactions/skip-overdue.
+ * Overdue and upcoming planned items with Pay / Skip. `scope` limits
+ * "Skip all overdue" (POST /transactions/skip-overdue) to an account or category.
  */
 const NONE: PlannedItem[] = [];
 
@@ -250,7 +253,7 @@ export function PlannedPanel({
   categories,
   tags,
   baseCurrency,
-  scoped = false,
+  scope,
   hideWhenEmpty = false,
   announce = false,
   title = "Upcoming & overdue",
@@ -264,7 +267,8 @@ export function PlannedPanel({
   categories: WalletCategory[];
   tags: Tag[];
   baseCurrency: string;
-  scoped?: boolean;
+  /** Limits "Skip all overdue" to these accounts / categories (detail pages). */
+  scope?: { accounts?: string[]; categories?: string[] };
   hideWhenEmpty?: boolean;
   /** Show the result of pay/skip inside the panel (pages without a notice banner). */
   announce?: boolean;
@@ -316,7 +320,7 @@ export function PlannedPanel({
     const count = lists.overdue.length;
     const ok = await confirm({
       title: `Skip ${count} overdue ${count === 1 ? "item" : "items"}?`,
-      description: scoped
+      description: scope
         ? "Nothing is recorded. Repeating plans listed here move to their next date from today; one-off items are removed."
         : "Nothing is recorded. Every repeating plan moves to its next date from today; one-off items are removed.",
       confirmLabel: "Skip all overdue",
@@ -326,29 +330,10 @@ export function PlannedPanel({
     setBusy("all");
     setError("");
     try {
-      let skipped = 0;
-      if (scoped) {
-        // Skip each listed item until its plan's next date is no longer overdue.
-        for (const item of lists.overdue) {
-          let id: string | undefined = item.id;
-          for (let guard = 0; id && guard < 400; guard++) {
-            const result: PayResult = await walletWrite<PayResult>(
-              `/api/v1/transactions/${id}/skip`,
-              "POST",
-            );
-            skipped++;
-            id = isOverdue(result.next?.due_at, new Date())
-              ? result.next!.id
-              : undefined;
-          }
-        }
-      } else {
-        const result = await walletWrite<{ skipped: number }>(
-          "/api/v1/transactions/skip-overdue",
-          "POST",
-        );
-        skipped = result.skipped;
-      }
+      const { skipped } = await walletWrite<{ skipped: number }>(
+        `/api/v1/transactions/skip-overdue${buildSkipOverdueQuery(scope ?? {})}`,
+        "POST",
+      );
       setLists((l) => ({ ...l, overdue: [] }));
       report(
         `Skipped ${skipped} overdue ${skipped === 1 ? "payment" : "payments"}.`,
