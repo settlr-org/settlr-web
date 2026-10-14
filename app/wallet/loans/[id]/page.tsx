@@ -247,6 +247,9 @@ export default function LoanDetail() {
             <ul className="record-list">
               {records.map((r) => {
                 const decrease = r.type === "DECREASE";
+                // Cash direction from the user's side: a repayment of money
+                // they lent comes in; borrowing more comes in too.
+                const moneyIn = (loan.type === "LEND") === decrease;
                 return (
                   <li key={r.id} className="record-row">
                     <span className="planned-main">
@@ -264,10 +267,10 @@ export default function LoanDetail() {
                       </small>
                     </span>
                     <span
-                      className={`planned-amount ${decrease ? "amount-in" : "amount-out"}`}
+                      className={`planned-amount ${moneyIn ? "amount-in" : "amount-out"}`}
                     >
                       {formatMoney(r.amount, loan.currency, {
-                        sign: decrease ? "-" : "+",
+                        sign: moneyIn ? "+" : "-",
                       })}
                     </span>
                   </li>

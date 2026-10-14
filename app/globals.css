@@ -4186,12 +4186,26 @@ a.account-row:hover {
   .budgets-mini {
     padding: 16px;
   }
-  .planned-actions {
-    width: 100%;
-    justify-content: flex-end;
+  .planned-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start;
   }
-  .planned-row .planned-main {
-    flex-basis: calc(100% - 150px);
+  .planned-row > .item-tile,
+  .planned-row > .planned-icon {
+    grid-row: 1 / span 2;
+  }
+  .planned-amount {
+    padding-top: 1px;
+  }
+  .planned-actions {
+    grid-column: 2 / -1;
+    justify-content: flex-end;
+    margin-top: -6px;
+  }
+  .record-row {
+    flex-wrap: nowrap;
+    align-items: start;
   }
   .loan-summary {
     grid-template-columns: 1fr;
@@ -4212,6 +4226,44 @@ a.account-row:hover {
   .danger-text,
   .plan-tabs a,
   .inline-link {
+    min-height: 44px;
+  }
+}
+.modal .check-label,
+.loan-paid-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.modal .check-label input,
+.loan-paid-toggle input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  padding: 0;
+  accent-color: var(--brand);
+}
+@media (max-width: 720px) {
+  /* Phone widths: planning controls keep 44px targets whatever the pointer. */
+  .pill-button,
+  .planned-actions .text-button,
+  .danger-text,
+  .plan-tabs a,
+  .plan-tabs-bar .back-link,
+  .record-row .ledger-open,
+  .planned-main .ledger-open,
+  .planned-panel .panel-title .text-button,
+  .budgets-mini .panel-title .text-button,
+  .planned-panel .inline-link,
+  .history-panel .panel-title .text-button,
+  .detail-toolbar .back-link {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .loan-toolbar .segmented button {
     min-height: 44px;
   }
 }
