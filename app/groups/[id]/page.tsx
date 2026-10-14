@@ -35,6 +35,10 @@ import {
   todayISO,
 } from "../../../lib/types";
 import { useSession } from "../../../components/SessionProvider";
+import {
+  AccountSelect,
+  useAccounts,
+} from "../../../components/wallet/AccountSelect";
 type GroupBalances = {
   data: { user_id: string; amount: number }[];
   currency: string;
@@ -47,6 +51,8 @@ type Settlement = {
   currency: string;
   note?: string;
   settled_at: string;
+  /** The caller's linked wallet account (payer or receiver side), or null. */
+  account_id?: string | null;
 };
 type Tab = "expenses" | "balances" | "members" | "settlements";
 export default function GroupDetail() {
@@ -68,6 +74,7 @@ export default function GroupDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const walletAccounts = useAccounts();
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -382,6 +389,41 @@ export default function GroupDetail() {
                   {s.note || "Settlement"} ·{" "}
                   {new Date(s.settled_at).toLocaleDateString()}
                 </p>
+                {(s.from_user === user?.id || s.to_user === user?.id) &&
+                  walletAccounts.length > 0 && (
+                    <div className="settlement-link">
+                      <AccountSelect
+                        label={
+                          s.from_user === user?.id
+                            ? "Paid from"
+                            : "Received into"
+                        }
+                        value={s.account_id || ""}
+                        accounts={walletAccounts}
+                        currency={s.currency}
+                        onChange={async (accountId) => {
+                          try {
+                            await apiFetch(
+                              `/api/v1/settlements/${s.id}/account`,
+                              {
+                                method: "PUT",
+                                body: JSON.stringify({
+                                  account_id: accountId || null,
+                                }),
+                              },
+                            );
+                            await load();
+                          } catch (x) {
+                            setError(
+                              x instanceof Error
+                                ? x.message
+                                : "Could not link the account.",
+                            );
+                          }
+                        }}
+                      />
+                    </div>
+                  )}
               </div>
               <strong>{money(s.amount, s.currency)}</strong>
               <button
@@ -441,6 +483,7 @@ export default function GroupDetail() {
           members={members}
           debts={debts}
           settlement={editingSettlement}
+          userId={user!.id}
           onClose={() => {
             setModal(null);
             setEditingSettlement(undefined);
@@ -488,6 +531,9 @@ function ExpenseModal({
   const [values, setValues] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const accounts = useAccounts();
+  const [paidBy, setPaidBy] = useState(userId);
+  const [payerAccount, setPayerAccount] = useState("");
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
@@ -518,6 +564,9 @@ function ExpenseModal({
           expense_date: data.get("expense_date"),
           split_mode: mode,
           splits,
+          ...(payerAccount && paidBy === userId
+            ? { payer_account_id: payerAccount }
+            : {}),
         }),
       });
       onDone();
@@ -566,7 +615,11 @@ function ExpenseModal({
           </label>
           <label>
             Paid by
-            <select name="paid_by" defaultValue={userId}>
+            <select
+              name="paid_by"
+              value={paidBy}
+              onChange={(e) => setPaidBy(e.target.value)}
+            >
               {members.map((m) => (
                 <option value={m.id} key={m.id}>
                   {m.name}
@@ -578,6 +631,15 @@ function ExpenseModal({
             Date
             <input name="expense_date" type="date" defaultValue={todayISO()} />
           </label>
+          {paidBy === userId && accounts.length > 0 && (
+            <AccountSelect
+              label="Paid from"
+              value={payerAccount}
+              onChange={setPayerAccount}
+              accounts={accounts}
+              currency={group.currency}
+            />
+          )}
         </div>
         <fieldset>
           <legend>How should it be split?</legend>
@@ -659,6 +721,7 @@ function SettlementModal({
   members,
   debts,
   settlement,
+  userId,
   onClose,
   onDone,
 }: {
@@ -666,16 +729,27 @@ function SettlementModal({
   members: Member[];
   debts: Debt[];
   settlement?: Settlement;
+  userId: string;
   onClose: () => void;
   onDone: () => void;
 }) {
   const first = debts[0];
   const [error, setError] = useState("");
+  const accounts = useAccounts();
+  const [fromUser, setFromUser] = useState(
+    settlement?.from_user || first?.from_user || "",
+  );
+  const [toUser, setToUser] = useState(
+    settlement?.to_user || first?.to_user || "",
+  );
+  const [account, setAccount] = useState(settlement?.account_id || "");
+  const mySide =
+    fromUser === userId ? "payer" : toUser === userId ? "receiver" : null;
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const d = new FormData(e.currentTarget);
     try {
-      await apiFetch(
+      const saved = await apiFetch<{ id?: string }>(
         settlement
           ? `/api/v1/settlements/${settlement.id}`
           : `/api/v1/groups/${group.id}/settlements`,
@@ -694,10 +768,26 @@ function SettlementModal({
                   currency: group.currency,
                   note: d.get("note"),
                   settled_at: new Date().toISOString(),
+                  ...(account && mySide === "payer"
+                    ? { from_account_id: account }
+                    : {}),
                 },
           ),
         },
       );
+      // Edits, and the receiver's side, link the account with its own call.
+      const settlementId = settlement?.id || saved?.id;
+      if (
+        settlementId &&
+        mySide &&
+        (settlement
+          ? (settlement.account_id || "") !== account
+          : mySide === "receiver" && account)
+      )
+        await apiFetch(`/api/v1/settlements/${settlementId}/account`, {
+          method: "PUT",
+          body: JSON.stringify({ account_id: account || null }),
+        });
       onDone();
     } catch (x) {
       setError(x instanceof Error ? x.message : "Could not record settlement.");
@@ -714,7 +804,8 @@ function SettlementModal({
           Who paid?
           <select
             name="from_user"
-            defaultValue={settlement?.from_user || first?.from_user}
+            value={fromUser}
+            onChange={(e) => setFromUser(e.target.value)}
             disabled={Boolean(settlement)}
           >
             {members.map((m) => (
@@ -728,7 +819,8 @@ function SettlementModal({
           Who received it?
           <select
             name="to_user"
-            defaultValue={settlement?.to_user || first?.to_user}
+            value={toUser}
+            onChange={(e) => setToUser(e.target.value)}
             disabled={Boolean(settlement)}
           >
             {members.map((m) => (
@@ -763,6 +855,20 @@ function SettlementModal({
             placeholder="Bank transfer, cash…"
           />
         </label>
+        {mySide && accounts.length > 0 && (
+          <AccountSelect
+            label={mySide === "payer" ? "Paid from" : "Received into"}
+            value={account}
+            onChange={setAccount}
+            accounts={accounts}
+            currency={group.currency}
+            hint={
+              mySide === "payer"
+                ? "Leaves this account; it is not counted as spending."
+                : "Arrives in this account; it is not counted as income."
+            }
+          />
+        )}
         {error && <p className="form-error">{error}</p>}
         <button className="button primary full">
           {settlement ? "Save settlement" : "Record settlement"}

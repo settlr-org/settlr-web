@@ -36,6 +36,10 @@ import {
   money,
 } from "../../../lib/types";
 import { useSession } from "../../../components/SessionProvider";
+import {
+  AccountSelect,
+  useAccounts,
+} from "../../../components/wallet/AccountSelect";
 
 type Comment = {
   id: string;
@@ -67,6 +71,9 @@ export default function ExpenseDetail() {
   const [error, setError] = useState("");
   const [saved, setSaved] = useState("");
   const [loading, setLoading] = useState(true);
+  const accounts = useAccounts();
+  const [paidBy, setPaidBy] = useState("");
+  const [payerAccount, setPayerAccount] = useState("");
   const load = useCallback(async () => {
     try {
       const e = await apiFetch<Expense>(`/api/v1/expenses/${id}`);
@@ -78,6 +85,8 @@ export default function ExpenseDetail() {
         apiFetch<{ data: Attachment[] }>(`/api/v1/expenses/${id}/attachments`),
       ]);
       setExpense(e);
+      setPaidBy(e.paid_by);
+      setPayerAccount(e.payer_account_id || "");
       setGroup(g);
       setMembers(m.data);
       setCategories(c.data);
@@ -122,6 +131,10 @@ export default function ExpenseDetail() {
           notes: data.get("notes"),
           split_mode: expense.split_mode,
           splits,
+          // Only the payer may link their own account; null unlinks it.
+          ...(paidBy === user?.id
+            ? { payer_account_id: payerAccount || null }
+            : {}),
         }),
       });
       setSaved("Expense changes saved.");
@@ -233,7 +246,11 @@ export default function ExpenseDetail() {
               </label>
               <label>
                 Paid by
-                <select name="paid_by" defaultValue={expense.paid_by}>
+                <select
+                  name="paid_by"
+                  defaultValue={expense.paid_by}
+                  onChange={(e) => setPaidBy(e.target.value)}
+                >
                   {members.map((m) => (
                     <option key={m.id} value={m.id}>
                       {m.name}
@@ -249,6 +266,15 @@ export default function ExpenseDetail() {
                   defaultValue={expense.expense_date}
                 />
               </label>
+              {paidBy === user?.id && accounts.length > 0 && (
+                <AccountSelect
+                  label="Paid from"
+                  value={payerAccount}
+                  onChange={setPayerAccount}
+                  accounts={accounts}
+                  currency={expense.currency}
+                />
+              )}
               <label>
                 Category
                 <select

@@ -15,7 +15,6 @@ import {
   HomeOutlined,
   LogoutOutlined,
   MoonOutlined,
-  PieChartOutlined,
   PlusOutlined,
   SettingOutlined,
   SearchOutlined,
@@ -32,9 +31,10 @@ import { useSession } from "./SessionProvider";
 import { initials } from "../lib/types";
 const navigation = [
   { href: "/overview", label: "Overview", icon: <HomeOutlined /> },
+  // Personal folded into Wallet; /personal stays reachable from the Wallet page.
+  { href: "/wallet", label: "Wallet", icon: <WalletOutlined /> },
   { href: "/groups", label: "Groups", icon: <TeamOutlined /> },
   { href: "/friends", label: "Friends", icon: <UserOutlined /> },
-  { href: "/personal", label: "Personal", icon: <PieChartOutlined /> },
   { href: "/activity", label: "Activity", icon: <UnorderedListOutlined /> },
   { href: "/invites", label: "Invites", icon: <MailOutlined /> },
 ];
@@ -73,6 +73,7 @@ const workspacePrefixes = [
   "/groups",
   "/friends",
   "/personal",
+  "/wallet",
   "/activity",
   "/notifications",
   "/settings",
@@ -177,8 +178,12 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={
-                  path.startsWith(item.href) ? "nav-item active" : "nav-item"
+                  path.startsWith(item.href) ||
+                  (item.href === "/wallet" && path.startsWith("/personal"))
+                    ? "nav-item active"
+                    : "nav-item"
                 }
+                aria-current={path.startsWith(item.href) ? "page" : undefined}
               >
                 {item.icon}
                 <span>{item.label}</span>
@@ -310,11 +315,15 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
             <PlusOutlined />
           </button>
           <Link
-            className={path === "/personal" ? "nav-item active" : "nav-item"}
-            href="/personal"
+            className={
+              path.startsWith("/wallet") || path === "/personal"
+                ? "nav-item active"
+                : "nav-item"
+            }
+            href="/wallet"
           >
-            <PieChartOutlined />
-            <span>Personal</span>
+            <WalletOutlined />
+            <span>Wallet</span>
           </Link>
           <Link
             className={path === "/activity" ? "nav-item active" : "nav-item"}

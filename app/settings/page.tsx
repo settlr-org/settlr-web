@@ -11,6 +11,8 @@ import {
   LogoutOutlined,
   MobileOutlined,
   SafetyCertificateOutlined,
+  SwapOutlined,
+  WalletOutlined,
   UserOutlined,
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
@@ -18,6 +20,7 @@ import { AppShell } from "../../components/AppShell";
 import { Panel, PanelTitle, useConfirmation } from "../../components/UI";
 import { PasswordInput } from "../../components/PasswordInput";
 import { useSession } from "../../components/SessionProvider";
+import { WalletSettingsPanels } from "../../components/wallet/WalletSettingsPanels";
 import { apiDownload, apiFetch } from "../../lib/api";
 import {
   deviceLabel,
@@ -59,6 +62,14 @@ export default function Settings() {
   const [payment, setPayment] = useState<Payment>();
   const [error, setError] = useState("");
   const [saved, setSaved] = useState("");
+  const showSaved = useCallback((message: string) => {
+    setError("");
+    setSaved(message);
+  }, []);
+  const showError = useCallback((message: string) => {
+    setSaved("");
+    setError(message);
+  }, []);
   const load = useCallback(async () => {
     try {
       const [p, s, pay] = await Promise.all([
@@ -85,7 +96,6 @@ export default function Settings() {
         body: JSON.stringify({
           name: d.get("name"),
           email: d.get("email"),
-          default_currency: d.get("currency"),
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         }),
       });
@@ -207,7 +217,7 @@ export default function Settings() {
     <AppShell
       title="Settings"
       eyebrow="YOUR ACCOUNT"
-      description="Profile, notifications, security, and active sessions."
+      description="Profile, notifications, security, wallet, and active sessions."
     >
       {(error || saved) && (
         <div className={error ? "alert" : "success-banner"}>
@@ -227,6 +237,12 @@ export default function Settings() {
           </a>
           <a href="#payments">
             <BankOutlined /> Payments
+          </a>
+          <a href="#wallet">
+            <WalletOutlined /> Wallet
+          </a>
+          <a href="#rates">
+            <SwapOutlined /> Exchange rates
           </a>
           <a href="#sessions">
             <SafetyCertificateOutlined /> Sessions
@@ -257,19 +273,6 @@ export default function Settings() {
                 <label>
                   Email
                   <input name="email" type="email" defaultValue={user?.email} />
-                </label>
-                <label>
-                  Default currency
-                  <select
-                    name="currency"
-                    defaultValue={user?.default_currency || "NPR"}
-                  >
-                    <option>NPR</option>
-                    <option>USD</option>
-                    <option>EUR</option>
-                    <option>GBP</option>
-                    <option>INR</option>
-                  </select>
                 </label>
               </div>
               <button className="button primary">Save profile</button>
@@ -376,6 +379,7 @@ export default function Settings() {
               </form>
             )}
           </Panel>
+          <WalletSettingsPanels onSaved={showSaved} onError={showError} />
           <Panel>
             <span id="sessions" />
             <PanelTitle

@@ -31,6 +31,8 @@ export class ApiError extends Error {
   constructor(
     public status: number,
     message: string,
+    /** Machine-readable error code from the API body (e.g. RATES_UNAVAILABLE). */
+    public code?: string,
   ) {
     super(message);
   }
@@ -87,13 +89,22 @@ export const saveSession = (session: Session, remember = true) => {
 };
 
 async function parseError(response: Response) {
+  return (await parseErrorBody(response)).message;
+}
+
+async function parseErrorBody(
+  response: Response,
+): Promise<{ message: string; code?: string }> {
+  const fallback = `Request failed (${response.status})`;
   try {
-    return (
-      ((await response.json()) as { error?: { message?: string } }).error
-        ?.message || `Request failed (${response.status})`
-    );
+    const error = (
+      (await response.json()) as {
+        error?: { message?: string; code?: string };
+      }
+    ).error;
+    return { message: error?.message || fallback, code: error?.code };
   } catch {
-    return `Request failed (${response.status})`;
+    return { message: fallback };
   }
 }
 
@@ -185,8 +196,10 @@ async function performRequest<T>(
     (await refreshAccessToken())
   )
     return performRequest<T>(path, init, false);
-  if (!response.ok)
-    throw new ApiError(response.status, await parseError(response));
+  if (!response.ok) {
+    const { message, code } = await parseErrorBody(response);
+    throw new ApiError(response.status, message, code);
+  }
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }

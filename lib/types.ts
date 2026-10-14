@@ -55,6 +55,8 @@ export type Expense = {
   expense_date: string;
   created_at?: string;
   splits?: Split[];
+  /** Payer's wallet account (returned to the payer only). */
+  payer_account_id?: string | null;
 };
 export type Split = {
   user_id: string;
@@ -111,6 +113,8 @@ export type Settlement = {
   currency: Currency;
   note?: string;
   settled_at: string;
+  /** The caller's linked wallet account for this settlement (either side). */
+  account_id?: string | null;
 };
 export type Attachment = {
   id: string;

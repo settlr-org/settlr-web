@@ -418,22 +418,22 @@ describe("mobile nav — components/AppShell.tsx:244 app/globals.css:731", () =>
     expect(buttonCount).toBe(1);
   });
 
-  it("mobile-nav icons: Home, Team, User, PieChart, UnorderedList, Setting plus Plus for add (components/AppShell.tsx:244-296)", () => {
+  it("mobile-nav icons: Home, Team, User, Wallet, UnorderedList, Setting plus Plus for add (components/AppShell.tsx:244-296)", () => {
     expect(appShell).toContain("HomeOutlined");
     expect(appShell).toContain("TeamOutlined");
     expect(appShell).toContain("UserOutlined");
-    expect(appShell).toContain("PieChartOutlined");
+    expect(appShell).toContain("WalletOutlined");
     expect(appShell).toContain("UnorderedListOutlined");
     expect(appShell).toContain("SettingOutlined");
     expect(appShell).toContain("PlusOutlined");
   });
 
-  it("mobile-nav labels: Home Groups Friends Personal Activity Settings (components/AppShell.tsx:249-295)", () => {
+  it("mobile-nav labels: Home Groups Friends Wallet Activity Settings (components/AppShell.tsx:249-295)", () => {
     const labels = [
       "Home",
       "Groups",
       "Friends",
-      "Personal",
+      "Wallet",
       "Activity",
       "Settings",
     ];
@@ -695,10 +695,11 @@ describe("expense split matrix — app/overview/page.tsx:356", () => {
     expect(Math.round(Number("0.005") * 100)).toBe(1); // rounding edge
   });
 
-  it("QuickExpense choose step has Shared vs Personal (app/overview/page.tsx:498-503)", () => {
+  it("QuickExpense choose step has Shared vs Personal (Wallet) (app/overview/page.tsx:498-503)", () => {
     expect(overview).toContain("Shared expense");
     expect(overview).toContain("Personal expense");
-    expect(overview).toContain('href="/personal?new=1"');
+    // Personal expenses are wallet EXPENSE transactions now.
+    expect(overview).toContain('href="/wallet?add=expense"');
   });
 
   it("group type options TRIP/HOME/COUPLE/OTHER exist in both modals (app/overview/page.tsx:958-964)", () => {

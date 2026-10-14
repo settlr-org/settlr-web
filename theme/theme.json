@@ -38,7 +38,18 @@
       "navIndicator": "#CDE7E3",
       "divider": "#E6EFED",
       "onAccent": "#2A1208",
-      "borderStrong": "#B8CFCB"
+      "borderStrong": "#B8CFCB",
+      "positiveSoft": "#DDF1E5",
+      "negativeSoft": "#F9E3E1",
+      "warningSoft": "#F7ECD6",
+      "chart1": "#0E7C7B",
+      "chart2": "#FF8A65",
+      "chart3": "#0F3D3C",
+      "chart4": "#E0B04A",
+      "chart5": "#6C8EBF",
+      "chart6": "#9FC3BF",
+      "chart7": "#C2678F",
+      "chart8": "#B8CFCB"
     },
     "dark": {
       "canvas": "#0A1716",
@@ -76,7 +87,18 @@
       "navIndicator": "#1D4744",
       "divider": "#1A3331",
       "onAccent": "#2A1208",
-      "borderStrong": "#3A5A56"
+      "borderStrong": "#3A5A56",
+      "positiveSoft": "#17352A",
+      "negativeSoft": "#3A1F1D",
+      "warningSoft": "#3A2F17",
+      "chart1": "#4FD1C5",
+      "chart2": "#FF9E80",
+      "chart3": "#2E8C86",
+      "chart4": "#F5CC75",
+      "chart5": "#8FB2E6",
+      "chart6": "#5F807C",
+      "chart7": "#E79BBE",
+      "chart8": "#3A5A56"
     }
   },
   "brand": {

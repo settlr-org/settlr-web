@@ -180,7 +180,9 @@ export function Modal({
           'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
         ) ?? [],
       );
-    focusable()[0]?.focus();
+    // A field marked data-autofocus (e.g. an amount input) gets focus first.
+    const preferred = dialog?.querySelector<HTMLElement>("[data-autofocus]");
+    (preferred ?? focusable()[0])?.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
