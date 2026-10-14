@@ -7,9 +7,12 @@ import {
   ArrowDownOutlined,
   ArrowUpOutlined,
   BarChartOutlined,
+  CalendarOutlined,
+  FundOutlined,
   PlusOutlined,
   SwapOutlined,
   TagsOutlined,
+  TransactionOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
 import { AppShell } from "../../components/AppShell";
@@ -42,6 +45,8 @@ import { HistoryPanel } from "../../components/wallet/HistoryPanel";
 import { TransactionEditor } from "../../components/wallet/TransactionEditor";
 import { AccountFormModal } from "../../components/wallet/AccountDialogs";
 import { ItemTile } from "../../components/wallet/icons";
+import { PlannedPanel } from "../../components/wallet/PlannedPanel";
+import { BudgetsMini } from "../../components/wallet/BudgetsMini";
 
 type EditorState = { id?: string; type?: TxnType; accountId?: string };
 
@@ -326,8 +331,30 @@ export default function WalletPage() {
                   )
                 )}
               </Panel>
+              <BudgetsMini period={period} reloadKey={reloadKey} />
               <Panel className="wallet-links">
-                <PanelTitle title="Organise" />
+                <PanelTitle title="Plan & organise" />
+                <Link href="/wallet/budgets" className="link-row">
+                  <FundOutlined />{" "}
+                  <span>
+                    Budgets
+                    <small>Limits per category and account</small>
+                  </span>
+                </Link>
+                <Link href="/wallet/planned" className="link-row">
+                  <CalendarOutlined />{" "}
+                  <span>
+                    Planned payments
+                    <small>Rent, salary, subscriptions</small>
+                  </span>
+                </Link>
+                <Link href="/wallet/loans" className="link-row">
+                  <TransactionOutlined />{" "}
+                  <span>
+                    Loans
+                    <small>Money lent or borrowed outside groups</small>
+                  </span>
+                </Link>
                 <Link href="/wallet/categories" className="link-row">
                   <AppstoreOutlined /> <span>Categories</span>
                 </Link>
@@ -337,20 +364,32 @@ export default function WalletPage() {
                 <Link href="/personal" className="link-row">
                   <BarChartOutlined />{" "}
                   <span>
-                    Monthly budget, stats &amp; CSV export
-                    <small>From Personal — budgets come to Wallet soon</small>
+                    Personal stats &amp; export
+                    <small>Monthly totals and CSV — until Wallet reports</small>
                   </span>
                 </Link>
               </Panel>
             </div>
-            <HistoryPanel
-              accounts={accounts}
-              categories={refs.categories}
-              tags={refs.tags}
-              period={period}
-              reloadKey={reloadKey}
-              onOpen={(entry) => setEditor({ id: entry.id })}
-            />
+            <div className="wallet-main">
+              <PlannedPanel
+                upcoming={overview?.upcoming}
+                overdue={overview?.overdue}
+                periodEnd={period.to}
+                accounts={accounts}
+                categories={refs.categories}
+                tags={refs.tags}
+                baseCurrency={overview?.currency || "NPR"}
+                onChanged={(message) => void refresh(message)}
+              />
+              <HistoryPanel
+                accounts={accounts}
+                categories={refs.categories}
+                tags={refs.tags}
+                period={period}
+                reloadKey={reloadKey}
+                onOpen={(entry) => setEditor({ id: entry.id })}
+              />
+            </div>
           </div>
           {editor && (
             <TransactionEditor

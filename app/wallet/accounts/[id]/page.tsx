@@ -33,6 +33,7 @@ import {
   DeleteAccountModal,
 } from "../../../../components/wallet/AccountDialogs";
 import { ItemTile } from "../../../../components/wallet/icons";
+import { PlannedPanel } from "../../../../components/wallet/PlannedPanel";
 
 type Dialog =
   | { kind: "edit" }
@@ -245,6 +246,18 @@ export default function AccountDetail() {
               )}
             </article>
           </section>
+          <PlannedPanel
+            scoped
+            hideWhenEmpty
+            upcoming={summary?.upcoming}
+            overdue={summary?.overdue}
+            periodEnd={period.to}
+            accounts={refs.accounts}
+            categories={refs.categories}
+            tags={refs.tags}
+            baseCurrency={account.base_currency}
+            onChanged={(message) => void refresh(message)}
+          />
           <HistoryPanel
             title="Entries"
             accounts={refs.accounts}

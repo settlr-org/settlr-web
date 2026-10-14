@@ -194,8 +194,10 @@ export default function Personal() {
           <div className="success-note moved-note" role="note">
             Personal expenses now live in your{" "}
             <Link href="/wallet">Wallet</Link> as expense transactions (on your
-            default account). This page keeps your monthly budget, stats and CSV
-            export until budgets arrive in Wallet.
+            default account), and budgets with categories and accounts are in{" "}
+            <Link href="/wallet/budgets">Wallet → Budgets</Link>. This page
+            keeps the legacy monthly budget, stats and CSV export until Wallet
+            reports arrive.
           </div>
           <button
             className="button primary mobile-personal-add"

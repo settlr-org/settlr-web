@@ -30,6 +30,7 @@ import { PeriodSelector } from "../../../../components/wallet/PeriodSelector";
 import { LedgerTable } from "../../../../components/wallet/LedgerTable";
 import { TransactionEditor } from "../../../../components/wallet/TransactionEditor";
 import { ItemTile } from "../../../../components/wallet/icons";
+import { PlannedPanel } from "../../../../components/wallet/PlannedPanel";
 
 export default function CategoryDetail() {
   const { id } = useParams<{ id: string }>();
@@ -41,6 +42,7 @@ export default function CategoryDetail() {
   const [error, setError] = useState("");
   const [editing, setEditing] = useState<string>();
   const [reloadKey, setReloadKey] = useState(0);
+  const [notice, setNotice] = useState("");
   const startDay = refs?.settings.month_start_day ?? 1;
   const category = refs?.categories.find((c) => c.id === id);
 
@@ -162,6 +164,27 @@ export default function CategoryDetail() {
               )}
             </article>
           </section>
+          {notice && (
+            <div className="success-banner" role="status">
+              {notice}
+            </div>
+          )}
+          <PlannedPanel
+            scoped
+            hideWhenEmpty
+            upcoming={summary?.upcoming}
+            overdue={summary?.overdue}
+            periodEnd={period.to}
+            accounts={refs.accounts}
+            categories={refs.categories}
+            tags={refs.tags}
+            baseCurrency={currency}
+            onChanged={(message) => {
+              if (message) setNotice(message);
+              void reload();
+              setReloadKey((k) => k + 1);
+            }}
+          />
           <Panel className="history-panel">
             <div className="history-head">
               <h2>Entries</h2>

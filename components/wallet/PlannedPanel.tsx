@@ -252,6 +252,7 @@ export function PlannedPanel({
   baseCurrency,
   scoped = false,
   hideWhenEmpty = false,
+  announce = false,
   title = "Upcoming & overdue",
   onChanged,
 }: {
@@ -265,6 +266,8 @@ export function PlannedPanel({
   baseCurrency: string;
   scoped?: boolean;
   hideWhenEmpty?: boolean;
+  /** Show the result of pay/skip inside the panel (pages without a notice banner). */
+  announce?: boolean;
   title?: string;
   onChanged: (message: string) => void;
 }) {
@@ -274,14 +277,19 @@ export function PlannedPanel({
   const [editing, setEditing] = useState<PlannedItem>();
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
+  const [status, setStatus] = useState("");
   useEffect(() => setLists({ upcoming, overdue }), [upcoming, overdue]);
+  const report = (message: string) => {
+    if (announce && message) setStatus(message);
+    onChanged(message);
+  };
 
   const accountsById = Object.fromEntries(accounts.map((a) => [a.id, a]));
   const categoriesById = Object.fromEntries(categories.map((c) => [c.id, c]));
 
   const settle = (id: string, next: PlannedItem | null, message: string) => {
     setLists((l) => applyPlannedResult(l, id, next, new Date(), periodEnd));
-    onChanged(message);
+    report(message);
   };
 
   const skip = async (item: PlannedItem) => {
@@ -342,18 +350,25 @@ export function PlannedPanel({
         skipped = result.skipped;
       }
       setLists((l) => ({ ...l, overdue: [] }));
-      onChanged(
+      report(
         `Skipped ${skipped} overdue ${skipped === 1 ? "payment" : "payments"}.`,
       );
     } catch (cause) {
       setError(errorText(cause, "Could not skip the overdue payments."));
-      onChanged("");
+      report("");
     } finally {
       setBusy("");
     }
   };
 
-  if (hideWhenEmpty && !lists.upcoming.length && !lists.overdue.length)
+  if (
+    hideWhenEmpty &&
+    !lists.upcoming.length &&
+    !lists.overdue.length &&
+    !status &&
+    !paying &&
+    !editing
+  )
     return null;
 
   const row = (item: PlannedItem, late: boolean) => {
@@ -452,6 +467,11 @@ export function PlannedPanel({
           {error}
         </p>
       )}
+      {status && (
+        <p className="planned-status" role="status">
+          {status}
+        </p>
+      )}
       {lists.overdue.length > 0 && (
         <section aria-label="Overdue" className="planned-section">
           <div className="planned-section-head">
@@ -516,7 +536,7 @@ export function PlannedPanel({
           onClose={() => setEditing(undefined)}
           onSaved={(message) => {
             setEditing(undefined);
-            onChanged(message);
+            report(message);
           }}
         />
       )}
@@ -530,7 +550,7 @@ export function PlannedPanel({
           onClose={() => setEditing(undefined)}
           onSaved={(message) => {
             setEditing(undefined);
-            onChanged(message);
+            report(message);
           }}
         />
       )}
