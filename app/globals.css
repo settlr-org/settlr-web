@@ -4547,3 +4547,9 @@ button.result-line {
 .result-line > span > strong .tag-badge {
   margin-left: 8px;
 }
+@media (max-width: 900px) {
+  /* Search takes its own row; the chips and Filters wrap beneath it. */
+  .history-search {
+    flex: 1 1 100%;
+  }
+}
