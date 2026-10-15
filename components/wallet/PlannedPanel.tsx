@@ -31,7 +31,7 @@ import {
   PlannedLists,
 } from "../../lib/planning";
 import { errorText, fetchRatesFor, walletWrite } from "./data";
-import { DeferredActions, withoutHeld } from "../../lib/undo";
+import { DeferredActions, flushOnLeave, withoutHeld } from "../../lib/undo";
 import { AmountField } from "./AmountField";
 import { PlanFormModal } from "./PlanForm";
 import { TransactionEditor } from "./TransactionEditor";
@@ -310,20 +310,30 @@ export function PlannedPanel({
     });
   useEffect(() => {
     const queue = deferred.current;
-    return () => void queue.flushAll();
+    const stop = flushOnLeave(queue);
+    return () => {
+      stop();
+      void queue.flushAll();
+    };
   }, []);
+  const listsRef = useRef(lists);
+  listsRef.current = lists;
 
   const skip = (item: PlannedItem) => {
     const name = item.title || "planned payment";
     setError("");
     setHeld((h) => new Set(h).add(item.id));
-    setUndo({ id: item.id, message: `Skipped “${name}”.` });
-    deferred.current.schedule(item.id, async () => {
+    setUndo({ id: item.id, message: `Skipping “${name}” in 6s…` });
+    // One key for every send of this skip, so a keepalive resend is a no-op.
+    const idempotencyKey = crypto.randomUUID();
+    deferred.current.schedule(item.id, async ({ keepalive }) => {
       setUndo((u) => (u?.id === item.id ? undefined : u));
       try {
         const result = await walletWrite<PayResult>(
           `/api/v1/transactions/${item.id}/skip`,
           "POST",
+          undefined,
+          { idempotencyKey, keepalive },
         );
         release(item.id);
         settle(
@@ -348,7 +358,14 @@ export function PlannedPanel({
   const upcomingShown = withoutHeld(lists.upcoming, held);
 
   const skipAll = async () => {
-    const count = overdueShown.length;
+    // Send queued single skips first so the count is right and they cannot
+    // fire (and 404) after the bulk skip.
+    if (deferred.current.size) {
+      await deferred.current.flushAll();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+    const count = listsRef.current.overdue.length;
+    if (!count) return;
     const ok = await confirm({
       title: `Skip ${count} overdue ${count === 1 ? "item" : "items"}?`,
       description: scope

@@ -20,12 +20,17 @@ export function walletWrite<T>(
   path: string,
   method: "POST" | "PATCH" | "PUT" | "DELETE",
   body?: unknown,
+  options: { idempotencyKey?: string; keepalive?: boolean } = {},
 ) {
   return apiFetch<T>(path, {
     method,
     headers:
-      method === "POST" ? { "Idempotency-Key": crypto.randomUUID() } : {},
+      method === "POST"
+        ? { "Idempotency-Key": options.idempotencyKey ?? crypto.randomUUID() }
+        : {},
     body: body === undefined ? undefined : JSON.stringify(body),
+    // Small requests only (the browser caps keepalive bodies at 64KB).
+    keepalive: options.keepalive,
   });
 }
 

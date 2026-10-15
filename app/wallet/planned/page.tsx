@@ -12,7 +12,7 @@ import {
   PanelTitle,
   useConfirmation,
 } from "../../../components/UI";
-import { DeferredActions } from "../../../lib/undo";
+import { DeferredActions, flushOnLeave } from "../../../lib/undo";
 import { apiFetch } from "../../../lib/api";
 import { formatMoney, Page } from "../../../lib/wallet";
 import {
@@ -119,6 +119,7 @@ export default function PlannedPage() {
   const [held, setHeld] = useState<ReadonlySet<string>>(new Set());
   const [undo, setUndo] = useState<{ key: string; message: string }>();
   const confirm = useConfirmation();
+  const overdueCountRef = useRef(0);
   const release = (key: string) =>
     setHeld((h) => {
       const next = new Set(h);
@@ -127,7 +128,11 @@ export default function PlannedPage() {
     });
   useEffect(() => {
     const queue = deferred.current;
-    return () => void queue.flushAll();
+    const stop = flushOnLeave(queue);
+    return () => {
+      stop();
+      void queue.flushAll();
+    };
   }, []);
 
   const skip = (row: Row) => {
@@ -135,13 +140,16 @@ export default function PlannedPage() {
     const item = row.item;
     setError("");
     setHeld((h) => new Set(h).add(row.key));
-    setUndo({ key: row.key, message: `Skipped “${row.name}”.` });
-    deferred.current.schedule(row.key, async () => {
+    setUndo({ key: row.key, message: `Skipping “${row.name}” in 6s…` });
+    const idempotencyKey = crypto.randomUUID();
+    deferred.current.schedule(row.key, async ({ keepalive }) => {
       setUndo((u) => (u?.key === row.key ? undefined : u));
       try {
         const result = await walletWrite<PayResult>(
           `/api/v1/transactions/${item.id}/skip`,
           "POST",
+          undefined,
+          { idempotencyKey, keepalive },
         );
         release(row.key);
         refresh(
@@ -160,7 +168,15 @@ export default function PlannedPage() {
     setUndo(undefined);
   };
 
-  const skipAllOverdue = async (count: number) => {
+  const skipAllOverdue = async () => {
+    // Send queued single skips first so the count is right and they cannot
+    // fire (and 404) after the bulk skip.
+    if (deferred.current.size) {
+      await deferred.current.flushAll();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+    const count = overdueCountRef.current;
+    if (!count) return;
     const ok = await confirm({
       title: `Skip ${count} overdue ${count === 1 ? "item" : "items"}?`,
       description:
@@ -230,6 +246,7 @@ export default function PlannedPage() {
   const overdueCount = [...recurring.map(toRow), ...oneTimeRows].filter(
     (r) => r.late && r.item && !r.muted && !held.has(r.key),
   ).length;
+  overdueCountRef.current = overdueCount;
   const accountsById = useMemo(() => accountMap(refs?.accounts ?? []), [refs]);
   const categoriesById = useMemo(
     () => categoryMap(refs?.categories ?? []),
@@ -387,7 +404,7 @@ export default function PlannedPage() {
                 type="button"
                 className="button danger-text"
                 disabled={Boolean(busy)}
-                onClick={() => void skipAllOverdue(overdueCount)}
+                onClick={() => void skipAllOverdue()}
               >
                 {busy === "all"
                   ? "Skipping…"
