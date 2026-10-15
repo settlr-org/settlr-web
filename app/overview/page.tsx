@@ -57,6 +57,7 @@ import {
   todayISO,
 } from "../../lib/types";
 import { type LoadFailure, toLoadFailure } from "../../lib/errors";
+import { plural } from "../../lib/format";
 /** Values carried over from the wallet editor's "Split with a group". */
 type ExpensePrefill = {
   amount?: string;
@@ -200,6 +201,20 @@ export default function Overview() {
       ) : (
         <>
           {error && <ErrorState message={error} retry={load} />}
+          {walletRefs && !walletRefs.accounts.length && (
+            <section className="first-run" aria-label="Get started">
+              <div>
+                <strong>Create your first account</strong>
+                <p>
+                  Add a cash, bank or card account to track your own money next
+                  to your shared ledgers.
+                </p>
+              </div>
+              <Link className="button primary" href="/wallet">
+                <PlusOutlined /> Add an account
+              </Link>
+            </section>
+          )}
           {walletRefs && (
             <div className="overview-wallet">
               <div className="overview-wallet-head">
@@ -427,7 +442,7 @@ export default function Overview() {
           <Panel className="group-strip">
             <PanelTitle
               title="Active groups"
-              meta={`${groups.length} ledgers`}
+              meta={`${plural(groups.length, "ledger")}`}
             />
             <div className="group-grid">
               {groups.slice(0, 4).map((g) => {

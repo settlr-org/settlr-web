@@ -14,6 +14,7 @@ import {
 import { apiFetch } from "../../lib/api";
 import { Event, Group, labelize, money } from "../../lib/types";
 import { type LoadFailure, toLoadFailure } from "../../lib/errors";
+import { plural } from "../../lib/format";
 export default function Activity() {
   const [data, setData] = useState<Event[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
@@ -58,7 +59,7 @@ export default function Activity() {
         <Panel>
           <PanelTitle
             title="All activity"
-            meta={`${data.length} recent events`}
+            meta={`${plural(data.length, "recent event")}`}
           />
           {error && <ErrorState message={error} retry={load} />}
           <div className="timeline">

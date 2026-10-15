@@ -1,5 +1,6 @@
 "use client";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   DollarOutlined,
   SearchOutlined,
@@ -11,6 +12,7 @@ import { AppShell } from "../../components/AppShell";
 import { Empty, ErrorState, Panel, PanelTitle } from "../../components/UI";
 import { apiFetch } from "../../lib/api";
 import { money } from "../../lib/types";
+import { plural } from "../../lib/format";
 
 type Results = {
   users: { id: string; name: string }[];
@@ -24,26 +26,41 @@ type Results = {
   }[];
 };
 export default function Search() {
-  const [query, setQuery] = useState("");
+  const searchParams = useSearchParams();
+  const initial = searchParams.get("q") ?? "";
+  const [query, setQuery] = useState(initial);
+  const [searched, setSearched] = useState("");
   const [results, setResults] = useState<Results>();
   const [error, setError] = useState("");
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    if (query.trim().length < 2) {
+  const run = async (raw: string) => {
+    const term = raw.trim();
+    if (term.length < 2) {
       setError("Enter at least two characters.");
       return;
     }
     setError("");
     try {
       setResults(
-        await apiFetch<Results>(
-          `/api/v1/search?q=${encodeURIComponent(query.trim())}`,
-        ),
+        await apiFetch<Results>(`/api/v1/search?q=${encodeURIComponent(term)}`),
       );
+      setSearched(term);
     } catch (x) {
       setError(x instanceof Error ? x.message : "Search failed.");
     }
   };
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    void run(query);
+  };
+  // /search?q=cabin (links, bookmarks, the browser's back button) runs the search.
+  const ran = useRef("");
+  useEffect(() => {
+    if (initial.trim().length >= 2 && ran.current !== initial) {
+      ran.current = initial;
+      setQuery(initial);
+      void run(initial);
+    }
+  }, [initial]);
   const count = results
     ? results.users.length + results.groups.length + results.expenses.length
     : 0;
@@ -70,7 +87,7 @@ export default function Search() {
         {error && <ErrorState message={error} />}
         {results && (
           <p className="search-count">
-            {count} results for “{query}”
+            {plural(count, "result")} for “{searched}”
           </p>
         )}
       </Panel>
@@ -79,7 +96,7 @@ export default function Search() {
           <Panel>
             <PanelTitle
               title="Groups"
-              meta={`${results.groups.length} matches`}
+              meta={plural(results.groups.length, "match", "matches")}
             />
             {results.groups.map((item) => (
               <Link
@@ -95,7 +112,7 @@ export default function Search() {
           <Panel>
             <PanelTitle
               title="Expenses"
-              meta={`${results.expenses.length} matches`}
+              meta={plural(results.expenses.length, "match", "matches")}
             />
             {results.expenses.map((item) => (
               <Link
@@ -114,7 +131,7 @@ export default function Search() {
           <Panel>
             <PanelTitle
               title="People"
-              meta={`${results.users.length} matches`}
+              meta={plural(results.users.length, "match", "matches")}
             />
             {results.users.map((item) => (
               <Link

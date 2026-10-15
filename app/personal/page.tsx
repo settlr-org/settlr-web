@@ -26,6 +26,7 @@ import { apiDownload, apiFetch } from "../../lib/api";
 import { Category, PersonalExpense, money, todayISO } from "../../lib/types";
 import theme from "../../theme/theme.json";
 import { type LoadFailure, toLoadFailure } from "../../lib/errors";
+import { plural } from "../../lib/format";
 type Stats = {
   total: number;
   by_category:
@@ -221,7 +222,7 @@ export default function Personal() {
               </span>
               <p>SPENT THIS MONTH</p>
               <strong>{money(spent, budgetCurrency)}</strong>
-              <small>{expenses.length} expenses</small>
+              <small>{plural(expenses.length, "expense")}</small>
             </article>
             <article>
               <span>
@@ -239,7 +240,7 @@ export default function Personal() {
             <Panel>
               <PanelTitle
                 title="Recent personal expenses"
-                meta={`${expenses.length} entries`}
+                meta={`${plural(expenses.length, "entry", "entries")}`}
                 action={
                   <button
                     className="text-button"
@@ -260,7 +261,11 @@ export default function Personal() {
                     <WalletOutlined />
                   </span>
                   <div>
-                    <h3>{e.description}</h3>
+                    <h3>
+                      {e.description ||
+                        categories.find((c) => c.id === e.category_id)?.name ||
+                        "Untitled expense"}
+                    </h3>
                     <p>
                       {new Date(e.expense_date).toLocaleDateString()} ·{" "}
                       {categories.find((c) => c.id === e.category_id)?.name ||

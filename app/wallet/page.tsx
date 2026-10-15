@@ -366,7 +366,7 @@ export default function WalletPage() {
                   <BarChartOutlined />{" "}
                   <span>
                     Personal stats &amp; export
-                    <small>Monthly totals and CSV — until Wallet reports</small>
+                    <small>Monthly totals and CSV export</small>
                   </span>
                 </Link>
               </Panel>

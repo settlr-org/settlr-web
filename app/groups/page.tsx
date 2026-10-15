@@ -23,6 +23,7 @@ import {
 import { apiFetch, readApiCache } from "../../lib/api";
 import { Balance, Group, money } from "../../lib/types";
 import { type LoadFailure, toLoadFailure } from "../../lib/errors";
+import { plural } from "../../lib/format";
 export default function Groups() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -106,7 +107,7 @@ export default function Groups() {
         <Panel>
           <PanelTitle
             title="Your groups"
-            meta={`${groups.length} active ledgers`}
+            meta={`${plural(groups.length, "active ledger")}`}
             action={<span className="status-pill">Active</span>}
           />
           {error && <ErrorState message={error} retry={load} />}

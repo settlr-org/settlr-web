@@ -37,6 +37,7 @@ import {
 } from "../../../../lib/types";
 import { useSession } from "../../../../components/SessionProvider";
 import { type LoadFailure, toLoadFailure } from "../../../../lib/errors";
+import { plural } from "../../../../lib/format";
 
 type Recurring = {
   id: string;
@@ -354,7 +355,7 @@ export default function ManageGroup() {
         <Panel>
           <PanelTitle
             title="Members"
-            meta={`${members.length} people`}
+            meta={`${plural(members.length, "person", "people")}`}
             action={<TeamOutlined />}
           />
           {members.map((member) => (
@@ -410,7 +411,7 @@ export default function ManageGroup() {
         <Panel>
           <PanelTitle
             title="Recurring expenses"
-            meta={`${recurring.length} schedules`}
+            meta={`${plural(recurring.length, "schedule")}`}
           />
           <form className="stack-form compact-form" onSubmit={createRecurring}>
             <div className="form-grid">
@@ -563,7 +564,7 @@ export default function ManageGroup() {
         <Panel>
           <PanelTitle
             title="Group activity"
-            meta={`${events.length} recent changes`}
+            meta={`${plural(events.length, "recent change")}`}
           />
           {events.map((event) => (
             <article className="compact-line" key={event.id}>

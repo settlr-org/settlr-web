@@ -210,6 +210,7 @@ p {
   font-weight: 800;
 }
 .content {
+  min-width: 0;
   width: calc(100% - 248px);
   max-width: 1420px;
   margin-left: 248px;
@@ -504,6 +505,7 @@ p {
 }
 .panel {
   padding: 24px;
+  min-width: 0;
 }
 .panel-title {
   display: flex;
@@ -848,7 +850,10 @@ p {
     height: 68px;
     z-index: 8;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 64px 1fr 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) 64px repeat(
+        3,
+        minmax(0, 1fr)
+      );
     align-items: center;
     background: var(--paper);
     backdrop-filter: blur(14px);
@@ -920,7 +925,10 @@ p {
   .mobile-nav {
     left: 8px;
     right: 8px;
-    grid-template-columns: 1fr 1fr 1fr 52px 1fr 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) 52px repeat(
+        3,
+        minmax(0, 1fr)
+      );
     padding: 4px;
   }
   .mobile-nav .nav-item:not(.active) span {
@@ -1993,7 +2001,11 @@ legend {
   color: var(--st-band-muted);
   font-weight: 800;
 }
+.group-summary > div {
+  min-width: 0;
+}
 .group-summary strong {
+  overflow-wrap: anywhere;
   font-family: var(--st-font-display);
   font-size: 27px;
   font-weight: 400;
@@ -2032,6 +2044,7 @@ legend {
 }
 .tabs {
   display: flex;
+  overflow-x: auto;
   gap: 4px;
   border-bottom: 1px solid var(--line);
   margin-bottom: 18px;
@@ -2583,7 +2596,7 @@ legend {
   }
   .two-column,
   .settings-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .settings-nav {
     position: static;
@@ -2594,7 +2607,7 @@ legend {
     grid-template-columns: 1fr;
   }
   .group-summary {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .member-stack {
     display: none;
@@ -2930,6 +2943,7 @@ legend {
 .wallet-summary {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr));
+  align-items: start;
   gap: 14px;
   margin-bottom: 22px;
 }
@@ -3252,13 +3266,12 @@ a.account-row:hover {
   font-weight: 700;
   color: var(--ink);
   text-align: left;
-  text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--ink) 25%, transparent);
-  text-underline-offset: 3px;
+  text-decoration: none;
 }
 .ledger-open:hover {
   color: var(--brand-strong);
-  text-decoration-color: currentColor;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .group-badge,
 .tag-badge {
@@ -4035,6 +4048,7 @@ a.account-row:hover {
 }
 .budget-list {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
 }
 .budget-card {
@@ -4065,7 +4079,7 @@ a.account-row:hover {
 .budget-head > span {
   font-family: var(--st-font-data);
   font-size: 13px;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 .budget-note {
   font-size: 12px;
@@ -4427,4 +4441,33 @@ input[type="radio"] {
   .loan-paid-toggle {
     min-height: 44px;
   }
+}
+.confirm-type {
+  display: grid;
+  gap: 6px;
+  margin-top: 14px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.first-run {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 20px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+  padding: 18px 20px;
+  border: 1px solid color-mix(in srgb, var(--brand) 30%, var(--line));
+  border-radius: 18px;
+  background: var(--brand-soft);
+}
+.first-run strong {
+  display: block;
+  color: var(--brand-strong);
+}
+.first-run p {
+  margin-top: 2px;
+  color: var(--muted-strong);
+  font-size: 13px;
 }

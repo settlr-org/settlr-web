@@ -400,9 +400,10 @@ describe("debt IDs & name mapping — app/groups/[id]/page.tsx:301 lib/types.ts:
 
 // ---------- mobile nav icon (components/AppShell.tsx:244) ----------
 describe("mobile nav — components/AppShell.tsx:244 app/globals.css:731", () => {
-  it("mobile-nav has 7 grid columns 1fr 1fr 1fr 64px 1fr 1fr 1fr (app/globals.css:829)", () => {
-    expect(css).toContain(
-      "grid-template-columns: 1fr 1fr 1fr 64px 1fr 1fr 1fr",
+  it("mobile-nav has 7 shrinkable grid columns around a 64px add button (app/globals.css:829)", () => {
+    // minmax(0, 1fr) lets the columns shrink below their label width at 320px.
+    expect(css).toMatch(
+      /grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\) 64px repeat\(3, minmax\(0, 1fr\)\)/,
     );
     expect(css).toContain(".mobile-nav");
   });

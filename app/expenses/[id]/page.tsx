@@ -42,6 +42,7 @@ import {
   useAccounts,
 } from "../../../components/wallet/AccountSelect";
 import { type LoadFailure, toLoadFailure } from "../../../lib/errors";
+import { plural } from "../../../lib/format";
 
 type Comment = {
   id: string;
@@ -346,7 +347,7 @@ export default function ExpenseDetail() {
         <Panel>
           <PanelTitle
             title="Conversation"
-            meta={`${comments.length} comments`}
+            meta={`${plural(comments.length, "comment")}`}
             action={<MessageOutlined />}
           />
           <form className="inline-form" onSubmit={addComment}>

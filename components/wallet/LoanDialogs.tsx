@@ -188,7 +188,7 @@ export function LoanFormModal({
     <Modal
       wide
       title={loan ? "Edit loan" : "New loan"}
-      subtitle="For money lent to or borrowed from anyone — friends' balances stay on the Friends tab."
+      subtitle="For money lent to or borrowed from anyone — money shared with friends is tracked under Friends."
       onClose={onClose}
     >
       <form className="txn-editor" onSubmit={submit} noValidate>

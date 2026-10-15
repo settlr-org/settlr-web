@@ -203,6 +203,7 @@ export default function Settings() {
           "Your identity will be anonymized and this cannot be undone.",
         confirmLabel: "Delete account",
         danger: true,
+        requireText: "DELETE",
       }))
     )
       return;
@@ -287,23 +288,45 @@ export default function Settings() {
             {prefs &&
               (
                 [
-                  ["email_enabled", "Email notifications"],
-                  ["push_enabled", "Push notifications"],
-                  ["friend_request_enabled", "Friend requests"],
-                  ["expense_enabled", "New expenses"],
-                  ["settlement_enabled", "Settlements"],
-                ] as [keyof Prefs, string][]
-              ).map(([key, label]) => (
+                  [
+                    "email_enabled",
+                    "Email notifications",
+                    "Get updates by email.",
+                  ],
+                  [
+                    "push_enabled",
+                    "Push notifications",
+                    "Get alerts on your devices.",
+                  ],
+                  [
+                    "friend_request_enabled",
+                    "Friend requests",
+                    "When someone asks to connect with you.",
+                  ],
+                  [
+                    "expense_enabled",
+                    "New expenses",
+                    "When an expense is added to one of your groups.",
+                  ],
+                  [
+                    "settlement_enabled",
+                    "Settlements",
+                    "When a payment is recorded with you.",
+                  ],
+                ] as [keyof Prefs, string, string][]
+              ).map(([key, label, hint]) => (
                 <div className="setting-row" key={key}>
                   <div>
                     <strong>{label}</strong>
-                    <p>Receive updates about {label.toLowerCase()}.</p>
+                    <p>{hint}</p>
                   </div>
                   <button
                     className={prefs[key] ? "toggle active" : "toggle"}
+                    type="button"
+                    role="switch"
                     onClick={() => void toggle(key)}
-                    aria-pressed={prefs[key]}
-                    aria-label={`${prefs[key] ? "Disable" : "Enable"} ${label.toLowerCase()}`}
+                    aria-checked={prefs[key]}
+                    aria-label={label}
                   >
                     <i />
                   </button>
@@ -411,7 +434,7 @@ export default function Settings() {
                   <button
                     type="button"
                     className="session-revoke"
-                    aria-label={`Revoke session on ${device}`}
+                    aria-label={`Revoke session on ${device}, last used ${new Date(s.last_used_at).toLocaleDateString()}${displayIp(s.ip) ? `, ${displayIp(s.ip)}` : ""}`}
                     title="Revoke session"
                     onClick={() => void revoke(s.id)}
                   >

@@ -41,6 +41,7 @@ import {
   useAccounts,
 } from "../../../components/wallet/AccountSelect";
 import { type LoadFailure, toLoadFailure } from "../../../lib/errors";
+import { plural } from "../../../lib/format";
 type GroupBalances = {
   data: { user_id: string; amount: number }[];
   currency: string;
@@ -200,7 +201,7 @@ export default function GroupDetail() {
               group?.currency,
             )}
           </strong>
-          <small>{expenses.length} expenses recorded</small>
+          <small>{plural(expenses.length, "expense")} recorded</small>
         </div>
         <div>
           <span>YOUR BALANCE</span>
@@ -232,7 +233,7 @@ export default function GroupDetail() {
           {members.slice(0, 4).map((m) => (
             <i key={m.id}>{initials(m.name)}</i>
           ))}
-          <b>{members.length} members</b>
+          <b>{plural(members.length, "member")}</b>
         </div>
       </section>
       <div className="tabs" role="tablist">
@@ -254,7 +255,7 @@ export default function GroupDetail() {
         <Panel>
           <PanelTitle
             title="Expenses"
-            meta={`${expenses.length} entries`}
+            meta={`${plural(expenses.length, "entry", "entries")}`}
             action={
               <label className="mini-search">
                 <SearchOutlined />
@@ -355,7 +356,7 @@ export default function GroupDetail() {
         <Panel>
           <PanelTitle
             title="Members"
-            meta={`${members.length} people`}
+            meta={`${plural(members.length, "person", "people")}`}
             action={
               <button
                 className="text-button"
@@ -393,7 +394,7 @@ export default function GroupDetail() {
         <Panel>
           <PanelTitle
             title="Settlement history"
-            meta={`${settlements.length} recorded payments`}
+            meta={`${plural(settlements.length, "recorded payment")}`}
           />
           {settlements.map((s) => (
             <article className="expense-line" key={s.id}>
