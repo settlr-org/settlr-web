@@ -265,7 +265,11 @@ export async function logout() {
 }
 
 export async function apiDownload(path: string, filename: string) {
-  const headers = new Headers({ Accept: "text/csv" });
+  const headers = new Headers({
+    Accept: path.split("?")[0].endsWith(".json")
+      ? "application/json"
+      : "text/csv",
+  });
   const token = accessToken;
   if (token) headers.set("Authorization", `Bearer ${token}`);
   let response = await fetchWithTimeout(`${API_URL}${path}`, { headers });
@@ -279,6 +283,11 @@ export async function apiDownload(path: string, filename: string) {
   const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = filename;
+  anchor.style.display = "none";
+  // Firefox needs the link in the document; revoking right away can cancel a
+  // large download, so give the browser time to start reading the blob.
+  document.body.append(anchor);
   anchor.click();
-  URL.revokeObjectURL(url);
+  anchor.remove();
+  globalThis.setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }

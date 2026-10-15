@@ -22,6 +22,7 @@ import { PasswordInput } from "../../components/PasswordInput";
 import { useSession } from "../../components/SessionProvider";
 import { WalletSettingsPanels } from "../../components/wallet/WalletSettingsPanels";
 import { apiDownload, apiFetch } from "../../lib/api";
+import { EXPORTS, type ExportOption } from "../../lib/exports";
 import {
   deviceLabel,
   displayIp,
@@ -193,6 +194,21 @@ export default function Settings() {
       await load();
     } catch (x) {
       setError(x instanceof Error ? x.message : "Could not revoke session.");
+    }
+  };
+  const [downloading, setDownloading] = useState("");
+  const download = async (option: ExportOption) => {
+    setDownloading(option.key);
+    setError("");
+    try {
+      await apiDownload(option.path, option.filename);
+      setSaved(`${option.label} downloaded.`);
+    } catch (x) {
+      setError(
+        x instanceof Error ? x.message : "Could not prepare the download.",
+      );
+    } finally {
+      setDownloading("");
     }
   };
   const deleteAccount = async () => {
@@ -483,28 +499,30 @@ export default function Settings() {
                   <BellOutlined /> Resend verification
                 </button>
               )}
-              <button
-                className="button"
-                onClick={() =>
-                  void apiDownload(
-                    "/api/v1/me/export.csv",
-                    "settlr-account.csv",
-                  )
-                }
-              >
-                <DownloadOutlined /> Export CSV
-              </button>
-              <button
-                className="button"
-                onClick={() =>
-                  void apiDownload(
-                    "/api/v1/me/export.json",
-                    "settlr-account.json",
-                  )
-                }
-              >
-                <DownloadOutlined /> Export JSON
-              </button>
+            </div>
+            <div
+              className="export-list"
+              role="group"
+              aria-label="Download your data"
+            >
+              {EXPORTS.map((option) => (
+                <div className="export-row" key={option.key}>
+                  <div>
+                    <strong>{option.label}</strong>
+                    <p>{option.description}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className={option.primary ? "button primary" : "button"}
+                    disabled={Boolean(downloading)}
+                    aria-label={`Download ${option.label}`}
+                    onClick={() => void download(option)}
+                  >
+                    <DownloadOutlined />{" "}
+                    {downloading === option.key ? "Preparing…" : "Download"}
+                  </button>
+                </div>
+              ))}
             </div>
             <div className="danger-inline">
               <div>

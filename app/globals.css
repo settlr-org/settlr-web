@@ -4504,3 +4504,34 @@ input[type="radio"] {
   background: var(--bg);
   color: var(--ink);
 }
+.export-list {
+  display: grid;
+  margin: 16px 0;
+  border-top: 1px solid var(--line);
+}
+.export-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.export-row > div {
+  min-width: 0;
+}
+.export-row strong {
+  font-size: 13px;
+}
+.export-row p {
+  margin-top: 2px;
+  color: var(--muted-strong);
+  font-size: 12px;
+  line-height: 1.5;
+}
+@media (max-width: 520px) {
+  .export-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
