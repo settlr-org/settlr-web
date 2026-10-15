@@ -184,13 +184,26 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
         <p className="status-copy">
           {sessionError} You&apos;re still signed in.
         </p>
-        <button
-          className="button primary"
-          type="button"
-          onClick={() => void retrySession()}
-        >
-          Try again
-        </button>
+        <div className="button-row">
+          <button
+            className="button primary"
+            type="button"
+            onClick={() => void retrySession()}
+          >
+            Try again
+          </button>
+          <button
+            className="button"
+            type="button"
+            onClick={() => {
+              void signOut()
+                .catch(() => undefined)
+                .finally(() => router.replace("/login"));
+            }}
+          >
+            Sign out
+          </button>
+        </div>
       </main>
     );
   if (loading || !user)

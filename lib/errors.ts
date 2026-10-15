@@ -13,7 +13,7 @@ const BY_CODE: Record<string, string> = {
   NOT_FOUND: "We couldn't find that. It may have been removed.",
   RATE_LIMITED: "Too many attempts. Wait a moment and try again.",
   RATES_UNAVAILABLE:
-    "Exchange rates are unavailable right now. Try again shortly.",
+    "No exchange rate for this pair. Add one in Settings → Exchange rates.",
   PAYLOAD_TOO_LARGE: "That is too large to upload.",
   IDEMPOTENCY_IN_PROGRESS: "That is already being saved. Give it a moment.",
   IDEMPOTENCY_KEY_REUSED: "That was already submitted. Refresh and try again.",
@@ -41,17 +41,31 @@ export function friendlyMessage(
   serverMessage: string,
 ): string {
   if (status === 0 || code === "NETWORK") return OFFLINE_MESSAGE;
-  if (status >= 500) return SERVER_MESSAGE;
-  if (code === "UNAUTHORIZED" && /invalid credentials/i.test(serverMessage))
-    return "Incorrect email or password.";
+  const message = serverMessage.trim();
+  if (code === "UNAUTHORIZED" || status === 401) {
+    // 401 is not always "session over": a wrong password or a failed Google
+    // check comes back as 401 while the user is still signed in.
+    if (/^invalid credentials$/i.test(message))
+      return "Incorrect email or password.";
+    if (/^current password incorrect$/i.test(message))
+      return "Current password is incorrect.";
+    if (/could not be verified/i.test(message))
+      return "Google sign-in could not be verified.";
+    if (/^authentication required$/i.test(message))
+      return "Your session has ended. Sign in again.";
+    if (!message || /^Request failed \(\d+\)$/.test(message))
+      return "Your session has ended. Sign in again.";
+    return sentenceCase(message);
+  }
+  // Codes first: OAUTH_NOT_CONFIGURED arrives with a 503.
   if (code && BY_CODE[code]) return BY_CODE[code];
-  if (status === 401) return "Your session has ended. Sign in again.";
+  if (status >= 500) return SERVER_MESSAGE;
   if (status === 404) return BY_CODE.NOT_FOUND;
   if (status === 403) return BY_CODE.FORBIDDEN;
   if (status === 429) return BY_CODE.RATE_LIMITED;
-  if (/^Request failed \(\d+\)$/.test(serverMessage))
+  if (/^Request failed \(\d+\)$/.test(message))
     return "That didn't work. Please try again.";
-  return sentenceCase(serverMessage);
+  return sentenceCase(message);
 }
 
 export type FailureKind = "missing" | "retry";

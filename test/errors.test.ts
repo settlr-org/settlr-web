@@ -26,9 +26,8 @@ describe("friendlyMessage", () => {
     expect(friendlyMessage(429, "RATE_LIMITED", "slow down")).toMatch(
       /Too many attempts/,
     );
-    expect(friendlyMessage(503, "RATES_UNAVAILABLE", "x")).toBe(SERVER_MESSAGE);
-    expect(friendlyMessage(422, "RATES_UNAVAILABLE", "x")).toMatch(
-      /Exchange rates/,
+    expect(friendlyMessage(422, "RATES_UNAVAILABLE", "x")).toBe(
+      "No exchange rate for this pair. Add one in Settings → Exchange rates.",
     );
   });
 
@@ -43,6 +42,36 @@ describe("friendlyMessage", () => {
     expect(friendlyMessage(401, "UNAUTHORIZED", "invalid credentials")).toBe(
       "Incorrect email or password.",
     );
+  });
+
+  it("only says the session ended for the API's session error", () => {
+    expect(
+      friendlyMessage(401, "UNAUTHORIZED", "authentication required"),
+    ).toBe("Your session has ended. Sign in again.");
+    // Wrong password while signed in must not claim the session ended.
+    expect(
+      friendlyMessage(401, "UNAUTHORIZED", "current password incorrect"),
+    ).toBe("Current password is incorrect.");
+    expect(
+      friendlyMessage(
+        401,
+        "UNAUTHORIZED",
+        "Google sign-in could not be verified",
+      ),
+    ).toBe("Google sign-in could not be verified.");
+    expect(friendlyMessage(401, "UNAUTHORIZED", "token revoked")).toBe(
+      "Token revoked.",
+    );
+  });
+
+  it("looks codes up before the 5xx fallback", () => {
+    expect(friendlyMessage(503, "OAUTH_NOT_CONFIGURED", "x")).toBe(
+      "Google sign-in isn't available right now.",
+    );
+    expect(friendlyMessage(503, "RATES_UNAVAILABLE", "x")).toMatch(
+      /No exchange rate/,
+    );
+    expect(friendlyMessage(500, "INTERNAL", "x")).toBe(SERVER_MESSAGE);
   });
 
   it("keeps validation detail but capitalises it", () => {

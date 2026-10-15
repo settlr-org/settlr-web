@@ -92,8 +92,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     return undefined;
   };
   const signOut = async () => {
-    await logout();
-    setUser(null);
+    try {
+      await logout();
+    } finally {
+      // Local sign-out must work even when the server cannot be reached.
+      setUser(null);
+      setSessionError(null);
+    }
   };
   const signInWithGoogle = async (idToken: string) => {
     const session = await authenticateWithGoogle(idToken);
