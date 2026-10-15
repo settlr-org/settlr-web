@@ -340,7 +340,7 @@ export function formatMoney(
  */
 export function amountScale(text: string): "normal" | "long" | "huge" {
   const length = text.length;
-  return length > 20 ? "huge" : length > 15 ? "long" : "normal";
+  return length > 21 ? "huge" : length > 17 ? "long" : "normal";
 }
 
 /** Direction of a ledger row for colouring and sign: in, out or neutral. */

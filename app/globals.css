@@ -2977,7 +2977,7 @@ legend {
 }
 .wallet-total > strong {
   font-family: var(--st-font-display);
-  font-size: clamp(26px, 3.2vw, 34px);
+  font-size: calc(clamp(26px, 3.2vw, 34px) * var(--amount-k, 1));
   font-weight: 600;
   color: var(--st-band-amount);
   overflow-wrap: anywhere;
@@ -3030,17 +3030,17 @@ legend {
 }
 .wallet-stat > strong {
   font-family: var(--st-font-data);
-  font-size: clamp(19px, 2.2vw, 23px);
+  font-size: calc(clamp(19px, 2.2vw, 23px) * var(--amount-k, 1));
   font-weight: 500;
   overflow-wrap: anywhere;
 }
 /* Long figures step down a size instead of clipping or orphaning a digit
    (see amountScale in lib/wallet.ts). */
-[data-amount-scale="long"] {
-  font-size: 0.82em;
+strong[data-amount-scale="long"] {
+  --amount-k: 0.84;
 }
-[data-amount-scale="huge"] {
-  font-size: 0.66em;
+strong[data-amount-scale="huge"] {
+  --amount-k: 0.7;
 }
 .wallet-stat > small {
   font-size: 12px;
