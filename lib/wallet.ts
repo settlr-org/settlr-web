@@ -334,6 +334,15 @@ export function formatMoney(
   return `${sign}${body}`;
 }
 
+/**
+ * How much to shrink a formatted amount so it fits its card: "NPR 13,300.00"
+ * is normal, "EUR 999,999,999.99" long, "NPR 170,020,528,475.20" huge.
+ */
+export function amountScale(text: string): "normal" | "long" | "huge" {
+  const length = text.length;
+  return length > 21 ? "huge" : length > 17 ? "long" : "normal";
+}
+
 /** Direction of a ledger row for colouring and sign: in, out or neutral. */
 export function entryDirection(
   entry: Pick<LedgerEntry, "type" | "account_amount" | "kind">,

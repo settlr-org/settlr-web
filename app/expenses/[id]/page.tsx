@@ -22,6 +22,7 @@ import {
   Empty,
   ErrorState,
   Loading,
+  LoadError,
   Panel,
   PanelTitle,
   useConfirmation,
@@ -40,6 +41,8 @@ import {
   AccountSelect,
   useAccounts,
 } from "../../../components/wallet/AccountSelect";
+import { type LoadFailure, toLoadFailure } from "../../../lib/errors";
+import { plural } from "../../../lib/format";
 
 type Comment = {
   id: string;
@@ -69,6 +72,7 @@ export default function ExpenseDetail() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [error, setError] = useState("");
+  const [loadFailure, setLoadFailure] = useState<LoadFailure | null>(null);
   const [saved, setSaved] = useState("");
   const [loading, setLoading] = useState(true);
   const accounts = useAccounts();
@@ -76,6 +80,7 @@ export default function ExpenseDetail() {
   const [payerAccount, setPayerAccount] = useState("");
   const load = useCallback(async () => {
     try {
+      setLoadFailure(null);
       const e = await apiFetch<Expense>(`/api/v1/expenses/${id}`);
       const [g, m, c, cm, a] = await Promise.all([
         apiFetch<Group>(`/api/v1/groups/${e.group_id}`),
@@ -93,7 +98,7 @@ export default function ExpenseDetail() {
       setComments(cm.data);
       setAttachments(a.data);
     } catch (x) {
-      setError(x instanceof Error ? x.message : "Could not load expense.");
+      setLoadFailure(toLoadFailure(x, "Could not load expense."));
     } finally {
       setLoading(false);
     }
@@ -192,6 +197,21 @@ export default function ExpenseDetail() {
       setError(x instanceof Error ? x.message : "Could not delete expense.");
     }
   };
+  if (loadFailure)
+    return (
+      <AppShell
+        title="Expense"
+        description="We couldn't load this page."
+        actions={<></>}
+      >
+        <LoadError
+          failure={loadFailure}
+          retry={() => void load()}
+          backHref="/groups"
+          backLabel="All groups"
+        />
+      </AppShell>
+    );
   if (loading || !expense || !group)
     return (
       <AppShell title="Expense" description="Loading expense details…">
@@ -327,7 +347,7 @@ export default function ExpenseDetail() {
         <Panel>
           <PanelTitle
             title="Conversation"
-            meta={`${comments.length} comments`}
+            meta={`${plural(comments.length, "comment")}`}
             action={<MessageOutlined />}
           />
           <form className="inline-form" onSubmit={addComment}>

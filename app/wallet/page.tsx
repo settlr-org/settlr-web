@@ -169,6 +169,7 @@ export default function WalletPage() {
           </div>
           <WalletSummary
             overview={overview}
+            unavailable={Boolean(error) && !overview}
             settings={refs.settings}
             accountCount={active.filter((a) => a.include_in_balance).length}
             onToggleHidden={() =>
@@ -365,7 +366,7 @@ export default function WalletPage() {
                   <BarChartOutlined />{" "}
                   <span>
                     Personal stats &amp; export
-                    <small>Monthly totals and CSV — until Wallet reports</small>
+                    <small>Monthly totals and CSV export</small>
                   </span>
                 </Link>
               </Panel>

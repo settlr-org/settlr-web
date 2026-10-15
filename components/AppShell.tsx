@@ -102,7 +102,7 @@ const workspacePrefixes = [
 ];
 
 export function WorkspaceLayout({ children }: { children: ReactNode }) {
-  const { user, loading, signOut } = useSession();
+  const { user, loading, signOut, sessionError, retrySession } = useSession();
   const router = useRouter();
   const path = usePathname();
   const [config, setConfig] = useState<ShellConfig>({
@@ -137,9 +137,11 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
     (prefix) => path === prefix || path.startsWith(`${prefix}/`),
   );
   useEffect(() => {
-    if (workspace && !loading && !user)
+    // A failed session check (5xx, offline) is not a sign-out: stay put and
+    // offer a retry instead of bouncing to the login page.
+    if (workspace && !loading && !user && !sessionError)
       router.replace(`/login?next=${encodeURIComponent(path)}`);
-  }, [workspace, loading, user, router, path]);
+  }, [workspace, loading, user, sessionError, router, path]);
   const toggleTheme = () => {
     const next =
       document.documentElement.dataset.theme === "dark" ? "light" : "dark";
@@ -173,6 +175,37 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [router, user, workspace]);
   if (!workspace) return children;
+  if (!loading && !user && sessionError)
+    return (
+      <main className="status-page" id="main" role="alert">
+        <Brand />
+        <p className="eyebrow">CAN&apos;T REACH SETTLR</p>
+        <h1>We couldn&apos;t open your ledger</h1>
+        <p className="status-copy">
+          {sessionError} You&apos;re still signed in.
+        </p>
+        <div className="button-row">
+          <button
+            className="button primary"
+            type="button"
+            onClick={() => void retrySession()}
+          >
+            Try again
+          </button>
+          <button
+            className="button"
+            type="button"
+            onClick={() => {
+              void signOut()
+                .catch(() => undefined)
+                .finally(() => router.replace("/login"));
+            }}
+          >
+            Sign out
+          </button>
+        </div>
+      </main>
+    );
   if (loading || !user)
     return (
       <div className="route-loading">
@@ -187,6 +220,9 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
   return (
     <ConfirmationProvider>
       <div className="app-shell">
+        <a className="skip-link" href="#main">
+          Skip to main content
+        </a>
         <aside className="sidebar">
           <Brand />
           <p className="brand-tagline">Shared money, made clear.</p>
@@ -263,11 +299,11 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
             <SettingOutlined />
           </button>
         </aside>
-        <main className="content">
+        <main className="content" id="main" tabIndex={-1}>
           <header className="topbar">
             <div className="page-heading">
               <p className="eyebrow">{config.eyebrow}</p>
-              <h1>{config.title}</h1>
+              <h1 title={config.title}>{config.title}</h1>
               <p className="subtitle">{config.description}</p>
             </div>
             <div className="top-actions">

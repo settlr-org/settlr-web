@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CalendarOutlined, PlusOutlined } from "@ant-design/icons";
 import { AppShell } from "../../../components/AppShell";
@@ -10,7 +10,9 @@ import {
   Loading,
   Panel,
   PanelTitle,
+  useConfirmation,
 } from "../../../components/UI";
+import { DeferredActions, flushOnLeave } from "../../../lib/undo";
 import { apiFetch } from "../../../lib/api";
 import { formatMoney, Page } from "../../../lib/wallet";
 import {
@@ -85,6 +87,10 @@ export default function PlannedPage() {
       .then(([p, t]) => {
         if (cancelled) return;
         setPlans(p.data);
+        // Fresh data: rows skipped earlier are gone or advanced, so only
+        // rows still waiting in the undo queue stay hidden.
+        skippedRef.current.clear();
+        setHeld((h) => new Set([...h].filter((k) => deferred.current.has(k))));
         // Standalone planned items: unpaid transactions that belong to no plan.
         setSingles(t.data.filter((i) => !i.planned_payment_id));
       })
@@ -111,19 +117,94 @@ export default function PlannedPage() {
     setReloadKey((k) => k + 1);
   }, []);
 
-  const skip = async (row: Row) => {
+  // Skipping has no server-side restore, so it is queued for a few seconds
+  // with an Undo; leaving the page sends anything still queued.
+  const deferred = useRef(new DeferredActions());
+  const [held, setHeld] = useState<ReadonlySet<string>>(new Set());
+  const [undo, setUndo] = useState<{ key: string; message: string }>();
+  const confirm = useConfirmation();
+  const overdueKeysRef = useRef<string[]>([]);
+  const skippedRef = useRef(new Set<string>());
+  const release = (key: string) =>
+    setHeld((h) => {
+      const next = new Set(h);
+      next.delete(key);
+      return next;
+    });
+  useEffect(() => {
+    const queue = deferred.current;
+    const stop = flushOnLeave(queue);
+    return () => {
+      stop();
+      void queue.flushAll();
+    };
+  }, []);
+
+  const skip = (row: Row) => {
     if (!row.item) return;
-    setBusy(row.key);
+    const item = row.item;
+    setError("");
+    setHeld((h) => new Set(h).add(row.key));
+    setUndo({ key: row.key, message: `Skipping “${row.name}” in 6s…` });
+    const idempotencyKey = crypto.randomUUID();
+    deferred.current.schedule(row.key, async ({ keepalive }) => {
+      setUndo((u) => (u?.key === row.key ? undefined : u));
+      try {
+        const result = await walletWrite<PayResult>(
+          `/api/v1/transactions/${item.id}/skip`,
+          "POST",
+          undefined,
+          { idempotencyKey, keepalive },
+        );
+        // Stay hidden until the reload below replaces the data.
+        skippedRef.current.add(row.key);
+        refresh(
+          `Skipped “${row.name}”.${result.next?.due_at ? ` Next due ${shortDate(result.next.due_at)}.` : ""}`,
+        );
+      } catch (cause) {
+        release(row.key);
+        setError(errorText(cause, "Could not skip it."));
+      }
+    });
+  };
+  const undoSkip = () => {
+    if (!undo) return;
+    deferred.current.undo(undo.key);
+    release(undo.key);
+    setUndo(undefined);
+  };
+
+  const skipAllOverdue = async () => {
+    // Send queued single skips first so the count is right and they cannot
+    // fire (and 404) after the bulk skip.
+    if (deferred.current.size) {
+      await deferred.current.flushAll();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+    const count = overdueKeysRef.current.filter(
+      (k) => !skippedRef.current.has(k),
+    ).length;
+    if (!count) return;
+    const ok = await confirm({
+      title: `Skip ${count} overdue ${count === 1 ? "item" : "items"}?`,
+      description:
+        "Nothing is recorded. Every repeating plan moves to its next date from today; one-off items are removed.",
+      confirmLabel: "Skip all overdue",
+      danger: true,
+    });
+    if (!ok) return;
+    setBusy("all");
+    setError("");
     try {
-      const result = await walletWrite<PayResult>(
-        `/api/v1/transactions/${row.item.id}/skip`,
+      const { skipped } = await walletWrite<{ skipped: number }>(
+        "/api/v1/transactions/skip-overdue",
         "POST",
       );
       refresh(
-        `Skipped “${row.name}”.${result.next?.due_at ? ` Next due ${shortDate(result.next.due_at)}.` : ""}`,
+        `Skipped ${skipped} overdue ${skipped === 1 ? "payment" : "payments"}.`,
       );
     } catch (cause) {
-      setError(errorText(cause, "Could not skip it."));
+      setError(errorText(cause, "Could not skip the overdue payments."));
     } finally {
       setBusy("");
     }
@@ -170,6 +251,11 @@ export default function PlannedPage() {
         new Date(b.item?.due_at ?? 0).getTime(),
   );
 
+  const overdueRows = [...recurring.map(toRow), ...oneTimeRows].filter(
+    (r) => r.late && r.item && !r.muted && !held.has(r.key),
+  );
+  const overdueCount = overdueRows.length;
+  overdueKeysRef.current = overdueRows.map((r) => r.key);
   const accountsById = useMemo(() => accountMap(refs?.accounts ?? []), [refs]);
   const categoriesById = useMemo(
     () => categoryMap(refs?.categories ?? []),
@@ -178,106 +264,108 @@ export default function PlannedPage() {
 
   const list = (rows: Row[], label: string) => (
     <ul className="planned-list" aria-label={label}>
-      {rows.map((row) => {
-        const category = row.categoryId
-          ? categoriesById[row.categoryId]
-          : undefined;
-        const from = row.accountId
-          ? accountsById[row.accountId]?.name
-          : undefined;
-        const to = row.toAccountId
-          ? accountsById[row.toAccountId]?.name
-          : undefined;
-        const where =
-          row.type === "TRANSFER"
-            ? `${from ?? "—"} → ${to ?? "—"}`
-            : (from ?? "No account yet");
-        const sign =
-          row.type === "INCOME"
-            ? "+"
-            : row.type === "EXPENSE"
-              ? "-"
-              : undefined;
-        const dir =
-          row.type === "INCOME"
-            ? "in"
-            : row.type === "EXPENSE"
-              ? "out"
-              : "neutral";
-        const cadence = row.plan ? cadenceLabel(row.plan) : "One-time";
-        return (
-          <li
-            key={row.key}
-            className={[
-              "planned-row",
-              row.late ? "is-late" : "",
-              row.muted ? "is-muted" : "",
-            ]
-              .filter(Boolean)
-              .join(" ")}
-          >
-            {category ? (
-              <ItemTile icon={category.icon} color={category.color} />
-            ) : (
-              <span className="planned-icon" aria-hidden="true">
-                <CalendarOutlined />
-              </span>
-            )}
-            <span className="planned-main">
-              <button
-                type="button"
-                className="ledger-open"
-                aria-label={`Edit ${row.name}`}
-                onClick={() =>
-                  row.plan
-                    ? setEditingPlan(row.plan.id)
-                    : setEditingItem(row.key)
-                }
-              >
-                {row.name}
-              </button>
-              <small>
-                {row.plan && !row.plan.one_time ? `${cadence} · ` : ""}
-                <span className={row.late ? "planned-late" : undefined}>
-                  {row.status}
-                </span>
-                {" · "}
-                {where}
-                {category ? ` · ${category.name}` : ""}
-              </small>
-            </span>
-            <span
-              className={`planned-amount amount-${row.muted ? "neutral" : dir}`}
+      {rows
+        .filter((row) => !held.has(row.key))
+        .map((row) => {
+          const category = row.categoryId
+            ? categoriesById[row.categoryId]
+            : undefined;
+          const from = row.accountId
+            ? accountsById[row.accountId]?.name
+            : undefined;
+          const to = row.toAccountId
+            ? accountsById[row.toAccountId]?.name
+            : undefined;
+          const where =
+            row.type === "TRANSFER"
+              ? `${from ?? "—"} → ${to ?? "—"}`
+              : (from ?? "No account yet");
+          const sign =
+            row.type === "INCOME"
+              ? "+"
+              : row.type === "EXPENSE"
+                ? "-"
+                : undefined;
+          const dir =
+            row.type === "INCOME"
+              ? "in"
+              : row.type === "EXPENSE"
+                ? "out"
+                : "neutral";
+          const cadence = row.plan ? cadenceLabel(row.plan) : "One-time";
+          return (
+            <li
+              key={row.key}
+              className={[
+                "planned-row",
+                row.late ? "is-late" : "",
+                row.muted ? "is-muted" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
             >
-              {formatMoney(row.amount, row.currency, { sign })}
-            </span>
-            <span className="planned-actions">
-              {row.item && (
-                <>
-                  <button
-                    type="button"
-                    className="button pill-button"
-                    disabled={Boolean(busy)}
-                    aria-label={`${row.type === "INCOME" ? "Receive" : "Pay"} ${row.name}`}
-                    onClick={() => setPaying(row.item!)}
-                  >
-                    {row.type === "INCOME" ? "Receive" : "Pay"}
-                  </button>
-                  <button
-                    type="button"
-                    className="text-button"
-                    disabled={Boolean(busy)}
-                    aria-label={`Skip ${row.name}`}
-                    onClick={() => void skip(row)}
-                  >
-                    {busy === row.key ? "Skipping…" : "Skip"}
-                  </button>
-                </>
+              {category ? (
+                <ItemTile icon={category.icon} color={category.color} />
+              ) : (
+                <span className="planned-icon" aria-hidden="true">
+                  <CalendarOutlined />
+                </span>
               )}
-            </span>
-          </li>
-        );
-      })}
+              <span className="planned-main">
+                <button
+                  type="button"
+                  className="ledger-open"
+                  aria-label={`Edit ${row.name}`}
+                  onClick={() =>
+                    row.plan
+                      ? setEditingPlan(row.plan.id)
+                      : setEditingItem(row.key)
+                  }
+                >
+                  {row.name}
+                </button>
+                <small>
+                  {row.plan && !row.plan.one_time ? `${cadence} · ` : ""}
+                  <span className={row.late ? "planned-late" : undefined}>
+                    {row.status}
+                  </span>
+                  {" · "}
+                  {where}
+                  {category ? ` · ${category.name}` : ""}
+                </small>
+              </span>
+              <span
+                className={`planned-amount amount-${row.muted ? "neutral" : dir}`}
+              >
+                {formatMoney(row.amount, row.currency, { sign })}
+              </span>
+              <span className="planned-actions">
+                {row.item && (
+                  <>
+                    <button
+                      type="button"
+                      className="button pill-button"
+                      disabled={Boolean(busy)}
+                      aria-label={`${row.type === "INCOME" ? "Receive" : "Pay"} ${row.name}`}
+                      onClick={() => setPaying(row.item!)}
+                    >
+                      {row.type === "INCOME" ? "Receive" : "Pay"}
+                    </button>
+                    <button
+                      type="button"
+                      className="text-button"
+                      disabled={Boolean(busy)}
+                      aria-label={`Skip ${row.name}`}
+                      onClick={() => void skip(row)}
+                    >
+                      {busy === row.key ? "Skipping…" : "Skip"}
+                    </button>
+                  </>
+                )}
+              </span>
+            </li>
+          );
+        })}
     </ul>
   );
 
@@ -306,9 +394,31 @@ export default function PlannedPage() {
       ) : (
         <>
           {error && <ErrorState message={error} retry={() => refresh()} />}
-          {notice && (
+          {undo && (
+            <div className="success-banner" role="status">
+              {undo.message}{" "}
+              <button type="button" className="text-button" onClick={undoSkip}>
+                Undo
+              </button>
+            </div>
+          )}
+          {notice && !undo && (
             <div className="success-banner" role="status">
               {notice}
+            </div>
+          )}
+          {overdueCount > 0 && (
+            <div className="button-row">
+              <button
+                type="button"
+                className="button danger-text"
+                disabled={Boolean(busy)}
+                onClick={() => void skipAllOverdue()}
+              >
+                {busy === "all"
+                  ? "Skipping…"
+                  : `Skip all overdue (${overdueCount})`}
+              </button>
             </div>
           )}
           {!plans ? (

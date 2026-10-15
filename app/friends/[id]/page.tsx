@@ -14,12 +14,14 @@ import { AppShell } from "../../../components/AppShell";
 import {
   ErrorState,
   Loading,
+  LoadError,
   Modal,
   Panel,
   PanelTitle,
 } from "../../../components/UI";
 import { apiFetch } from "../../../lib/api";
 import { initials } from "../../../lib/types";
+import { type LoadFailure, toLoadFailure } from "../../../lib/errors";
 
 type Person = { id: string; name: string; avatar_url?: string };
 type Payment = {
@@ -35,11 +37,13 @@ export default function FriendDetail() {
   const [payment, setPayment] = useState<Payment>();
   const [ledger, setLedger] = useState<Ledger>();
   const [error, setError] = useState("");
+  const [loadFailure, setLoadFailure] = useState<LoadFailure | null>(null);
   const [loading, setLoading] = useState(true);
   const [requested, setRequested] = useState(false);
   const [confirmation, setConfirmation] = useState<"remove" | "block">();
   const load = useCallback(async () => {
     try {
+      setLoadFailure(null);
       const p = await apiFetch<Person>(`/api/v1/users/${id}`);
       setPerson(p);
       const [l, pay] = await Promise.allSettled([
@@ -49,7 +53,7 @@ export default function FriendDetail() {
       if (l.status === "fulfilled") setLedger(l.value);
       if (pay.status === "fulfilled") setPayment(pay.value);
     } catch (x) {
-      setError(x instanceof Error ? x.message : "Could not load person.");
+      setLoadFailure(toLoadFailure(x, "Could not load person."));
     } finally {
       setLoading(false);
     }
@@ -78,6 +82,21 @@ export default function FriendDetail() {
     setConfirmation(undefined);
     await remove(block);
   };
+  if (loadFailure)
+    return (
+      <AppShell
+        title="Person"
+        description="We couldn't load this page."
+        actions={<></>}
+      >
+        <LoadError
+          failure={loadFailure}
+          retry={() => void load()}
+          backHref="/friends"
+          backLabel="All friends"
+        />
+      </AppShell>
+    );
   if (loading || !person)
     return (
       <AppShell title="Person" description="Loading…">

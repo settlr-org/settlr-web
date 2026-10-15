@@ -8,11 +8,13 @@ import {
   Empty,
   ErrorState,
   Loading,
+  LoadError,
   Panel,
   PanelTitle,
 } from "../../components/UI";
 import { apiFetch } from "../../lib/api";
 import { Friend, Group } from "../../lib/types";
+import { type LoadFailure, toLoadFailure } from "../../lib/errors";
 
 type Invite = {
   id: string;
@@ -30,11 +32,13 @@ export default function Invitations() {
   const [groupId, setGroupId] = useState("");
   const [sent, setSent] = useState("");
   const [error, setError] = useState("");
+  const [loadFailure, setLoadFailure] = useState<LoadFailure | null>(null);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState("");
   const router = useRouter();
   const load = useCallback(async () => {
     try {
+      setLoadFailure(null);
       const [g, f, i] = await Promise.all([
         apiFetch<{ data: Group[] }>("/api/v1/groups"),
         apiFetch<{ data: Friend[] }>("/api/v1/friends"),
@@ -45,7 +49,7 @@ export default function Invitations() {
       setGroupId((current) => current || g.data[0]?.id || "");
       setReceived(i.data);
     } catch (x) {
-      setError(x instanceof Error ? x.message : "Could not load invitations.");
+      setLoadFailure(toLoadFailure(x, "Could not load invitations."));
     } finally {
       setLoading(false);
     }
@@ -106,6 +110,13 @@ export default function Invitations() {
     >
       {loading ? (
         <Loading />
+      ) : loadFailure ? (
+        <LoadError
+          failure={loadFailure}
+          retry={load}
+          backHref="/overview"
+          backLabel="Back to overview"
+        />
       ) : (
         <div className="two-column">
           <Panel>

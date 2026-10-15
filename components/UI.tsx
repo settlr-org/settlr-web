@@ -9,6 +9,8 @@ import {
   useRef,
   useState,
 } from "react";
+import Link from "next/link";
+import type { LoadFailure } from "../lib/errors";
 import {
   CloseOutlined,
   InboxOutlined,
@@ -20,6 +22,8 @@ type ConfirmationOptions = {
   description: string;
   confirmLabel?: string;
   danger?: boolean;
+  /** Irreversible actions: the user must type this word before confirming. */
+  requireText?: string;
 };
 
 type PendingConfirmation = ConfirmationOptions & {
@@ -30,16 +34,33 @@ const ConfirmationContext = createContext<
   ((options: ConfirmationOptions) => Promise<boolean>) | undefined
 >(undefined);
 
+/** Typed-confirmation check: case-insensitive, ignores surrounding spaces. */
+export function matchesConfirmText(typed: string, required?: string): boolean {
+  return !required || typed.trim().toLowerCase() === required.toLowerCase();
+}
+
 export function ConfirmationProvider({ children }: { children: ReactNode }) {
   const [pending, setPending] = useState<PendingConfirmation>();
+  const [typed, setTyped] = useState("");
+  const pendingRef = useRef<PendingConfirmation | undefined>(undefined);
   const requestConfirmation = useCallback(
     (options: ConfirmationOptions) =>
-      new Promise<boolean>((resolve) => setPending({ ...options, resolve })),
+      new Promise<boolean>((resolve) => {
+        // A second question replaces the first; the first is answered "no"
+        // instead of being left unresolved.
+        pendingRef.current?.resolve(false);
+        const next = { ...options, resolve };
+        pendingRef.current = next;
+        setTyped("");
+        setPending(next);
+      }),
     [],
   );
   const close = (confirmed: boolean) => {
-    if (!pending) return;
-    pending.resolve(confirmed);
+    const current = pendingRef.current;
+    if (!current) return;
+    pendingRef.current = undefined;
+    current.resolve(confirmed);
     setPending(undefined);
   };
 
@@ -51,7 +72,21 @@ export function ConfirmationProvider({ children }: { children: ReactNode }) {
           title={pending.title}
           subtitle={pending.description}
           onClose={() => close(false)}
+          guardDirty={false}
         >
+          {pending.requireText && (
+            <label className="confirm-type">
+              Type {pending.requireText} to confirm
+              <input
+                value={typed}
+                onChange={(e) => setTyped(e.target.value)}
+                autoComplete="off"
+                autoCapitalize="characters"
+                spellCheck={false}
+                data-autofocus
+              />
+            </label>
+          )}
           <div className="modal-actions">
             <button className="button full" onClick={() => close(false)}>
               Cancel
@@ -59,6 +94,10 @@ export function ConfirmationProvider({ children }: { children: ReactNode }) {
             <button
               className={
                 pending.danger ? "button danger full" : "button primary full"
+              }
+              disabled={
+                Boolean(pending.requireText) &&
+                !matchesConfirmText(typed, pending.requireText)
               }
               onClick={() => close(true)}
             >
@@ -133,7 +172,7 @@ export function ErrorState({
   retry?: () => void;
 }) {
   return (
-    <div className="alert">
+    <div className="alert" role="alert">
       <span>{message}</span>
       {retry && (
         <button onClick={retry}>
@@ -142,6 +181,37 @@ export function ErrorState({
       )}
     </div>
   );
+}
+/**
+ * Full replacement for a view whose data failed to load. Shows only the
+ * error (never zeros or an empty state that would look like real data). A
+ * missing or forbidden record gets a way back instead of a pointless retry.
+ */
+export function LoadError({
+  failure,
+  retry,
+  backHref,
+  backLabel = "Go back",
+}: {
+  failure: LoadFailure;
+  retry?: () => void;
+  backHref?: string;
+  backLabel?: string;
+}) {
+  if (failure.kind === "missing")
+    return (
+      <div className="empty load-error" role="alert">
+        <InboxOutlined />
+        <strong>{failure.status === 403 ? "No access" : "Not found"}</strong>
+        <p>{failure.message}</p>
+        {backHref && (
+          <Link className="button primary" href={backHref}>
+            {backLabel}
+          </Link>
+        )}
+      </div>
+    );
+  return <ErrorState message={failure.message} retry={retry} />;
 }
 export function Loading() {
   return (
@@ -152,24 +222,68 @@ export function Loading() {
     </div>
   );
 }
+/** Only edits to real form fields count; search boxes and pickers do not. */
+export function isFormEdit(target: HTMLElement | null): boolean {
+  if (!target?.closest) return false;
+  if (!target.matches("input, select, textarea")) return false;
+  if (!target.closest("form")) return false;
+  return (
+    !target.closest(
+      "[data-no-dirty], [role='listbox'], [role='combobox'], [role='searchbox']",
+    ) && target.getAttribute("type") !== "search"
+  );
+}
+
 export function Modal({
   title,
   subtitle,
   onClose,
   children,
   wide = false,
+  guardDirty = true,
 }: {
   title: string;
   subtitle: string;
   onClose: () => void;
   children: ReactNode;
   wide?: boolean;
+  /** Ask "Discard changes?" before an implicit close of an edited form. */
+  guardDirty?: boolean;
 }) {
   const titleId = useId();
   const subtitleId = useId();
   const dialogRef = useRef<HTMLElement>(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+  const confirm = useContext(ConfirmationContext);
+  const confirmRef = useRef(confirm);
+  confirmRef.current = confirm;
+  // Set once the user types into or changes a field: closing by Escape, the
+  // backdrop or the X then asks before throwing the entry away.
+  const dirty = useRef(false);
+  const closing = useRef(false);
+  const guardRef = useRef(guardDirty);
+  guardRef.current = guardDirty;
+
+  const requestClose = useCallback(async () => {
+    if (closing.current) return;
+    if (guardRef.current && dirty.current && confirmRef.current) {
+      closing.current = true;
+      let discard = false;
+      try {
+        discard = await confirmRef.current({
+          title: "Discard changes?",
+          description: "What you entered here has not been saved.",
+          confirmLabel: "Discard",
+          danger: true,
+        });
+      } finally {
+        closing.current = false;
+      }
+      if (!discard) return;
+    }
+    onCloseRef.current();
+  }, []);
 
   useEffect(() => {
     const previouslyFocused = document.activeElement as HTMLElement | null;
@@ -185,9 +299,11 @@ export function Modal({
     (preferred ?? focusable()[0])?.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      // A dialog stacked on top (e.g. "Discard changes?") owns the keyboard.
+      if (!dialog?.contains(document.activeElement)) return;
       if (event.key === "Escape") {
         event.preventDefault();
-        onCloseRef.current();
+        void requestClose();
         return;
       }
       if (event.key !== "Tab") return;
@@ -209,10 +325,10 @@ export function Modal({
       document.removeEventListener("keydown", handleKeyDown);
       previouslyFocused?.focus();
     };
-  }, []);
+  }, [requestClose]);
 
   return (
-    <div className="modal-backdrop" onMouseDown={onClose}>
+    <div className="modal-backdrop" onMouseDown={() => void requestClose()}>
       <section
         ref={dialogRef}
         className={wide ? "modal modal-wide" : "modal"}
@@ -221,8 +337,15 @@ export function Modal({
         aria-labelledby={titleId}
         aria-describedby={subtitleId}
         onMouseDown={(e) => e.stopPropagation()}
+        onInputCapture={(event) => {
+          if (isFormEdit(event.target as HTMLElement)) dirty.current = true;
+        }}
       >
-        <button className="modal-close" onClick={onClose} aria-label="Close">
+        <button
+          className="modal-close"
+          onClick={() => void requestClose()}
+          aria-label="Close"
+        >
           <CloseOutlined />
         </button>
         <p className="eyebrow">SETTLR</p>

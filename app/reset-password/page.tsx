@@ -40,7 +40,7 @@ export default function ResetPassword() {
       </Link>
       <form className="auth-form" onSubmit={submit}>
         <p className="eyebrow">ACCOUNT RECOVERY</p>
-        <h2>{done ? "Password changed" : "Choose a new password"}</h2>
+        <h1>{done ? "Password changed" : "Choose a new password"}</h1>
         {done ? (
           <>
             <p>

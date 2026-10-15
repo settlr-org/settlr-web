@@ -25,6 +25,7 @@ import {
 import { ItemTile } from "../../../components/wallet/icons";
 import { StyleModal } from "../../../components/wallet/StyleModal";
 import { suggestColour, Tag } from "../../../lib/wallet";
+import { plural } from "../../../lib/format";
 
 export default function TagsPage() {
   const requestConfirmation = useConfirmation();
@@ -92,7 +93,10 @@ export default function TagsPage() {
         <Loading />
       ) : (
         <Panel className="manage-panel">
-          <PanelTitle title="Your tags" meta={`${tags.length} tags`} />
+          <PanelTitle
+            title="Your tags"
+            meta={`${plural(tags.length, "tag")}`}
+          />
           <form className="inline-form manage-create" onSubmit={create}>
             <input
               name="name"

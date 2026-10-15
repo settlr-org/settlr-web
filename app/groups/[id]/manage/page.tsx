@@ -19,6 +19,7 @@ import {
   Empty,
   ErrorState,
   Loading,
+  LoadError,
   Panel,
   PanelTitle,
   useConfirmation,
@@ -35,6 +36,8 @@ import {
   todayISO,
 } from "../../../../lib/types";
 import { useSession } from "../../../../components/SessionProvider";
+import { type LoadFailure, toLoadFailure } from "../../../../lib/errors";
+import { plural } from "../../../../lib/format";
 
 type Recurring = {
   id: string;
@@ -70,10 +73,12 @@ export default function ManageGroup() {
   const [stats, setStats] = useState<Stats>();
   const [events, setEvents] = useState<Event[]>([]);
   const [error, setError] = useState("");
+  const [loadFailure, setLoadFailure] = useState<LoadFailure | null>(null);
   const [saved, setSaved] = useState("");
   const [loading, setLoading] = useState(true);
   const load = useCallback(async () => {
     try {
+      setLoadFailure(null);
       const [g, m, f, r, s, a] = await Promise.all([
         apiFetch<Group>(`/api/v1/groups/${id}`),
         apiFetch<{ data: Member[] }>(`/api/v1/groups/${id}/members`),
@@ -89,9 +94,7 @@ export default function ManageGroup() {
       setStats(s);
       setEvents(a.data);
     } catch (x) {
-      setError(
-        x instanceof Error ? x.message : "Could not load group controls.",
-      );
+      setLoadFailure(toLoadFailure(x, "Could not load group controls."));
     } finally {
       setLoading(false);
     }
@@ -203,6 +206,21 @@ export default function ManageGroup() {
       setError(x instanceof Error ? x.message : "Could not complete action.");
     }
   };
+  if (loadFailure)
+    return (
+      <AppShell
+        title="Manage group"
+        description="We couldn't load this page."
+        actions={<></>}
+      >
+        <LoadError
+          failure={loadFailure}
+          retry={() => void load()}
+          backHref="/groups"
+          backLabel="All groups"
+        />
+      </AppShell>
+    );
   if (loading || !group)
     return (
       <AppShell title="Manage group" description="Loading group controls…">
@@ -337,7 +355,7 @@ export default function ManageGroup() {
         <Panel>
           <PanelTitle
             title="Members"
-            meta={`${members.length} people`}
+            meta={`${plural(members.length, "person", "people")}`}
             action={<TeamOutlined />}
           />
           {members.map((member) => (
@@ -393,7 +411,7 @@ export default function ManageGroup() {
         <Panel>
           <PanelTitle
             title="Recurring expenses"
-            meta={`${recurring.length} schedules`}
+            meta={`${plural(recurring.length, "schedule")}`}
           />
           <form className="stack-form compact-form" onSubmit={createRecurring}>
             <div className="form-grid">
@@ -546,7 +564,7 @@ export default function ManageGroup() {
         <Panel>
           <PanelTitle
             title="Group activity"
-            meta={`${events.length} recent changes`}
+            meta={`${plural(events.length, "recent change")}`}
           />
           {events.map((event) => (
             <article className="compact-line" key={event.id}>

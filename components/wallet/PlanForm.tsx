@@ -24,6 +24,7 @@ import {
 } from "../../lib/planning";
 import { errorText, walletWrite } from "./data";
 import { AmountField } from "./AmountField";
+import { Segmented } from "../RovingRadios";
 
 const TYPES: { value: TxnType; label: string }[] = [
   { value: "EXPENSE", label: "Expense" },
@@ -213,24 +214,13 @@ export function PlanFormModal({
         <p className="muted-copy">Loading…</p>
       ) : (
         <form className="txn-editor" onSubmit={submit} noValidate>
-          <div
-            className="segmented txn-type"
-            role="radiogroup"
-            aria-label="Type"
-          >
-            {TYPES.map((t) => (
-              <button
-                key={t.value}
-                type="button"
-                role="radio"
-                aria-checked={type === t.value}
-                className={type === t.value ? "active" : ""}
-                onClick={() => setType(t.value)}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+          <Segmented
+            className="txn-type"
+            label="Type"
+            options={TYPES}
+            value={type}
+            onChange={setType}
+          />
 
           <AmountField
             large
@@ -373,26 +363,15 @@ export function PlanFormModal({
 
           <fieldset className="schedule-field">
             <legend>Repeat</legend>
-            <div className="segmented" role="radiogroup" aria-label="Repeat">
-              <button
-                type="button"
-                role="radio"
-                aria-checked={!oneTime}
-                className={!oneTime ? "active" : ""}
-                onClick={() => setOneTime(false)}
-              >
-                Repeats
-              </button>
-              <button
-                type="button"
-                role="radio"
-                aria-checked={oneTime}
-                className={oneTime ? "active" : ""}
-                onClick={() => setOneTime(true)}
-              >
-                One-time
-              </button>
-            </div>
+            <Segmented
+              label="Repeat"
+              options={[
+                { value: false, label: "Repeats" },
+                { value: true, label: "One-time" },
+              ]}
+              value={oneTime}
+              onChange={setOneTime}
+            />
             {!oneTime && (
               <div className="interval-row">
                 <label htmlFor="plan-every">Every</label>

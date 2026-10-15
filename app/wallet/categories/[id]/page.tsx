@@ -8,7 +8,13 @@ import {
   WarningOutlined,
 } from "@ant-design/icons";
 import { AppShell } from "../../../../components/AppShell";
-import { Empty, ErrorState, Loading, Panel } from "../../../../components/UI";
+import {
+  Empty,
+  ErrorState,
+  LoadError,
+  Loading,
+  Panel,
+} from "../../../../components/UI";
 import { apiFetch } from "../../../../lib/api";
 import {
   buildLedgerQuery,
@@ -31,6 +37,7 @@ import { LedgerTable } from "../../../../components/wallet/LedgerTable";
 import { TransactionEditor } from "../../../../components/wallet/TransactionEditor";
 import { ItemTile } from "../../../../components/wallet/icons";
 import { PlannedPanel } from "../../../../components/wallet/PlannedPanel";
+import { type LoadFailure, toLoadFailure } from "../../../../lib/errors";
 
 export default function CategoryDetail() {
   const { id } = useParams<{ id: string }>();
@@ -40,6 +47,7 @@ export default function CategoryDetail() {
   const [entries, setEntries] = useState<LedgerEntry[]>([]);
   const [cursor, setCursor] = useState<string>();
   const [error, setError] = useState("");
+  const [loadFailure, setLoadFailure] = useState<LoadFailure | null>(null);
   const [editing, setEditing] = useState<string>();
   const [reloadKey, setReloadKey] = useState(0);
   const [notice, setNotice] = useState("");
@@ -62,8 +70,10 @@ export default function CategoryDetail() {
         setEntries(s.entries ?? []);
         setCursor(s.next_cursor);
       })
-      .catch((cause) =>
-        setError(errorText(cause, "Could not load this category.")),
+      .catch(
+        (cause) =>
+          !cancelled &&
+          setLoadFailure(toLoadFailure(cause, "Could not load this category.")),
       );
     return () => {
       cancelled = true;
@@ -102,7 +112,14 @@ export default function CategoryDetail() {
         </Link>
       </div>
       {error && <ErrorState message={error} />}
-      {!refs || !period ? (
+      {loadFailure && !summary ? (
+        <LoadError
+          failure={loadFailure}
+          retry={() => setReloadKey((k) => k + 1)}
+          backHref="/wallet/categories"
+          backLabel="Back to categories"
+        />
+      ) : !refs || !period ? (
         refsError ? (
           <ErrorState message={refsError} retry={() => void reload()} />
         ) : (

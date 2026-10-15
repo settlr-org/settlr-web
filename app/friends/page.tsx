@@ -16,11 +16,13 @@ import {
   Empty,
   ErrorState,
   Loading,
+  LoadError,
   Panel,
   PanelTitle,
 } from "../../components/UI";
 import { apiFetch } from "../../lib/api";
 import { Friend, FriendRequest, initials } from "../../lib/types";
+import { type LoadFailure, toLoadFailure } from "../../lib/errors";
 type SearchUser = {
   id: string;
   name: string;
@@ -34,8 +36,10 @@ export default function Friends() {
   const [sent, setSent] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [loadFailure, setLoadFailure] = useState<LoadFailure | null>(null);
   const load = useCallback(async () => {
     try {
+      setLoadFailure(null);
       const [f, r] = await Promise.all([
         apiFetch<{ data: Friend[] }>("/api/v1/friends"),
         apiFetch<{ data: FriendRequest[] }>("/api/v1/friends/requests"),
@@ -43,7 +47,7 @@ export default function Friends() {
       setFriends(f.data);
       setRequests(r.data);
     } catch (x) {
-      setError(x instanceof Error ? x.message : "Unable to load friends.");
+      setLoadFailure(toLoadFailure(x, "Unable to load friends."));
     } finally {
       setLoading(false);
     }
@@ -97,6 +101,13 @@ export default function Friends() {
     >
       {loading ? (
         <Loading />
+      ) : loadFailure ? (
+        <LoadError
+          failure={loadFailure}
+          retry={load}
+          backHref="/overview"
+          backLabel="Back to overview"
+        />
       ) : (
         <div className="two-column">
           <div>

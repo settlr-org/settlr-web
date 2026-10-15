@@ -1,5 +1,5 @@
 "use client";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   CalendarOutlined,
@@ -31,6 +31,7 @@ import {
   PlannedLists,
 } from "../../lib/planning";
 import { errorText, fetchRatesFor, walletWrite } from "./data";
+import { DeferredActions, flushOnLeave, withoutHeld } from "../../lib/undo";
 import { AmountField } from "./AmountField";
 import { PlanFormModal } from "./PlanForm";
 import { TransactionEditor } from "./TransactionEditor";
@@ -296,28 +297,81 @@ export function PlannedPanel({
     report(message);
   };
 
-  const skip = async (item: PlannedItem) => {
-    setBusy(item.id);
+  // Skipping has no server-side restore, so it is queued for a few seconds
+  // with an Undo; leaving the page sends anything still queued.
+  const deferred = useRef(new DeferredActions());
+  const [held, setHeld] = useState<ReadonlySet<string>>(new Set());
+  const [undo, setUndo] = useState<{ id: string; message: string }>();
+  const release = (id: string) =>
+    setHeld((h) => {
+      const next = new Set(h);
+      next.delete(id);
+      return next;
+    });
+  useEffect(() => {
+    const queue = deferred.current;
+    const stop = flushOnLeave(queue);
+    return () => {
+      stop();
+      void queue.flushAll();
+    };
+  }, []);
+  const listsRef = useRef(lists);
+  listsRef.current = lists;
+  // Ids already skipped on the server: React may not have re-rendered the
+  // lists yet when Skip all counts what is left.
+  const skippedRef = useRef(new Set<string>());
+
+  const skip = (item: PlannedItem) => {
+    const name = item.title || "planned payment";
     setError("");
-    try {
-      const result = await walletWrite<PayResult>(
-        `/api/v1/transactions/${item.id}/skip`,
-        "POST",
-      );
-      settle(
-        item.id,
-        result.next,
-        `Skipped “${item.title || "planned payment"}”.${result.next?.due_at ? ` Next due ${shortDate(result.next.due_at)}.` : ""}`,
-      );
-    } catch (cause) {
-      setError(errorText(cause, "Could not skip it."));
-    } finally {
-      setBusy("");
-    }
+    setHeld((h) => new Set(h).add(item.id));
+    setUndo({ id: item.id, message: `Skipping “${name}” in 6s…` });
+    // One key for every send of this skip, so a keepalive resend is a no-op.
+    const idempotencyKey = crypto.randomUUID();
+    deferred.current.schedule(item.id, async ({ keepalive }) => {
+      setUndo((u) => (u?.id === item.id ? undefined : u));
+      try {
+        const result = await walletWrite<PayResult>(
+          `/api/v1/transactions/${item.id}/skip`,
+          "POST",
+          undefined,
+          { idempotencyKey, keepalive },
+        );
+        skippedRef.current.add(item.id);
+        release(item.id);
+        settle(
+          item.id,
+          result.next,
+          `Skipped “${name}”.${result.next?.due_at ? ` Next due ${shortDate(result.next.due_at)}.` : ""}`,
+        );
+      } catch (cause) {
+        release(item.id);
+        setError(errorText(cause, "Could not skip it."));
+      }
+    });
+  };
+  const undoSkip = () => {
+    if (!undo) return;
+    deferred.current.undo(undo.id);
+    release(undo.id);
+    setUndo(undefined);
   };
 
+  const overdueShown = withoutHeld(lists.overdue, held);
+  const upcomingShown = withoutHeld(lists.upcoming, held);
+
   const skipAll = async () => {
-    const count = lists.overdue.length;
+    // Send queued single skips first so the count is right and they cannot
+    // fire (and 404) after the bulk skip.
+    if (deferred.current.size) {
+      await deferred.current.flushAll();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+    const count = listsRef.current.overdue.filter(
+      (i) => !skippedRef.current.has(i.id),
+    ).length;
+    if (!count) return;
     const ok = await confirm({
       title: `Skip ${count} overdue ${count === 1 ? "item" : "items"}?`,
       description: scope
@@ -348,9 +402,10 @@ export function PlannedPanel({
 
   if (
     hideWhenEmpty &&
-    !lists.upcoming.length &&
-    !lists.overdue.length &&
+    !upcomingShown.length &&
+    !overdueShown.length &&
     !status &&
+    !undo &&
     !paying &&
     !editing
   )
@@ -430,11 +485,11 @@ export function PlannedPanel({
       <PanelTitle
         title={title}
         meta={
-          lists.overdue.length || lists.upcoming.length
+          overdueShown.length || upcomingShown.length
             ? [
-                lists.overdue.length ? `${lists.overdue.length} overdue` : "",
-                lists.upcoming.length
-                  ? `${lists.upcoming.length} coming up this period`
+                overdueShown.length ? `${overdueShown.length} overdue` : "",
+                upcomingShown.length
+                  ? `${upcomingShown.length} coming up this period`
                   : "",
               ]
                 .filter(Boolean)
@@ -452,12 +507,20 @@ export function PlannedPanel({
           {error}
         </p>
       )}
-      {status && (
+      {undo && (
+        <p className="planned-status" role="status">
+          {undo.message}{" "}
+          <button type="button" className="text-button" onClick={undoSkip}>
+            Undo
+          </button>
+        </p>
+      )}
+      {status && !undo && (
         <p className="planned-status" role="status">
           {status}
         </p>
       )}
-      {lists.overdue.length > 0 && (
+      {overdueShown.length > 0 && (
         <section aria-label="Overdue" className="planned-section">
           <div className="planned-section-head">
             <h3>Overdue</h3>
@@ -471,23 +534,23 @@ export function PlannedPanel({
             </button>
           </div>
           <ul className="planned-list">
-            {lists.overdue.map((i) => row(i, true))}
+            {overdueShown.map((i) => row(i, true))}
           </ul>
         </section>
       )}
-      {lists.upcoming.length > 0 && (
+      {upcomingShown.length > 0 && (
         <section aria-label="Upcoming" className="planned-section">
-          {lists.overdue.length > 0 && (
+          {overdueShown.length > 0 && (
             <div className="planned-section-head">
               <h3>Upcoming</h3>
             </div>
           )}
           <ul className="planned-list">
-            {lists.upcoming.map((i) => row(i, false))}
+            {upcomingShown.map((i) => row(i, false))}
           </ul>
         </section>
       )}
-      {!lists.overdue.length && !lists.upcoming.length && (
+      {!overdueShown.length && !upcomingShown.length && (
         <p className="muted-copy planned-empty">
           Rent, salary, subscriptions — plan them once and pay with a tap.{" "}
           <Link href="/wallet/planned?new=1" className="inline-link">

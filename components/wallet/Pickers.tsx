@@ -1,33 +1,7 @@
 "use client";
-import { KeyboardEvent, useRef } from "react";
+import { useRovingKeys } from "../RovingRadios";
 import { PALETTE } from "../../lib/wallet";
 import { ICON_CHOICES, ItemTile } from "./icons";
-
-/** Arrow keys move between radio options (roving tab index, as native radios do). */
-function useRovingKeys<T>(
-  values: T[],
-  current: T,
-  onChange: (value: T) => void,
-) {
-  const ref = useRef<HTMLDivElement>(null);
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    const delta =
-      event.key === "ArrowRight" || event.key === "ArrowDown"
-        ? 1
-        : event.key === "ArrowLeft" || event.key === "ArrowUp"
-          ? -1
-          : 0;
-    if (!delta) return;
-    event.preventDefault();
-    const index = Math.max(values.indexOf(current), 0);
-    const next = (index + delta + values.length) % values.length;
-    onChange(values[next]);
-    ref.current
-      ?.querySelectorAll<HTMLButtonElement>("[role=radio]")
-      [next]?.focus();
-  };
-  return { ref, onKeyDown };
-}
 
 export function ColourPicker({
   value,

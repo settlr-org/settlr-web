@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import {
+  ApiError,
   apiFetch,
   authenticate,
   authenticateWithGoogle,
@@ -32,24 +33,43 @@ type SessionValue = {
   ) => Promise<RegistrationResult | void>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
+  /** Set when the session could not be verified for a reason other than 401. */
+  sessionError: string | null;
+  retrySession: () => Promise<void>;
   signInWithGoogle: (idToken: string) => Promise<void>;
 };
 const SessionContext = createContext<SessionValue | null>(null);
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sessionError, setSessionError] = useState<string | null>(null);
   const refresh = useCallback(async () => {
+    setSessionError(null);
     if (!hasSession()) {
       setUser(null);
       return;
     }
     try {
       setUser(await apiFetch<User>("/api/v1/me"));
-    } catch {
-      clearSession();
-      setUser(null);
+    } catch (x) {
+      // Only a 401 means the session is gone. A 5xx, timeout or dropped
+      // connection says nothing about the session, so keep it and let the
+      // user retry instead of signing them out.
+      if (x instanceof ApiError && x.status === 401) {
+        clearSession();
+        setUser(null);
+      } else {
+        setSessionError(
+          x instanceof Error ? x.message : "We couldn't reach Settlr.",
+        );
+      }
     }
   }, []);
+  const retrySession = useCallback(async () => {
+    setLoading(true);
+    await refresh();
+    setLoading(false);
+  }, [refresh]);
   useEffect(() => {
     refresh().finally(() => setLoading(false));
   }, [refresh]);
@@ -72,8 +92,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     return undefined;
   };
   const signOut = async () => {
-    await logout();
-    setUser(null);
+    try {
+      await logout();
+    } finally {
+      // Local sign-out must work even when the server cannot be reached.
+      setUser(null);
+      setSessionError(null);
+    }
   };
   const signInWithGoogle = async (idToken: string) => {
     const session = await authenticateWithGoogle(idToken);
@@ -84,7 +109,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   };
   return (
     <SessionContext.Provider
-      value={{ user, loading, signIn, signInWithGoogle, signOut, refresh }}
+      value={{
+        user,
+        loading,
+        signIn,
+        signInWithGoogle,
+        signOut,
+        refresh,
+        sessionError,
+        retrySession,
+      }}
     >
       {children}
     </SessionContext.Provider>

@@ -23,7 +23,10 @@ const mono = DM_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Settlr | Shared money, settled clearly",
+  title: {
+    default: "Settlr | Shared money, settled clearly",
+    template: "%s · Settlr",
+  },
   description: "A calm place to keep shared spending balanced.",
 };
 

@@ -6,6 +6,7 @@ import {
   WarningOutlined,
 } from "@ant-design/icons";
 import {
+  amountScale,
   formatMoney,
   missingRatesText,
   Overview,
@@ -18,6 +19,21 @@ const projectedBy = (to: string) => {
   return end.toLocaleDateString(undefined, { day: "numeric", month: "short" });
 };
 
+/** A headline amount that steps down in size when the figure is very long. */
+export function ScaledAmount({
+  text,
+  className,
+}: {
+  text: string;
+  className?: string;
+}) {
+  return (
+    <strong className={className} data-amount-scale={amountScale(text)}>
+      {text}
+    </strong>
+  );
+}
+
 /** Total balance (base currency), income and spending for a period. */
 export function WalletSummary({
   overview,
@@ -25,13 +41,17 @@ export function WalletSummary({
   accountCount,
   onToggleHidden,
   showProjected = true,
+  unavailable = false,
 }: {
   overview?: Overview;
   settings: WalletSettings;
   accountCount: number;
   onToggleHidden: () => void;
   showProjected?: boolean;
+  /** Totals failed to load: show a dash instead of a loading ellipsis. */
+  unavailable?: boolean;
 }) {
+  const placeholder = unavailable ? "—" : "…";
   const currency = overview?.currency || "NPR";
   const hidden = settings.hide_balance;
   const missing = overview?.missing_rates ?? [];
@@ -54,13 +74,16 @@ export function WalletSummary({
             {hidden ? <EyeInvisibleOutlined /> : <EyeOutlined />}
           </button>
         </div>
-        <strong
+        <ScaledAmount
           className={
             !hidden && (overview?.balance ?? 0) < 0 ? "is-negative" : ""
           }
-        >
-          {overview ? formatMoney(overview.balance, currency, { hidden }) : "…"}
-        </strong>
+          text={
+            overview
+              ? formatMoney(overview.balance, currency, { hidden })
+              : placeholder
+          }
+        />
         {showProjected &&
           overview?.projected_balance != null &&
           overview.projected_balance !== overview.balance && (
@@ -80,22 +103,28 @@ export function WalletSummary({
       </article>
       <article className="wallet-stat">
         <span>Income</span>
-        <strong className="amount-in">
-          {overview
-            ? formatMoney(overview.income, currency, {
-                sign: "+",
-                hidden: settings.hide_income,
-              })
-            : "…"}
-        </strong>
+        <ScaledAmount
+          className="amount-in"
+          text={
+            overview
+              ? formatMoney(overview.income, currency, {
+                  sign: "+",
+                  hidden: settings.hide_income,
+                })
+              : placeholder
+          }
+        />
       </article>
       <article className="wallet-stat">
         <span>Spent · incl. group shares</span>
-        <strong className="amount-out">
-          {overview
-            ? formatMoney(overview.expense, currency, { sign: "-" })
-            : "…"}
-        </strong>
+        <ScaledAmount
+          className="amount-out"
+          text={
+            overview
+              ? formatMoney(overview.expense, currency, { sign: "-" })
+              : placeholder
+          }
+        />
       </article>
     </section>
   );

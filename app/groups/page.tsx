@@ -15,12 +15,15 @@ import {
   Empty,
   ErrorState,
   Loading,
+  LoadError,
   Modal,
   Panel,
   PanelTitle,
 } from "../../components/UI";
 import { apiFetch, readApiCache } from "../../lib/api";
 import { Balance, Group, money } from "../../lib/types";
+import { type LoadFailure, toLoadFailure } from "../../lib/errors";
+import { plural } from "../../lib/format";
 export default function Groups() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -32,9 +35,11 @@ export default function Groups() {
   const [loading, setLoading] = useState(!warm);
   const [show, setShow] = useState(false);
   const [error, setError] = useState("");
+  const [loadFailure, setLoadFailure] = useState<LoadFailure | null>(null);
   const load = useCallback(async () => {
     if (!warm) setLoading(true);
     try {
+      setLoadFailure(null);
       const [g, b] = await Promise.all([
         apiFetch<{ data: Group[] }>("/api/v1/groups"),
         apiFetch<Balance>("/api/v1/me/balances"),
@@ -42,7 +47,7 @@ export default function Groups() {
       setGroups(g.data);
       setBalance(b);
     } catch (x) {
-      setError(x instanceof Error ? x.message : "Unable to load groups.");
+      setLoadFailure(toLoadFailure(x, "Unable to load groups."));
     } finally {
       setLoading(false);
     }
@@ -91,11 +96,18 @@ export default function Groups() {
     >
       {loading ? (
         <Loading />
+      ) : loadFailure ? (
+        <LoadError
+          failure={loadFailure}
+          retry={load}
+          backHref="/overview"
+          backLabel="Back to overview"
+        />
       ) : (
         <Panel>
           <PanelTitle
             title="Your groups"
-            meta={`${groups.length} active ledgers`}
+            meta={`${plural(groups.length, "active ledger")}`}
             action={<span className="status-pill">Active</span>}
           />
           {error && <ErrorState message={error} retry={load} />}

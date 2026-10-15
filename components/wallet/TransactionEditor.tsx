@@ -41,6 +41,7 @@ import {
   utcDateInput,
 } from "../../lib/planning";
 import { errorText, fetchRatesFor, walletWrite } from "./data";
+import { Segmented } from "../RovingRadios";
 
 /** When the transaction happens: now/past, a planned due date, or repeating (creates a plan). */
 type Schedule = "paid" | "planned" | "repeat";
@@ -536,44 +537,22 @@ export function TransactionEditor({
         <p className="muted-copy">Loading…</p>
       ) : (
         <form className="txn-editor" onSubmit={submit} noValidate>
-          <div
-            className="segmented txn-type"
-            role="radiogroup"
-            aria-label="Transaction type"
-          >
-            {TYPES.map((t) => (
-              <button
-                key={t.value}
-                type="button"
-                role="radio"
-                aria-checked={type === t.value}
-                className={type === t.value ? "active" : ""}
-                onClick={() => setType(t.value)}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+          <Segmented
+            className="txn-type"
+            label="Transaction type"
+            options={TYPES}
+            value={type}
+            onChange={setType}
+          />
 
           {!original && (
-            <div
-              className="segmented txn-schedule"
-              role="radiogroup"
-              aria-label="When"
-            >
-              {SCHEDULES.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  role="radio"
-                  aria-checked={schedule === option.value}
-                  className={schedule === option.value ? "active" : ""}
-                  onClick={() => setSchedule(option.value)}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
+            <Segmented
+              className="txn-schedule"
+              label="When"
+              options={SCHEDULES}
+              value={schedule}
+              onChange={setSchedule}
+            />
           )}
 
           <label className="amount-entry">

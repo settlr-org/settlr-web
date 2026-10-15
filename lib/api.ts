@@ -1,4 +1,5 @@
 import type { User } from "./types";
+import { friendlyMessage, OFFLINE_MESSAGE } from "./errors";
 
 export type { User };
 
@@ -28,13 +29,17 @@ export const readApiCache = <T>(path: string) =>
 export const clearApiCache = () => requestCache.clear();
 
 export class ApiError extends Error {
+  /** The raw message from the API body (developer-facing, not for display). */
+  public serverMessage: string;
   constructor(
     public status: number,
     message: string,
     /** Machine-readable error code from the API body (e.g. RATES_UNAVAILABLE). */
     public code?: string,
+    friendly = true,
   ) {
-    super(message);
+    super(friendly ? friendlyMessage(status, code, message) : message);
+    this.serverMessage = message;
   }
 }
 
@@ -58,9 +63,12 @@ async function fetchWithTimeout(
       throw new ApiError(
         408,
         "The server took too long to respond. Please try again.",
+        "TIMEOUT",
+        false,
       );
     }
-    throw error;
+    // fetch() rejects with a TypeError when the network is down.
+    throw new ApiError(0, OFFLINE_MESSAGE, "NETWORK", false);
   } finally {
     globalThis.clearTimeout(timeout);
     init.signal?.removeEventListener("abort", abort);
@@ -88,8 +96,9 @@ export const saveSession = (session: Session, remember = true) => {
   storage.setItem(SESSION_KEY, "1");
 };
 
-async function parseError(response: Response) {
-  return (await parseErrorBody(response)).message;
+async function toApiError(response: Response) {
+  const { message, code } = await parseErrorBody(response);
+  return new ApiError(response.status, message, code);
 }
 
 async function parseErrorBody(
@@ -125,7 +134,10 @@ async function requestAccessToken() {
     headers: { "Content-Type": "application/json", Accept: "application/json" },
   });
   if (!response.ok) {
-    clearSession();
+    // Only a rejected refresh token ends the session. A 5xx or a network
+    // failure is transient: keep the session so the next attempt can work.
+    if (response.status === 401 || response.status === 403) clearSession();
+    else throw await toApiError(response);
     return null;
   }
   const session = (await response.json()) as Session;
@@ -196,10 +208,7 @@ async function performRequest<T>(
     (await refreshAccessToken())
   )
     return performRequest<T>(path, init, false);
-  if (!response.ok) {
-    const { message, code } = await parseErrorBody(response);
-    throw new ApiError(response.status, message, code);
-  }
+  if (!response.ok) throw await toApiError(response);
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }
@@ -265,8 +274,7 @@ export async function apiDownload(path: string, filename: string) {
     if (refreshed) headers.set("Authorization", `Bearer ${refreshed}`);
     response = await fetchWithTimeout(`${API_URL}${path}`, { headers });
   }
-  if (!response.ok)
-    throw new ApiError(response.status, await parseError(response));
+  if (!response.ok) throw await toApiError(response);
   const url = URL.createObjectURL(await response.blob());
   const anchor = document.createElement("a");
   anchor.href = url;

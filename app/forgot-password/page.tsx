@@ -33,7 +33,7 @@ export default function Forgot() {
           <ArrowLeftOutlined /> Back to sign in
         </Link>
         <p className="eyebrow">ACCOUNT RECOVERY</p>
-        <h2>{sent ? "Check your inbox" : "Reset your password"}</h2>
+        <h1>{sent ? "Check your inbox" : "Reset your password"}</h1>
         {sent ? (
           <p>
             If that address belongs to an account, we sent password reset

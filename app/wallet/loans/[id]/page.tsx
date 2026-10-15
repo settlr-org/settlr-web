@@ -12,6 +12,7 @@ import { AppShell } from "../../../../components/AppShell";
 import {
   Empty,
   ErrorState,
+  LoadError,
   Loading,
   Panel,
   PanelTitle,
@@ -37,6 +38,7 @@ import {
   LoanRecordModal,
 } from "../../../../components/wallet/LoanDialogs";
 import { ItemTile } from "../../../../components/wallet/icons";
+import { type LoadFailure, toLoadFailure } from "../../../../lib/errors";
 
 type Dialog =
   | { kind: "edit" }
@@ -53,6 +55,7 @@ export default function LoanDetail() {
   const [loan, setLoan] = useState<Loan>();
   const [records, setRecords] = useState<LoanRecord[]>();
   const [error, setError] = useState("");
+  const [loadFailure, setLoadFailure] = useState<LoadFailure | null>(null);
   const [notice, setNotice] = useState("");
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -76,7 +79,8 @@ export default function LoanDetail() {
       })
       .catch(
         (cause) =>
-          !cancelled && setError(errorText(cause, "Could not load this loan.")),
+          !cancelled &&
+          setLoadFailure(toLoadFailure(cause, "Could not load this loan.")),
       );
     return () => {
       cancelled = true;
@@ -87,6 +91,7 @@ export default function LoanDetail() {
     (message?: string) => {
       if (message) setNotice(message);
       setError("");
+      setLoadFailure(null);
       setReloadKey((k) => k + 1);
       void reload();
     },
@@ -143,8 +148,13 @@ export default function LoanDetail() {
           <ArrowLeftOutlined /> Loans
         </Link>
       </div>
-      {error && !loan ? (
-        <ErrorState message={error} retry={() => refresh()} />
+      {loadFailure && !loan ? (
+        <LoadError
+          failure={loadFailure}
+          retry={() => refresh()}
+          backHref="/wallet/loans"
+          backLabel="Back to loans"
+        />
       ) : !loan || !records || !refs || !progress ? (
         refsError ? (
           <ErrorState message={refsError} retry={() => void reload()} />
