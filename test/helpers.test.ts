@@ -139,7 +139,7 @@ describe("document titles", () => {
         const layout = join(dir, "layout.tsx");
         return (
           !existsSync(layout) ||
-          !/export const metadata[^=]*=\s*\{\s*title:\s*"[^"]+"/.test(
+          !/export const metadata[^=]*=\s*\{\s*title:\s*(\{\s*default:\s*)?"[^"]+"/.test(
             readFileSync(layout, "utf8"),
           )
         );
@@ -153,7 +153,7 @@ describe("document titles", () => {
       .filter((dir) => dir !== root)
       .map(
         (dir) =>
-          /title:\s*"([^"]+)"/.exec(
+          /title:\s*(?:\{\s*default:\s*)?"([^"]+)"/.exec(
             readFileSync(join(dir, "layout.tsx"), "utf8"),
           )?.[1],
       );
@@ -161,6 +161,22 @@ describe("document titles", () => {
     // but no two distinct routes should reuse the exact same title.
     const dupes = titles.filter((t, i) => titles.indexOf(t) !== i);
     expect(dupes).toEqual([]);
+  });
+
+  it("keeps the product-name suffix on nested routes", () => {
+    // A layout with its own child layouts must define the template, or the
+    // children's plain titles lose " · Settlr".
+    const dirs = pages.filter((d) => d !== root);
+    const bad = dirs
+      .filter((d) => dirs.some((o) => o !== d && o.startsWith(`${d}/`)))
+      .filter(
+        (d) =>
+          !/template:\s*"%s · Settlr"/.test(
+            readFileSync(join(d, "layout.tsx"), "utf8"),
+          ),
+      )
+      .map((d) => d.replace(root, ""));
+    expect(bad).toEqual([]);
   });
 
   it("appends the product name through the root template", () => {

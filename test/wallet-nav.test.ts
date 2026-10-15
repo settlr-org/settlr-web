@@ -32,16 +32,20 @@ describe("wallet navigation", () => {
     expect(loans).toBeLessThan(groups);
   });
 
-  it("does not link Phase 3 pages that do not exist yet", () => {
-    expect(nav).not.toContain("Reports");
+  it("lists Reports under Wallet", () => {
+    expect(nav).toContain('label: "Reports"');
+    expect(nav.indexOf('href: "/wallet/reports"')).toBeGreaterThan(
+      nav.indexOf('href: "/wallet/loans"'),
+    );
   });
 
-  it("guards /wallet routes and keeps /personal stats reachable", () => {
+  it("guards /wallet routes; /personal stays reachable by URL but is no longer advertised", () => {
     expect(shell).toContain('"/wallet",');
     expect(shell).toContain('"/personal",');
     const wallet = read("app/wallet/page.tsx");
-    expect(wallet).toContain('href="/personal"');
-    expect(wallet).toContain("Personal stats &amp; export");
+    expect(wallet).not.toContain('href="/personal"');
+    expect(wallet).not.toContain("Personal stats");
+    expect(wallet).toContain('href="/wallet/reports"');
     expect(wallet).toContain('href="/wallet/budgets"');
     expect(wallet).toContain('href="/wallet/loans"');
   });
@@ -49,6 +53,7 @@ describe("wallet navigation", () => {
   it("every wallet page referenced in links exists", () => {
     for (const route of [
       "app/wallet/page.tsx",
+      "app/wallet/reports/page.tsx",
       "app/wallet/accounts/[id]/page.tsx",
       "app/wallet/categories/page.tsx",
       "app/wallet/categories/[id]/page.tsx",
