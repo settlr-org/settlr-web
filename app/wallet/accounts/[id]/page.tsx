@@ -11,7 +11,8 @@ import {
   WarningOutlined,
 } from "@ant-design/icons";
 import { AppShell } from "../../../../components/AppShell";
-import { ErrorState, Loading } from "../../../../components/UI";
+import { ScaledAmount } from "../../../../components/wallet/WalletSummary";
+import { ErrorState, LoadError, Loading } from "../../../../components/UI";
 import { apiFetch } from "../../../../lib/api";
 import {
   Account,
@@ -34,6 +35,7 @@ import {
 } from "../../../../components/wallet/AccountDialogs";
 import { ItemTile } from "../../../../components/wallet/icons";
 import { PlannedPanel } from "../../../../components/wallet/PlannedPanel";
+import { type LoadFailure, toLoadFailure } from "../../../../lib/errors";
 
 type Dialog =
   | { kind: "edit" }
@@ -51,6 +53,7 @@ export default function AccountDetail() {
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [error, setError] = useState("");
+  const [loadFailure, setLoadFailure] = useState<LoadFailure | null>(null);
   const [notice, setNotice] = useState("");
   const startDay = refs?.settings.month_start_day ?? 1;
 
@@ -61,9 +64,15 @@ export default function AccountDetail() {
   useEffect(() => {
     let cancelled = false;
     apiFetch<Account>(`/api/v1/accounts/${id}`)
-      .then((a) => !cancelled && setAccount(a))
-      .catch((cause) =>
-        setError(errorText(cause, "Could not load this account.")),
+      .then((a) => {
+        if (cancelled) return;
+        setAccount(a);
+        setLoadFailure(null);
+      })
+      .catch(
+        (cause) =>
+          !cancelled &&
+          setLoadFailure(toLoadFailure(cause, "Could not load this account.")),
       );
     return () => {
       cancelled = true;
@@ -124,8 +133,13 @@ export default function AccountDetail() {
         </button>
       }
     >
-      {error && !account ? (
-        <ErrorState message={error} retry={() => void refresh()} />
+      {loadFailure && !account ? (
+        <LoadError
+          failure={loadFailure}
+          retry={() => void refresh()}
+          backHref="/wallet"
+          backLabel="Back to wallet"
+        />
       ) : !account || !refs || !period ? (
         refsError ? (
           <ErrorState message={refsError} retry={() => void reload()} />
@@ -194,11 +208,10 @@ export default function AccountDetail() {
                   Balance
                 </span>
               </div>
-              <strong
+              <ScaledAmount
                 className={!hidden && account.balance < 0 ? "is-negative" : ""}
-              >
-                {formatMoney(account.balance, currency, { hidden })}
-              </strong>
+                text={formatMoney(account.balance, currency, { hidden })}
+              />
               {account.balance_base != null &&
                 account.base_currency !== currency && (
                   <p className="wallet-sub">
@@ -218,14 +231,17 @@ export default function AccountDetail() {
             </article>
             <article className="wallet-stat">
               <span>Income</span>
-              <strong className="amount-in">
-                {summary
-                  ? formatMoney(summary.income, currency, {
-                      sign: "+",
-                      hidden: refs.settings.hide_income,
-                    })
-                  : "…"}
-              </strong>
+              <ScaledAmount
+                className="amount-in"
+                text={
+                  summary
+                    ? formatMoney(summary.income, currency, {
+                        sign: "+",
+                        hidden: refs.settings.hide_income,
+                      })
+                    : "…"
+                }
+              />
               {summary && (
                 <small>
                   All money in {formatMoney(summary.inflow, currency)}
@@ -234,11 +250,14 @@ export default function AccountDetail() {
             </article>
             <article className="wallet-stat">
               <span>Expense</span>
-              <strong className="amount-out">
-                {summary
-                  ? formatMoney(summary.expense, currency, { sign: "-" })
-                  : "…"}
-              </strong>
+              <ScaledAmount
+                className="amount-out"
+                text={
+                  summary
+                    ? formatMoney(summary.expense, currency, { sign: "-" })
+                    : "…"
+                }
+              />
               {summary && (
                 <small>
                   All money out {formatMoney(summary.outflow, currency)}

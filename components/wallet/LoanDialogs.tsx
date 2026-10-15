@@ -20,6 +20,7 @@ import {
 import { errorText, walletWrite } from "./data";
 import { AmountField } from "./AmountField";
 import { ColourPicker, IconPicker } from "./Pickers";
+import { Segmented } from "../RovingRadios";
 
 /**
  * YYYY-MM-DD from a picker to an instant: today keeps the current time (so
@@ -191,20 +192,16 @@ export function LoanFormModal({
       onClose={onClose}
     >
       <form className="txn-editor" onSubmit={submit} noValidate>
-        <div className="segmented txn-type" role="radiogroup" aria-label="Type">
-          {(["LEND", "BORROW"] as LoanType[]).map((t) => (
-            <button
-              key={t}
-              type="button"
-              role="radio"
-              aria-checked={type === t}
-              className={type === t ? "active" : ""}
-              onClick={() => setType(t)}
-            >
-              {t === "LEND" ? "I lent" : "I borrowed"}
-            </button>
-          ))}
-        </div>
+        <Segmented<LoanType>
+          className="txn-type"
+          label="Type"
+          options={[
+            { value: "LEND", label: "I lent" },
+            { value: "BORROW", label: "I borrowed" },
+          ]}
+          value={type}
+          onChange={setType}
+        />
         <label>
           Name
           <input
@@ -385,20 +382,16 @@ export function LoanRecordModal({
       onClose={onClose}
     >
       <form className="stack-form" onSubmit={submit} noValidate>
-        <div className="segmented txn-type" role="radiogroup" aria-label="Type">
-          {(["DECREASE", "INCREASE"] as LoanRecordType[]).map((t) => (
-            <button
-              key={t}
-              type="button"
-              role="radio"
-              aria-checked={type === t}
-              className={type === t ? "active" : ""}
-              onClick={() => setType(t)}
-            >
-              {t === "DECREASE" ? words.decrease : words.increase}
-            </button>
-          ))}
-        </div>
+        <Segmented<LoanRecordType>
+          className="txn-type"
+          label="Type"
+          options={[
+            { value: "DECREASE", label: words.decrease },
+            { value: "INCREASE", label: words.increase },
+          ]}
+          value={type}
+          onChange={setType}
+        />
         <AmountField
           autoFocus
           label="Amount"

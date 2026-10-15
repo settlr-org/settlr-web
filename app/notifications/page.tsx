@@ -12,27 +12,29 @@ import {
   Empty,
   ErrorState,
   Loading,
+  LoadError,
   Panel,
   PanelTitle,
 } from "../../components/UI";
 import { apiFetch } from "../../lib/api";
 import { Notification } from "../../lib/types";
+import { type LoadFailure, toLoadFailure } from "../../lib/errors";
 export default function Notifications() {
   const [data, setData] = useState<Notification[]>([]);
   const [unread, setUnread] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [loadFailure, setLoadFailure] = useState<LoadFailure | null>(null);
   const load = useCallback(async () => {
     try {
+      setLoadFailure(null);
       const r = await apiFetch<{ data: Notification[]; unread_count: number }>(
         "/api/v1/notifications?limit=100",
       );
       setData(r.data);
       setUnread(r.unread_count);
     } catch (x) {
-      setError(
-        x instanceof Error ? x.message : "Unable to load notifications.",
-      );
+      setLoadFailure(toLoadFailure(x, "Unable to load notifications."));
     } finally {
       setLoading(false);
     }
@@ -72,6 +74,13 @@ export default function Notifications() {
     >
       {loading ? (
         <Loading />
+      ) : loadFailure ? (
+        <LoadError
+          failure={loadFailure}
+          retry={load}
+          backHref="/overview"
+          backLabel="Back to overview"
+        />
       ) : (
         <Panel>
           <PanelTitle title="Inbox" meta={`${unread} unread`} />

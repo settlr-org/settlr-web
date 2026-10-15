@@ -16,6 +16,7 @@ import {
   Empty,
   ErrorState,
   Loading,
+  LoadError,
   Modal,
   Panel,
   PanelTitle,
@@ -55,6 +56,7 @@ import {
   initials,
   todayISO,
 } from "../../lib/types";
+import { type LoadFailure, toLoadFailure } from "../../lib/errors";
 /** Values carried over from the wallet editor's "Split with a group". */
 type ExpensePrefill = {
   amount?: string;
@@ -88,6 +90,7 @@ export default function Overview() {
   >({});
   const [loading, setLoading] = useState(!warm);
   const [error, setError] = useState("");
+  const [loadFailure, setLoadFailure] = useState<LoadFailure | null>(null);
   const [addExpense, setAddExpense] = useState(false);
   const [settleOpen, setSettleOpen] = useState(false);
   const [groupOpen, setGroupOpen] = useState(false);
@@ -126,6 +129,7 @@ export default function Overview() {
     if (!warm) setLoading(true);
     setError("");
     try {
+      setLoadFailure(null);
       const [b, a, f, g] = await Promise.all([
         apiFetch<Balance>("/api/v1/me/balances"),
         apiFetch<{ data: Event[] }>("/api/v1/activity?limit=6"),
@@ -153,7 +157,7 @@ export default function Overview() {
         setFriendBalances(Object.fromEntries(entries));
       }
     } catch (x) {
-      setError(x instanceof Error ? x.message : "Unable to load overview.");
+      setLoadFailure(toLoadFailure(x, "Unable to load overview."));
     } finally {
       setLoading(false);
     }
@@ -186,6 +190,13 @@ export default function Overview() {
     >
       {loading ? (
         <Loading />
+      ) : loadFailure ? (
+        <LoadError
+          failure={loadFailure}
+          retry={load}
+          backHref="/groups"
+          backLabel="Go to groups"
+        />
       ) : (
         <>
           {error && <ErrorState message={error} retry={load} />}

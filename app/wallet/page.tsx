@@ -169,6 +169,7 @@ export default function WalletPage() {
           </div>
           <WalletSummary
             overview={overview}
+            unavailable={Boolean(error) && !overview}
             settings={refs.settings}
             accountCount={active.filter((a) => a.include_in_balance).length}
             onToggleHidden={() =>

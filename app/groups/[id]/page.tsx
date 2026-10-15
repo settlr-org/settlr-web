@@ -18,6 +18,7 @@ import {
   Empty,
   ErrorState,
   Loading,
+  LoadError,
   Modal,
   Panel,
   PanelTitle,
@@ -39,6 +40,7 @@ import {
   AccountSelect,
   useAccounts,
 } from "../../../components/wallet/AccountSelect";
+import { type LoadFailure, toLoadFailure } from "../../../lib/errors";
 type GroupBalances = {
   data: { user_id: string; amount: number }[];
   currency: string;
@@ -73,12 +75,14 @@ export default function GroupDetail() {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [loadFailure, setLoadFailure] = useState<LoadFailure | null>(null);
   const [search, setSearch] = useState("");
   const walletAccounts = useAccounts();
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
+      setLoadFailure(null);
       const [g, m, f, e, b, d, s] = await Promise.all([
         apiFetch<Group>(`/api/v1/groups/${id}`),
         apiFetch<{ data: Member[] }>(`/api/v1/groups/${id}/members`),
@@ -100,7 +104,7 @@ export default function GroupDetail() {
       setDebts(d.data);
       setSettlements(s.data);
     } catch (x) {
-      setError(x instanceof Error ? x.message : "Unable to open this group.");
+      setLoadFailure(toLoadFailure(x, "Unable to open this group."));
     } finally {
       setLoading(false);
     }
@@ -132,6 +136,21 @@ export default function GroupDetail() {
       setError(x instanceof Error ? x.message : "Could not delete expense.");
     }
   };
+  if (loadFailure)
+    return (
+      <AppShell
+        title="Group"
+        description="We couldn't load this page."
+        actions={<></>}
+      >
+        <LoadError
+          failure={loadFailure}
+          retry={() => void load()}
+          backHref="/groups"
+          backLabel="All groups"
+        />
+      </AppShell>
+    );
   if (loading)
     return (
       <AppShell title="Group" description="Loading the shared ledger…">

@@ -9,6 +9,8 @@ import {
   useRef,
   useState,
 } from "react";
+import Link from "next/link";
+import type { LoadFailure } from "../lib/errors";
 import {
   CloseOutlined,
   InboxOutlined,
@@ -133,7 +135,7 @@ export function ErrorState({
   retry?: () => void;
 }) {
   return (
-    <div className="alert">
+    <div className="alert" role="alert">
       <span>{message}</span>
       {retry && (
         <button onClick={retry}>
@@ -142,6 +144,37 @@ export function ErrorState({
       )}
     </div>
   );
+}
+/**
+ * Full replacement for a view whose data failed to load. Shows only the
+ * error (never zeros or an empty state that would look like real data). A
+ * missing or forbidden record gets a way back instead of a pointless retry.
+ */
+export function LoadError({
+  failure,
+  retry,
+  backHref,
+  backLabel = "Go back",
+}: {
+  failure: LoadFailure;
+  retry?: () => void;
+  backHref?: string;
+  backLabel?: string;
+}) {
+  if (failure.kind === "missing")
+    return (
+      <div className="empty load-error" role="alert">
+        <InboxOutlined />
+        <strong>{failure.status === 403 ? "No access" : "Not found"}</strong>
+        <p>{failure.message}</p>
+        {backHref && (
+          <Link className="button primary" href={backHref}>
+            {backLabel}
+          </Link>
+        )}
+      </div>
+    );
+  return <ErrorState message={failure.message} retry={retry} />;
 }
 export function Loading() {
   return (

@@ -6,20 +6,24 @@ import {
   Empty,
   ErrorState,
   Loading,
+  LoadError,
   Panel,
   PanelTitle,
   Modal,
 } from "../../components/UI";
 import { apiFetch } from "../../lib/api";
 import { Event, Group, labelize, money } from "../../lib/types";
+import { type LoadFailure, toLoadFailure } from "../../lib/errors";
 export default function Activity() {
   const [data, setData] = useState<Event[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [selected, setSelected] = useState<Event>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [loadFailure, setLoadFailure] = useState<LoadFailure | null>(null);
   const load = useCallback(async () => {
     try {
+      setLoadFailure(null);
       const [events, groupData] = await Promise.all([
         apiFetch<{ data: Event[] }>("/api/v1/activity?limit=100"),
         apiFetch<{ data: Group[] }>("/api/v1/groups"),
@@ -27,7 +31,7 @@ export default function Activity() {
       setData(events.data);
       setGroups(groupData.data);
     } catch (x) {
-      setError(x instanceof Error ? x.message : "Unable to load activity.");
+      setLoadFailure(toLoadFailure(x, "Unable to load activity."));
     } finally {
       setLoading(false);
     }
@@ -43,6 +47,13 @@ export default function Activity() {
     >
       {loading ? (
         <Loading />
+      ) : loadFailure ? (
+        <LoadError
+          failure={loadFailure}
+          retry={load}
+          backHref="/overview"
+          backLabel="Back to overview"
+        />
       ) : (
         <Panel>
           <PanelTitle

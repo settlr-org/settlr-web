@@ -290,7 +290,7 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
           <header className="topbar">
             <div className="page-heading">
               <p className="eyebrow">{config.eyebrow}</p>
-              <h1>{config.title}</h1>
+              <h1 title={config.title}>{config.title}</h1>
               <p className="subtitle">{config.description}</p>
             </div>
             <div className="top-actions">

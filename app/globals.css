@@ -229,6 +229,13 @@ p {
   font-weight: 800;
 }
 .topbar h1 {
+  /* Long names clamp to two lines; the full text is in the title attribute. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
   font-family: var(--st-font-display);
   font-size: 36px;
   font-weight: 600;
@@ -2460,27 +2467,40 @@ legend {
   color: var(--muted);
   margin-top: 3px;
 }
+/* 44x44 hit area around a 40x24 track, so the switch is easy to hit on touch
+   and clears the 24px minimum for fine pointers (WCAG 2.5.8). */
 .toggle {
-  width: 40px;
-  height: 23px;
-  padding: 3px;
+  position: relative;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   border: 0;
+  background: transparent;
+}
+.toggle::before {
+  content: "";
+  position: absolute;
+  inset: 10px 2px;
   border-radius: 20px;
   background: var(--line);
+  transition: background 0.2s;
 }
 .toggle i {
-  display: block;
-  width: 17px;
-  height: 17px;
+  position: absolute;
+  top: 13px;
+  left: 5px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: var(--st-toggle-knob);
   transition: transform 0.2s;
 }
-.toggle.active {
+.toggle.active::before {
   background: var(--brand);
 }
 .toggle.active i {
-  transform: translateX(17px);
+  transform: translateX(16px);
 }
 .session-icon {
   width: 36px;
@@ -2991,9 +3011,15 @@ legend {
   font-family: var(--st-font-data);
   font-size: clamp(19px, 2.2vw, 23px);
   font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
+}
+/* Long figures step down a size instead of clipping or orphaning a digit
+   (see amountScale in lib/wallet.ts). */
+[data-amount-scale="long"] {
+  font-size: 0.82em;
+}
+[data-amount-scale="huge"] {
+  font-size: 0.66em;
 }
 .wallet-stat > small {
   font-size: 12px;
@@ -3176,6 +3202,8 @@ a.account-row:hover {
 }
 .ledger-wrap {
   width: 100%;
+  /* Safety net: a wide row scrolls inside its panel, never the page. */
+  overflow-x: auto;
 }
 .ledger-table {
   width: 100%;
@@ -3267,7 +3295,15 @@ a.account-row:hover {
   font-family: var(--st-font-data);
 }
 .ledger-amount span {
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+}
+/* Money in table cells stays on one line until the cell is squeezed; the
+   transfer "from → to" pair may then wrap at the arrow (nbsp keeps each
+   amount together). */
+@media (min-width: 901px) {
+  .ledger-amount span {
+    white-space: nowrap;
+  }
 }
 .ledger-amount small {
   display: block;
@@ -3564,7 +3600,7 @@ a.account-row:hover {
     grid-template-columns: 1fr;
   }
 }
-@media (max-width: 720px) {
+@media (max-width: 900px) {
   .wallet-summary {
     grid-template-columns: 1fr;
     gap: 10px;
@@ -3615,7 +3651,7 @@ a.account-row:hover {
   }
   .ledger-table tr {
     display: grid;
-    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    grid-template-columns: auto auto minmax(0, 1fr) minmax(0, auto);
     column-gap: 8px;
     row-gap: 3px;
     padding: 11px 0;
@@ -4308,4 +4344,87 @@ a.account-row:hover {
 }
 .content:focus {
   outline: none;
+}
+
+/* ------------------------------------------------------------ Target sizes
+   Every pointer: at least 24x24 (WCAG 2.5.8). Touch: 44x44 (2.5.5). */
+.text-button,
+.ledger-open,
+.back-link,
+.inline-link,
+.danger-text,
+.pill-button,
+.ghost-icon,
+.accept,
+.reject,
+.session-revoke,
+.tabs button,
+.segmented button,
+.settings-nav a {
+  min-height: 24px;
+}
+.text-button,
+.ledger-open,
+.back-link,
+.inline-link,
+.danger-text {
+  display: inline-flex;
+  align-items: center;
+}
+.row-action {
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 4px;
+  border-radius: 8px;
+}
+.mini-search input,
+.search input,
+input[type="search"] {
+  min-height: 24px;
+}
+input[type="checkbox"],
+input[type="radio"] {
+  min-width: 20px;
+  min-height: 20px;
+}
+@media (pointer: coarse) {
+  .text-button,
+  .ledger-open,
+  .back-link,
+  .inline-link,
+  .danger-text,
+  .pill-button,
+  .accept,
+  .reject,
+  .session-revoke,
+  .row-action,
+  .tabs button,
+  .segmented button,
+  .settings-nav a,
+  .password-visibility-toggle,
+  .modal-close,
+  .planned-actions button,
+  .planned-actions a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .modal input:not([type="checkbox"], [type="radio"]),
+  .modal select,
+  .auth-form input:not([type="checkbox"], [type="radio"]),
+  .settings-layout input:not([type="checkbox"], [type="radio"]),
+  .settings-layout select,
+  .mini-search input,
+  .global-search input,
+  .inline-form input,
+  .history-filters input,
+  .history-filters select {
+    min-height: 44px;
+  }
+  .check-label,
+  .modal .check-label,
+  .loan-paid-toggle {
+    min-height: 44px;
+  }
 }

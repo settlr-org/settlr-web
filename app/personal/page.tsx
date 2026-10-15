@@ -17,6 +17,7 @@ import {
   Empty,
   ErrorState,
   Loading,
+  LoadError,
   Modal,
   Panel,
   PanelTitle,
@@ -24,6 +25,7 @@ import {
 import { apiDownload, apiFetch } from "../../lib/api";
 import { Category, PersonalExpense, money, todayISO } from "../../lib/types";
 import theme from "../../theme/theme.json";
+import { type LoadFailure, toLoadFailure } from "../../lib/errors";
 type Stats = {
   total: number;
   by_category:
@@ -49,6 +51,7 @@ export default function Personal() {
     "NPR";
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [loadFailure, setLoadFailure] = useState<LoadFailure | null>(null);
   const month = new Date().toISOString().slice(0, 7);
   const openNewExpense = () => {
     setEditing(undefined);
@@ -56,6 +59,7 @@ export default function Personal() {
   };
   const load = useCallback(async () => {
     try {
+      setLoadFailure(null);
       const [e, c, s, b] = await Promise.all([
         apiFetch<{ data: PersonalExpense[] }>("/api/v1/personal/expenses"),
         apiFetch<{ data: Category[] }>("/api/v1/categories"),
@@ -67,9 +71,7 @@ export default function Personal() {
       setStats(s);
       setBudget(b);
     } catch (x) {
-      setError(
-        x instanceof Error ? x.message : "Unable to load personal spending.",
-      );
+      setLoadFailure(toLoadFailure(x, "Unable to load personal spending."));
     } finally {
       setLoading(false);
     }
@@ -188,6 +190,13 @@ export default function Personal() {
     >
       {loading ? (
         <Loading />
+      ) : loadFailure ? (
+        <LoadError
+          failure={loadFailure}
+          retry={load}
+          backHref="/wallet"
+          backLabel="Back to wallet"
+        />
       ) : (
         <>
           {error && <ErrorState message={error} retry={load} />}
