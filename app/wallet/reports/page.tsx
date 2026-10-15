@@ -435,7 +435,10 @@ function ReportsView() {
                 <div className="history-head">
                   <h2>Matching entries</h2>
                   <p className="muted-copy" role="status">
-                    {plural(report.count, "entry", "entries")}
+                    {plural(report.count, "entry", "entries")} in the totals
+                    {!cursor && entries.length > report.count
+                      ? ` · ${entries.length} listed, including transfers, loans and adjustments`
+                      : ""}
                   </p>
                 </div>
                 {entriesError && (
