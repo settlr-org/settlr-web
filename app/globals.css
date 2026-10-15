@@ -4835,3 +4835,12 @@ button.result-line {
   gap: 2px;
   font-size: 15px !important;
 }
+.by-account > summary {
+  display: flex;
+  align-items: center;
+}
+@media (pointer: coarse) {
+  .by-account > summary {
+    min-height: 44px;
+  }
+}
