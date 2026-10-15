@@ -4497,3 +4497,10 @@ input[type="radio"] {
     min-height: 44px;
   }
 }
+.global-search input {
+  border: 1px solid var(--st-border-strong);
+  border-radius: 11px;
+  padding: 10px 12px;
+  background: var(--bg);
+  color: var(--ink);
+}
