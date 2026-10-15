@@ -60,4 +60,16 @@ describe("wallet navigation", () => {
     ])
       expect(fs.existsSync(path.join(process.cwd(), route))).toBe(true);
   });
+
+  it("uses one name per concept", () => {
+    expect(shell).toContain('label: "Home"');
+    expect(shell).not.toContain('label: "Overview"');
+    expect(shell).toContain("Add transaction");
+    expect(shell).not.toContain("Add expense");
+    expect(read("app/overview/layout.tsx")).toContain('title: "Home"');
+    expect(read("app/groups/[id]/page.tsx")).toContain("Add expense");
+    expect(read("components/wallet/LedgerTable.tsx")).not.toContain(
+      '"Settlement"',
+    );
+  });
 });

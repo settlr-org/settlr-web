@@ -58,6 +58,7 @@ import {
 } from "../../lib/types";
 import { type LoadFailure, toLoadFailure } from "../../lib/errors";
 import { plural } from "../../lib/format";
+import { readShowAdjustments } from "../../lib/prefs";
 import { formatDate } from "../../lib/dates";
 /** Values carried over from the wallet editor's "Split with a group". */
 type ExpensePrefill = {
@@ -115,7 +116,12 @@ export default function Overview() {
       apiFetch<WalletOverview>(
         `/api/v1/overview${buildLedgerQuery({ period })}`,
       ),
-      apiFetch<Page<LedgerEntry>>("/api/v1/ledger?limit=6"),
+      apiFetch<Page<LedgerEntry>>(
+        `/api/v1/ledger${buildLedgerQuery({
+          limit: 6,
+          hideAdjustments: !readShowAdjustments(),
+        })}`,
+      ),
     ])
       .then(([o, l]) => {
         if (cancelled) return;

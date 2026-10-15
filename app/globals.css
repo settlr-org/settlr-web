@@ -4535,3 +4535,15 @@ input[type="radio"] {
     align-items: stretch;
   }
 }
+button.result-line {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+}
+.result-line > span > strong .tag-badge {
+  margin-left: 8px;
+}

@@ -543,6 +543,8 @@ export type LedgerFilters = {
   tags?: string[];
   groups?: string[];
   kinds?: LedgerKind[];
+  /** Leave out "Initial balance / Adjustment" rows (hide_adjustments=true). */
+  hideAdjustments?: boolean;
   period?: Period;
   cursor?: string;
   limit?: number;
@@ -568,6 +570,7 @@ export function buildLedgerQuery(filters: LedgerFilters): string {
   list("group", filters.groups);
   const q = filters.q?.trim();
   if (q) params.set("q", q);
+  if (filters.hideAdjustments) params.set("hide_adjustments", "true");
   if (filters.limit) params.set("limit", String(filters.limit));
   if (filters.cursor) params.set("cursor", filters.cursor);
   const query = params.toString();
