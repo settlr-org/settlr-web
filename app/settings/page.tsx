@@ -22,12 +22,14 @@ import { PasswordInput } from "../../components/PasswordInput";
 import { useSession } from "../../components/SessionProvider";
 import { WalletSettingsPanels } from "../../components/wallet/WalletSettingsPanels";
 import { apiDownload, apiFetch } from "../../lib/api";
+import { EXPORTS, type ExportOption } from "../../lib/exports";
 import {
   deviceLabel,
   displayIp,
   initials,
   isMobileAgent,
 } from "../../lib/types";
+import { formatDate, formatDateTime } from "../../lib/dates";
 type Prefs = {
   email_enabled: boolean;
   push_enabled: boolean;
@@ -195,6 +197,21 @@ export default function Settings() {
       setError(x instanceof Error ? x.message : "Could not revoke session.");
     }
   };
+  const [downloading, setDownloading] = useState("");
+  const download = async (option: ExportOption) => {
+    setDownloading(option.key);
+    setError("");
+    try {
+      await apiDownload(option.path, option.filename);
+      setSaved(`${option.label} downloaded.`);
+    } catch (x) {
+      setError(
+        x instanceof Error ? x.message : "Could not prepare the download.",
+      );
+    } finally {
+      setDownloading("");
+    }
+  };
   const deleteAccount = async () => {
     if (
       !(await requestConfirmation({
@@ -237,7 +254,7 @@ export default function Settings() {
             <LockOutlined /> Security
           </a>
           <a href="#payments">
-            <BankOutlined /> Payments
+            <BankOutlined /> Payment details
           </a>
           <a href="#wallet">
             <WalletOutlined /> Wallet
@@ -310,7 +327,7 @@ export default function Settings() {
                   ],
                   [
                     "settlement_enabled",
-                    "Settlements",
+                    "Payments",
                     "When a payment is recorded with you.",
                   ],
                 ] as [keyof Prefs, string, string][]
@@ -425,7 +442,7 @@ export default function Settings() {
                     <p>
                       {[
                         displayIp(s.ip),
-                        `Last used ${new Date(s.last_used_at).toLocaleDateString()}`,
+                        `Last used ${formatDate(s.last_used_at)}`,
                       ]
                         .filter(Boolean)
                         .join(" · ")}
@@ -434,7 +451,7 @@ export default function Settings() {
                   <button
                     type="button"
                     className="session-revoke"
-                    aria-label={`Revoke session ${index + 1} of ${activeSessions.length}: ${device}, last used ${new Date(s.last_used_at).toLocaleString()}`}
+                    aria-label={`Revoke session ${index + 1} of ${activeSessions.length}: ${device}, last used ${formatDateTime(s.last_used_at)}`}
                     title="Revoke session"
                     onClick={() => void revoke(s.id)}
                   >
@@ -483,28 +500,30 @@ export default function Settings() {
                   <BellOutlined /> Resend verification
                 </button>
               )}
-              <button
-                className="button"
-                onClick={() =>
-                  void apiDownload(
-                    "/api/v1/me/export.csv",
-                    "settlr-account.csv",
-                  )
-                }
-              >
-                <DownloadOutlined /> Export CSV
-              </button>
-              <button
-                className="button"
-                onClick={() =>
-                  void apiDownload(
-                    "/api/v1/me/export.json",
-                    "settlr-account.json",
-                  )
-                }
-              >
-                <DownloadOutlined /> Export JSON
-              </button>
+            </div>
+            <div
+              className="export-list"
+              role="group"
+              aria-label="Download your data"
+            >
+              {EXPORTS.map((option) => (
+                <div className="export-row" key={option.key}>
+                  <div>
+                    <strong>{option.label}</strong>
+                    <p>{option.description}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className={option.primary ? "button primary" : "button"}
+                    disabled={Boolean(downloading)}
+                    aria-label={`Download ${option.label}`}
+                    onClick={() => void download(option)}
+                  >
+                    <DownloadOutlined />{" "}
+                    {downloading === option.key ? "Preparing…" : "Download"}
+                  </button>
+                </div>
+              ))}
             </div>
             <div className="danger-inline">
               <div>

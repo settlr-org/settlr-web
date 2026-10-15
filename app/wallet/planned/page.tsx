@@ -37,6 +37,7 @@ import { PlanFormModal } from "../../../components/wallet/PlanForm";
 import { PayDialog } from "../../../components/wallet/PlannedPanel";
 import { TransactionEditor } from "../../../components/wallet/TransactionEditor";
 import { ItemTile } from "../../../components/wallet/icons";
+import { formatDate } from "../../../lib/dates";
 
 type Row = {
   key: string;
@@ -54,11 +55,7 @@ type Row = {
   muted: boolean;
 };
 
-const shortDate = (iso: string) =>
-  new Date(iso).toLocaleDateString(undefined, {
-    day: "numeric",
-    month: "short",
-  });
+const shortDate = (iso: string) => formatDate(iso);
 
 export default function PlannedPage() {
   const router = useRouter();

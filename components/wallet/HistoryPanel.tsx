@@ -14,6 +14,7 @@ import {
   Tag,
   WalletCategory,
 } from "../../lib/wallet";
+import { readShowAdjustments, writeShowAdjustments } from "../../lib/prefs";
 import { accountMap, categoryMap, errorText } from "./data";
 import { LedgerTable } from "./LedgerTable";
 
@@ -22,7 +23,7 @@ const TYPE_OPTIONS: { value: "" | LedgerType; label: string }[] = [
   { value: "EXPENSE", label: "Expenses" },
   { value: "INCOME", label: "Income" },
   { value: "TRANSFER", label: "Transfers" },
-  { value: "SETTLEMENT", label: "Settlements" },
+  { value: "SETTLEMENT", label: "Payments" },
 ];
 
 /** Searchable, filterable history from GET /ledger with cursor paging. */
@@ -58,6 +59,15 @@ export function HistoryPanel({
   const [more, setMore] = useState(false);
   const [error, setError] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  // Opening balances and corrections clutter the combined history; they stay
+  // visible on each account's own page.
+  const [showAdjustments, setShowAdjustments] = useState(false);
+  useEffect(() => setShowAdjustments(readShowAdjustments()), []);
+  const toggleAdjustments = () => {
+    const next = !showAdjustments;
+    setShowAdjustments(next);
+    writeShowAdjustments(next);
+  };
 
   // Debounce the search box so each keystroke doesn't hit the API.
   useEffect(() => {
@@ -73,9 +83,10 @@ export function HistoryPanel({
       accounts: accountId ? [accountId] : account ? [account] : [],
       categories: category ? [category] : [],
       tags: tag ? [tag] : [],
+      hideAdjustments: !accountId && !showAdjustments,
       limit: 30,
     }),
-    [period, query, type, account, accountId, category, tag],
+    [period, query, type, account, accountId, category, tag, showAdjustments],
   );
 
   useEffect(() => {
@@ -138,6 +149,16 @@ export function HistoryPanel({
               onChange={(e) => setQ(e.target.value)}
             />
           </label>
+          {!accountId && (
+            <button
+              type="button"
+              className={showAdjustments ? "chip active" : "chip"}
+              aria-pressed={showAdjustments}
+              onClick={toggleAdjustments}
+            >
+              Show adjustments
+            </button>
+          )}
           <button
             type="button"
             className="button"

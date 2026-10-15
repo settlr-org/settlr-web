@@ -36,7 +36,7 @@ const navigation: {
   icon: ReactNode;
   children?: NavChild[];
 }[] = [
-  { href: "/overview", label: "Overview", icon: <HomeOutlined /> },
+  { href: "/overview", label: "Home", icon: <HomeOutlined /> },
   // Personal folded into Wallet; /personal stays reachable from the Wallet page.
   {
     href: "/wallet",
@@ -177,11 +177,11 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
   if (!workspace) return children;
   if (!loading && !user && sessionError)
     return (
-      <main className="status-page" id="main" role="alert">
+      <main className="status-page" id="main">
         <Brand />
         <p className="eyebrow">CAN&apos;T REACH SETTLR</p>
         <h1>We couldn&apos;t open your ledger</h1>
-        <p className="status-copy">
+        <p className="status-copy" role="alert">
           {sessionError} You&apos;re still signed in.
         </p>
         <div className="button-row">
@@ -339,7 +339,7 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
                   className="button primary default-add"
                   onClick={() => router.push("/overview?add=1")}
                 >
-                  <PlusOutlined /> Add expense
+                  <PlusOutlined /> Add transaction
                 </button>
               )}
               <button
@@ -383,7 +383,7 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
             className="mobile-add"
             type="button"
             onClick={() => router.push("/overview?add=1")}
-            aria-label="Add expense"
+            aria-label="Add transaction"
           >
             <PlusOutlined />
           </button>

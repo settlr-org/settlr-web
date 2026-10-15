@@ -12,7 +12,7 @@ describe("wallet navigation", () => {
     shell.indexOf("type ShellConfig"),
   );
 
-  it("puts Wallet between Overview and Groups in the sidebar", () => {
+  it("puts Wallet between Home and Groups in the sidebar", () => {
     const order = ["/overview", "/wallet", "/groups"].map((href) =>
       nav.indexOf(`href: "${href}"`),
     );
@@ -59,5 +59,17 @@ describe("wallet navigation", () => {
       "app/wallet/loans/[id]/page.tsx",
     ])
       expect(fs.existsSync(path.join(process.cwd(), route))).toBe(true);
+  });
+
+  it("uses one name per concept", () => {
+    expect(shell).toContain('label: "Home"');
+    expect(shell).not.toContain('label: "Overview"');
+    expect(shell).toContain("Add transaction");
+    expect(shell).not.toContain("Add expense");
+    expect(read("app/overview/layout.tsx")).toContain('title: "Home"');
+    expect(read("app/groups/[id]/page.tsx")).toContain("Add expense");
+    expect(read("components/wallet/LedgerTable.tsx")).not.toContain(
+      '"Settlement"',
+    );
   });
 });

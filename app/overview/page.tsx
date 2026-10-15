@@ -58,6 +58,8 @@ import {
 } from "../../lib/types";
 import { type LoadFailure, toLoadFailure } from "../../lib/errors";
 import { plural } from "../../lib/format";
+import { readShowAdjustments } from "../../lib/prefs";
+import { formatDate } from "../../lib/dates";
 /** Values carried over from the wallet editor's "Split with a group". */
 type ExpensePrefill = {
   amount?: string;
@@ -114,7 +116,12 @@ export default function Overview() {
       apiFetch<WalletOverview>(
         `/api/v1/overview${buildLedgerQuery({ period })}`,
       ),
-      apiFetch<Page<LedgerEntry>>("/api/v1/ledger?limit=6"),
+      apiFetch<Page<LedgerEntry>>(
+        `/api/v1/ledger${buildLedgerQuery({
+          limit: 6,
+          hideAdjustments: !readShowAdjustments(),
+        })}`,
+      ),
     ])
       .then(([o, l]) => {
         if (cancelled) return;
@@ -158,7 +165,7 @@ export default function Overview() {
         setFriendBalances(Object.fromEntries(entries));
       }
     } catch (x) {
-      setLoadFailure(toLoadFailure(x, "Unable to load overview."));
+      setLoadFailure(toLoadFailure(x, "Unable to load Home."));
     } finally {
       setLoading(false);
     }
@@ -186,7 +193,7 @@ export default function Overview() {
   }, [router, searchParams]);
   return (
     <AppShell
-      title="Overview"
+      title="Home"
       description="Every shared balance, one clear next move."
     >
       {loading ? (
@@ -302,8 +309,8 @@ export default function Overview() {
               <p className="eyebrow">QUICK ACTIONS</p>
               <button type="button" onClick={() => setAddExpense(true)}>
                 <PlusOutlined />
-                <b>Add expense</b>
-                <span>Split with a group</span>
+                <b>Add transaction</b>
+                <span>Personal or shared</span>
               </button>
               <button type="button" onClick={() => setSettleOpen(true)}>
                 <SwapOutlined />
@@ -368,12 +375,7 @@ export default function Overview() {
                     </strong>
                     <small>{labelize(e.type)}</small>
                   </div>
-                  <time>
-                    {new Date(e.created_at).toLocaleDateString(undefined, {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </time>
+                  <time>{formatDate(e.created_at)}</time>
                 </div>
               ))}
               {!events.length && (
@@ -701,8 +703,8 @@ function QuickExpenseModal({
   if (kind === "choose")
     return (
       <Modal
-        title="Add expense"
-        subtitle="Choose where this expense belongs."
+        title="Add transaction"
+        subtitle="Choose where this belongs."
         onClose={onClose}
       >
         <div className="stack-form">
@@ -710,7 +712,7 @@ function QuickExpenseModal({
             <TeamOutlined /> Shared expense
           </button>
           <Link className="button" href="/wallet?add=expense">
-            <WalletOutlined /> Personal expense (Wallet)
+            <WalletOutlined /> Personal transaction (Wallet)
           </Link>
         </div>
       </Modal>

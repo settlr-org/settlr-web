@@ -38,6 +38,7 @@ import {
 import { useSession } from "../../../../components/SessionProvider";
 import { type LoadFailure, toLoadFailure } from "../../../../lib/errors";
 import { plural } from "../../../../lib/format";
+import { formatDateTime } from "../../../../lib/dates";
 
 type Recurring = {
   id: string;
@@ -570,7 +571,7 @@ export default function ManageGroup() {
             <article className="compact-line" key={event.id}>
               <span>
                 <strong>{labelize(event.type)}</strong>
-                <small>{new Date(event.created_at).toLocaleString()}</small>
+                <small>{formatDateTime(event.created_at)}</small>
               </span>
             </article>
           ))}

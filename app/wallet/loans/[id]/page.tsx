@@ -39,13 +39,13 @@ import {
 } from "../../../../components/wallet/LoanDialogs";
 import { ItemTile } from "../../../../components/wallet/icons";
 import { type LoadFailure, toLoadFailure } from "../../../../lib/errors";
+import { formatDate } from "../../../../lib/dates";
 
 type Dialog =
   | { kind: "edit" }
   | { kind: "record"; record?: LoanRecord; type?: LoanRecordType };
 
-const longDate = (iso: string) =>
-  new Date(iso).toLocaleDateString(undefined, { dateStyle: "medium" });
+const longDate = (iso: string) => formatDate(iso);
 
 export default function LoanDetail() {
   const { id } = useParams<{ id: string }>();

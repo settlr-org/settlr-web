@@ -42,6 +42,7 @@ import {
 } from "../../../components/wallet/AccountSelect";
 import { type LoadFailure, toLoadFailure } from "../../../lib/errors";
 import { plural } from "../../../lib/format";
+import { formatDate } from "../../../lib/dates";
 type GroupBalances = {
   data: { user_id: string; amount: number }[];
   currency: string;
@@ -246,7 +247,7 @@ export default function GroupDetail() {
               className={tab === x ? "active" : ""}
               onClick={() => setTab(x)}
             >
-              {x}
+              {x === "settlements" ? "payments" : x}
             </button>
           ),
         )}
@@ -276,7 +277,7 @@ export default function GroupDetail() {
                 <h3>{e.description}</h3>
                 <p>
                   Paid by {names[e.paid_by] || "group member"} ·{" "}
-                  {new Date(e.expense_date).toLocaleDateString()}
+                  {formatDate(e.expense_date)}
                 </p>
               </div>
               <div>
@@ -393,7 +394,7 @@ export default function GroupDetail() {
       {tab === "settlements" && (
         <Panel>
           <PanelTitle
-            title="Settlement history"
+            title="Payments"
             meta={`${plural(settlements.length, "recorded payment")}`}
           />
           {settlements.map((s) => (
@@ -406,8 +407,7 @@ export default function GroupDetail() {
                   {names[s.from_user]} paid {names[s.to_user]}
                 </h3>
                 <p>
-                  {s.note || "Settlement"} ·{" "}
-                  {new Date(s.settled_at).toLocaleDateString()}
+                  {s.note || "Payment"} · {formatDate(s.settled_at)}
                 </p>
                 {(s.from_user === user?.id || s.to_user === user?.id) &&
                   walletAccounts.length > 0 && (

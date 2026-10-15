@@ -115,7 +115,7 @@ export default function Invitations() {
           failure={loadFailure}
           retry={load}
           backHref="/overview"
-          backLabel="Back to overview"
+          backLabel="Back to Home"
         />
       ) : (
         <div className="two-column">

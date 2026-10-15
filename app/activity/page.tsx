@@ -15,6 +15,7 @@ import { apiFetch } from "../../lib/api";
 import { Event, Group, labelize, money } from "../../lib/types";
 import { type LoadFailure, toLoadFailure } from "../../lib/errors";
 import { plural } from "../../lib/format";
+import { formatDate, formatDateTime } from "../../lib/dates";
 export default function Activity() {
   const [data, setData] = useState<Event[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
@@ -53,7 +54,7 @@ export default function Activity() {
           failure={loadFailure}
           retry={load}
           backHref="/overview"
-          backLabel="Back to overview"
+          backLabel="Back to Home"
         />
       ) : (
         <Panel>
@@ -80,14 +81,7 @@ export default function Activity() {
                   </h3>
                   <p>{activityMeta(e)}</p>
                 </div>
-                <time>
-                  {new Date(e.created_at).toLocaleString(undefined, {
-                    month: "short",
-                    day: "numeric",
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })}
-                </time>
+                <time>{formatDateTime(e.created_at)}</time>
               </button>
             ))}
           </div>
@@ -112,7 +106,7 @@ export default function Activity() {
           <div className="detail-list">
             <div>
               <span>When</span>
-              <strong>{new Date(selected.created_at).toLocaleString()}</strong>
+              <strong>{formatDateTime(selected.created_at)}</strong>
             </div>
             <div>
               <span>Type</span>
@@ -162,7 +156,5 @@ function activityMeta(e: Event): string {
   const currency = e.payload?.currency;
   return typeof amount === "number"
     ? money(amount, typeof currency === "string" ? currency : undefined)
-    : new Date(e.created_at).toLocaleDateString(undefined, {
-        weekday: "long",
-      });
+    : formatDate(e.created_at);
 }

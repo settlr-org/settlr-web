@@ -19,7 +19,7 @@ export default function ErrorBoundary({
       <p className="eyebrow">SOMETHING WENT WRONG</p>
       <h1>This page hit a problem</h1>
       <p className="status-copy">
-        Your data is safe. Try again, or head back to your overview.
+        Your data is safe. Try again, or head back to Home.
       </p>
       <div className="button-row">
         <button
@@ -30,7 +30,7 @@ export default function ErrorBoundary({
           Try again
         </button>
         <Link className="button" href="/overview">
-          Go to your overview
+          Go to Home
         </Link>
       </div>
     </main>
