@@ -177,11 +177,11 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
   if (!workspace) return children;
   if (!loading && !user && sessionError)
     return (
-      <main className="status-page" id="main" role="alert">
+      <main className="status-page" id="main">
         <Brand />
         <p className="eyebrow">CAN&apos;T REACH SETTLR</p>
         <h1>We couldn&apos;t open your ledger</h1>
-        <p className="status-copy">
+        <p className="status-copy" role="alert">
           {sessionError} You&apos;re still signed in.
         </p>
         <div className="button-row">
