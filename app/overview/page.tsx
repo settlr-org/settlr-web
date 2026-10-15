@@ -36,6 +36,7 @@ import {
 import { WalletSummary } from "../../components/wallet/WalletSummary";
 import { LedgerTable } from "../../components/wallet/LedgerTable";
 import { TransactionEditor } from "../../components/wallet/TransactionEditor";
+import { PlannedPanel } from "../../components/wallet/PlannedPanel";
 import {
   AccountSelect,
   useAccounts,
@@ -210,6 +211,23 @@ export default function Overview() {
                   })
                 }
               />
+              {walletOverview && (
+                <PlannedPanel
+                  hideWhenEmpty
+                  announce
+                  upcoming={walletOverview.upcoming}
+                  overdue={walletOverview.overdue}
+                  periodEnd={new Date(walletOverview.to)}
+                  accounts={walletRefs.accounts}
+                  categories={walletRefs.categories}
+                  tags={walletRefs.tags}
+                  baseCurrency={walletOverview.currency}
+                  onChanged={() => {
+                    void reloadWallet();
+                    setWalletKey((k) => k + 1);
+                  }}
+                />
+              )}
             </div>
           )}
           <section className="summary-grid">

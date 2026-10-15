@@ -1,9 +1,11 @@
 "use client";
 import { FormEvent, KeyboardEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   CopyOutlined,
   DeleteOutlined,
+  LockOutlined,
   PlusOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
@@ -13,6 +15,7 @@ import {
   Account,
   colourCss,
   CURRENCIES,
+  dateInput,
   dateTimeInput,
   evaluateExpression,
   FetchedRates,
@@ -30,7 +33,22 @@ import {
   TxnType,
   WalletCategory,
 } from "../../lib/wallet";
+import {
+  cadenceLabel,
+  INTERVAL_UNITS,
+  IntervalUnit,
+  scheduleFields,
+  utcDateInput,
+} from "../../lib/planning";
 import { errorText, fetchRatesFor, walletWrite } from "./data";
+
+/** When the transaction happens: now/past, a planned due date, or repeating (creates a plan). */
+type Schedule = "paid" | "planned" | "repeat";
+const SCHEDULES: { value: Schedule; label: string }[] = [
+  { value: "paid", label: "Paid" },
+  { value: "planned", label: "Planned (due date)" },
+  { value: "repeat", label: "Repeat…" },
+];
 
 const TYPES: { value: TxnType; label: string }[] = [
   { value: "EXPENSE", label: "Expense" },
@@ -91,6 +109,11 @@ export function TransactionEditor({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [when, setWhen] = useState(dateTimeInput(new Date()));
+  const [schedule, setSchedule] = useState<Schedule>("paid");
+  const [dueDate, setDueDate] = useState(dateInput(new Date()));
+  const [repeatN, setRepeatN] = useState("1");
+  const [repeatUnit, setRepeatUnit] = useState<IntervalUnit>("MONTH");
+  const [currencyChoice, setCurrencyChoice] = useState(baseCurrency || "NPR");
   const [tagIds, setTagIds] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -111,6 +134,13 @@ export function TransactionEditor({
         setType(t.type);
         setAmountText(minorToInput(t.amount));
         if (t.account_id) setAccountId(t.account_id);
+        if (!t.occurred_at) {
+          // A planned (unpaid) item: edit its due date; it may have no account yet.
+          setSchedule("planned");
+          setAccountId(t.account_id || "");
+          setCurrencyChoice(t.currency);
+          if (t.due_at) setDueDate(utcDateInput(t.due_at));
+        }
         setToAccountId(t.to_account_id || "");
         if (t.to_amount && t.type === "TRANSFER") {
           setToAmountText(minorToInput(t.to_amount));
@@ -140,7 +170,12 @@ export function TransactionEditor({
 
   const account = accounts.find((a) => a.id === accountId);
   const toAccount = accounts.find((a) => a.id === toAccountId);
-  const currency = account?.currency || baseCurrency || "NPR";
+  const planning = schedule !== "paid";
+  const loanManaged = original?.source === "LOAN";
+  const currency =
+    account?.currency ||
+    (planning ? currencyChoice : baseCurrency || "NPR") ||
+    "NPR";
   const crossCurrency =
     type === "TRANSFER" &&
     Boolean(toAccount) &&
@@ -245,7 +280,7 @@ export function TransactionEditor({
       setError("Enter an amount greater than zero (e.g. 1200 or 300*4).");
       return;
     }
-    if (!accountId) {
+    if (!accountId && (!planning || type === "TRANSFER")) {
       setError("Choose an account, or create one.");
       return;
     }
@@ -269,30 +304,77 @@ export function TransactionEditor({
         return;
       }
     }
-    const occurred = new Date(when);
-    if (Number.isNaN(occurred.getTime())) {
-      setError("Choose a valid date and time.");
-      return;
-    }
-    const body = {
+    const common = {
       type,
-      account_id: accountId,
+      account_id: accountId || null,
       amount: amountMinor,
+      currency,
       to_account_id: type === "TRANSFER" ? toAccountId : null,
       to_amount: type === "TRANSFER" ? toAmount : null,
       category_id: type === "TRANSFER" ? null : categoryId || null,
       title: title.trim(),
       description: description.trim(),
-      occurred_at: occurred.toISOString(),
       tag_ids: tagIds,
     };
+    if (schedule === "repeat") {
+      const fields = scheduleFields({
+        oneTime: false,
+        n: repeatN,
+        unit: repeatUnit,
+        start: dueDate,
+      });
+      if (!fields.ok) {
+        setError(fields.error);
+        return;
+      }
+      setBusy(true);
+      setError("");
+      try {
+        await walletWrite("/api/v1/planned", "POST", {
+          ...common,
+          ...fields.value,
+        });
+        onSaved(
+          `Planned ${cadenceLabel(fields.value as never).toLowerCase()}: “${title.trim() || "payment"}”.`,
+        );
+      } catch (cause) {
+        setError(errorText(cause, "Could not save the plan."));
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+    let dates: Record<string, string>;
+    if (schedule === "planned") {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) {
+        setError("Choose a due date.");
+        return;
+      }
+      dates = { due_at: dueDate };
+    } else {
+      const occurred = new Date(when);
+      if (Number.isNaN(occurred.getTime())) {
+        setError("Choose a valid date and time.");
+        return;
+      }
+      dates = { occurred_at: occurred.toISOString() };
+    }
+    const body = { ...common, ...dates };
     setBusy(true);
     setError("");
     try {
       if (original)
         await walletWrite(`/api/v1/transactions/${original.id}`, "PATCH", body);
       else await walletWrite("/api/v1/transactions", "POST", body);
-      onSaved(original ? "Transaction updated." : "Transaction added.");
+      onSaved(
+        schedule === "planned"
+          ? original
+            ? "Planned payment updated."
+            : "Planned payment added."
+          : original
+            ? "Transaction updated."
+            : "Transaction added.",
+      );
     } catch (cause) {
       setError(errorText(cause, "Could not save the transaction."));
     } finally {
@@ -397,17 +479,57 @@ export function TransactionEditor({
     </button>
   );
 
-  const heading = original
-    ? `Edit ${TYPES.find((t) => t.value === type)?.label.toLowerCase()}`
-    : type === "TRANSFER"
-      ? "New transfer"
-      : "Add transaction";
+  const heading = loanManaged
+    ? "Loan transaction"
+    : original
+      ? `Edit ${planning ? "planned " : ""}${TYPES.find((t) => t.value === type)?.label.toLowerCase()}`
+      : schedule === "repeat"
+        ? "Plan a repeating payment"
+        : type === "TRANSFER"
+          ? "New transfer"
+          : "Add transaction";
+
+  if (loanManaged && original)
+    return (
+      <Modal
+        title={heading}
+        subtitle="Loan bookings follow their loan, so they can't be edited here."
+        onClose={onClose}
+      >
+        <div className="stack-form">
+          <p className="warning-note">
+            <LockOutlined aria-hidden="true" />{" "}
+            {original.title || "This booking"} ·{" "}
+            {formatMoney(original.amount, original.currency)}. Change the
+            amount, date or account on the loan record instead.
+          </p>
+          <div className="modal-actions">
+            <button type="button" className="button full" onClick={onClose}>
+              Close
+            </button>
+            {original.loan_id && (
+              <Link
+                className="button primary full"
+                href={`/wallet/loans/${original.loan_id}`}
+                onClick={onClose}
+              >
+                Open the loan
+              </Link>
+            )}
+          </div>
+        </div>
+      </Modal>
+    );
 
   return (
     <Modal
       wide
       title={heading}
-      subtitle="Amounts accept sums like 1200*4. Enter saves."
+      subtitle={
+        schedule === "repeat"
+          ? "Creates a planned payment that repeats. Amounts accept sums like 1200*4."
+          : "Amounts accept sums like 1200*4. Enter saves."
+      }
       onClose={onClose}
     >
       {!loaded ? (
@@ -432,6 +554,27 @@ export function TransactionEditor({
               </button>
             ))}
           </div>
+
+          {!original && (
+            <div
+              className="segmented txn-schedule"
+              role="radiogroup"
+              aria-label="When"
+            >
+              {SCHEDULES.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={schedule === option.value}
+                  className={schedule === option.value ? "active" : ""}
+                  onClick={() => setSchedule(option.value)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          )}
 
           <label className="amount-entry">
             <span>Amount ({currency})</span>
@@ -467,7 +610,11 @@ export function TransactionEditor({
                 value={accountId}
                 onChange={(e) => setAccountId(e.target.value)}
               >
-                {!accounts.length && <option value="">No accounts yet</option>}
+                {planning && type !== "TRANSFER" ? (
+                  <option value="">No account — choose when paying</option>
+                ) : (
+                  !accounts.length && <option value="">No accounts yet</option>
+                )}
                 {accounts.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.name} · {a.currency}
@@ -521,6 +668,19 @@ export function TransactionEditor({
               </div>
             )}
           </div>
+          {planning && !accountId && type !== "TRANSFER" && (
+            <label>
+              Currency
+              <select
+                value={currencyChoice}
+                onChange={(e) => setCurrencyChoice(e.target.value)}
+              >
+                {CURRENCIES.map((c) => (
+                  <option key={c}>{c}</option>
+                ))}
+              </select>
+            </label>
+          )}
           {(creating === "account" || creating === "category") &&
             inlineCreate(
               creating,
@@ -579,16 +739,64 @@ export function TransactionEditor({
                 onChange={(e) => setTitle(e.target.value)}
               />
             </label>
-            <label>
-              Date and time
-              <input
-                type="datetime-local"
-                value={when}
-                onChange={(e) => setWhen(e.target.value)}
-                required
-              />
-            </label>
+            {planning ? (
+              <label>
+                {schedule === "repeat" ? "First payment" : "Due date"}
+                <input
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  required
+                />
+              </label>
+            ) : (
+              <label>
+                Date and time
+                <input
+                  type="datetime-local"
+                  value={when}
+                  onChange={(e) => setWhen(e.target.value)}
+                  required
+                />
+              </label>
+            )}
           </div>
+          {schedule === "repeat" && (
+            <div className="interval-row">
+              <label htmlFor="txn-every">Repeat every</label>
+              <input
+                id="txn-every"
+                type="number"
+                min={1}
+                max={1000}
+                inputMode="numeric"
+                value={repeatN}
+                onChange={(e) => setRepeatN(e.target.value)}
+              />
+              <select
+                aria-label="Unit"
+                value={repeatUnit}
+                onChange={(e) => setRepeatUnit(e.target.value as IntervalUnit)}
+              >
+                {INTERVAL_UNITS.map((u) => (
+                  <option key={u.value} value={u.value}>
+                    {u.label}
+                  </option>
+                ))}
+              </select>
+              <span className="muted-copy">
+                {cadenceLabel({
+                  one_time: false,
+                  interval_n: Number(repeatN) || 1,
+                  interval_unit: repeatUnit,
+                })}
+                {" · "}
+                <Link href="/wallet/planned" className="inline-link">
+                  Manage plans
+                </Link>
+              </span>
+            </div>
+          )}
 
           <fieldset className="tag-field">
             <div className="field-head">
@@ -642,7 +850,11 @@ export function TransactionEditor({
 
           {confirmDelete ? (
             <div className="confirm-inline" role="group" aria-label="Confirm">
-              <p>Delete this transaction? Account balances update at once.</p>
+              <p>
+                {planning
+                  ? "Delete this planned payment? Nothing has been recorded for it yet."
+                  : "Delete this transaction? Account balances update at once."}
+              </p>
               <div className="button-row">
                 <button
                   type="button"
@@ -673,17 +885,19 @@ export function TransactionEditor({
                   >
                     <DeleteOutlined /> Delete
                   </button>
-                  <button
-                    type="button"
-                    className="button"
-                    disabled={busy}
-                    onClick={() => void duplicate()}
-                  >
-                    <CopyOutlined /> Duplicate
-                  </button>
+                  {!planning && (
+                    <button
+                      type="button"
+                      className="button"
+                      disabled={busy}
+                      onClick={() => void duplicate()}
+                    >
+                      <CopyOutlined /> Duplicate
+                    </button>
+                  )}
                 </>
               )}
-              {!original && type === "EXPENSE" && (
+              {!original && !planning && type === "EXPENSE" && (
                 <button
                   type="button"
                   className="button"

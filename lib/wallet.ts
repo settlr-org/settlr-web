@@ -2,6 +2,7 @@
 // Everything here is framework-free so it can be unit tested in isolation.
 import theme from "../theme/theme.json";
 import type { Category } from "./types";
+import type { PlannedItem } from "./planning";
 
 export type TxnType = "INCOME" | "EXPENSE" | "TRANSFER";
 export type LedgerType = TxnType | "SETTLEMENT";
@@ -49,6 +50,9 @@ export type Transaction = {
   occurred_at: string | null;
   due_at?: string | null;
   source: string;
+  planned_payment_id?: string | null;
+  loan_id?: string | null;
+  loan_record_id?: string | null;
   tags?: TagRef[];
 };
 
@@ -75,6 +79,8 @@ export type LedgerEntry = {
   settlement_id: string | null;
   total_amount: number | null;
   read_only: boolean;
+  loan_id?: string | null;
+  planned_payment_id?: string | null;
   tags?: TagRef[];
 };
 
@@ -109,6 +115,13 @@ export type Overview = {
   income: number;
   expense: number;
   missing_rates?: string[];
+  upcoming?: PlannedItem[];
+  overdue?: PlannedItem[];
+  upcoming_income?: number;
+  upcoming_expense?: number;
+  overdue_income?: number;
+  overdue_expense?: number;
+  projected_balance?: number;
 };
 
 export type AccountSummary = {
@@ -122,6 +135,8 @@ export type AccountSummary = {
   entries: LedgerEntry[];
   next_cursor?: string;
   missing_rates?: string[];
+  upcoming?: PlannedItem[];
+  overdue?: PlannedItem[];
 };
 
 export type CategorySummary = {
@@ -133,6 +148,8 @@ export type CategorySummary = {
   entries: LedgerEntry[];
   next_cursor?: string;
   missing_rates?: string[];
+  upcoming?: PlannedItem[];
+  overdue?: PlannedItem[];
 };
 
 export type RateOverride = {

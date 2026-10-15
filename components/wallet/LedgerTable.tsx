@@ -128,9 +128,11 @@ export function LedgerTable({
                 ? "Transfer"
                 : entry.type === "SETTLEMENT"
                   ? "Settlement"
-                  : (category?.name ?? "Uncategorized");
-            const groupHref =
-              entry.kind === "GROUP_EXPENSE" && entry.expense_id
+                  : (category?.name ??
+                    (entry.source === "LOAN" ? "Loan" : "Uncategorized"));
+            const groupHref = entry.loan_id
+              ? `/wallet/loans/${entry.loan_id}`
+              : entry.kind === "GROUP_EXPENSE" && entry.expense_id
                 ? `/expenses/${entry.expense_id}`
                 : entry.group_id
                   ? `/groups/${entry.group_id}`
@@ -175,6 +177,11 @@ export function LedgerTable({
                   )}
                   {entry.source === "ADJUSTMENT" && (
                     <span className="group-badge">Adjustment</span>
+                  )}
+                  {entry.source === "LOAN" && (
+                    <span className="group-badge" title="Edit it on the loan">
+                      <LockOutlined aria-hidden="true" /> Loan
+                    </span>
                   )}
                   {(entry.tags ?? []).map((tag) => (
                     <span
