@@ -409,7 +409,7 @@ export default function Settings() {
               title="Active sessions"
               meta={`${activeSessions.length} active`}
             />
-            {activeSessions.map((s) => {
+            {activeSessions.map((s, index) => {
               const device = deviceLabel(s.user_agent);
               return (
                 <article className="session-row" key={s.id}>
@@ -434,7 +434,7 @@ export default function Settings() {
                   <button
                     type="button"
                     className="session-revoke"
-                    aria-label={`Revoke session on ${device}, last used ${new Date(s.last_used_at).toLocaleDateString()}${displayIp(s.ip) ? `, ${displayIp(s.ip)}` : ""}`}
+                    aria-label={`Revoke session ${index + 1} of ${activeSessions.length}: ${device}, last used ${new Date(s.last_used_at).toLocaleString()}`}
                     title="Revoke session"
                     onClick={() => void revoke(s.id)}
                   >

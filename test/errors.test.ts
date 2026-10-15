@@ -114,6 +114,12 @@ function memoryStorage(): Storage {
   };
 }
 
+const failure = async (call: Promise<unknown>) =>
+  (await call.then(
+    () => undefined,
+    (e: unknown) => e,
+  )) as ApiError;
+
 describe("apiFetch error handling", () => {
   beforeEach(() => {
     Object.defineProperties(window, {
@@ -136,7 +142,7 @@ describe("apiFetch error handling", () => {
         ),
       ),
     );
-    const error = await apiFetch("/api/v1/groups").catch((e) => e as ApiError);
+    const error = await failure(apiFetch("/api/v1/groups"));
     expect(error).toBeInstanceOf(ApiError);
     expect(error.message).toBe(SERVER_MESSAGE);
     expect(error.serverMessage).toBe("internal error");
@@ -148,7 +154,7 @@ describe("apiFetch error handling", () => {
       "fetch",
       vi.fn().mockRejectedValue(new TypeError("Failed to fetch")),
     );
-    const error = await apiFetch("/api/v1/me").catch((e) => e as ApiError);
+    const error = await failure(apiFetch("/api/v1/me"));
     expect(error).toMatchObject({
       status: 0,
       code: "NETWORK",
@@ -177,7 +183,7 @@ describe("apiFetch error handling", () => {
           json(503, { error: { code: "INTERNAL", message: "x" } }),
         ),
     );
-    const error = await apiFetch("/api/v1/me").catch((e) => e as ApiError);
+    const error = await failure(apiFetch("/api/v1/me"));
     expect(error).toBeInstanceOf(ApiError);
     expect(error.status).toBe(503);
     expect(hasSession()).toBe(true);
@@ -194,7 +200,7 @@ describe("apiFetch error handling", () => {
         )
         .mockRejectedValueOnce(new TypeError("Failed to fetch")),
     );
-    const error = await apiFetch("/api/v1/me").catch((e) => e as ApiError);
+    const error = await failure(apiFetch("/api/v1/me"));
     expect(error).toMatchObject({ status: 0, code: "NETWORK" });
     expect(hasSession()).toBe(true);
   });
