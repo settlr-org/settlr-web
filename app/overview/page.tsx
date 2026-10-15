@@ -58,6 +58,7 @@ import {
 } from "../../lib/types";
 import { type LoadFailure, toLoadFailure } from "../../lib/errors";
 import { plural } from "../../lib/format";
+import { formatDate } from "../../lib/dates";
 /** Values carried over from the wallet editor's "Split with a group". */
 type ExpensePrefill = {
   amount?: string;
@@ -368,12 +369,7 @@ export default function Overview() {
                     </strong>
                     <small>{labelize(e.type)}</small>
                   </div>
-                  <time>
-                    {new Date(e.created_at).toLocaleDateString(undefined, {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </time>
+                  <time>{formatDate(e.created_at)}</time>
                 </div>
               ))}
               {!events.length && (

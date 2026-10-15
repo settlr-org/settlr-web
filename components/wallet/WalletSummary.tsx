@@ -12,11 +12,12 @@ import {
   Overview,
   WalletSettings,
 } from "../../lib/wallet";
+import { formatDate } from "../../lib/dates";
 
 /** Last day of a period whose `to` is exclusive, e.g. "31 Oct". */
 const projectedBy = (to: string) => {
   const end = new Date(new Date(to).getTime() - 1);
-  return end.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  return formatDate(end);
 };
 
 /** A headline amount that steps down in size when the figure is very long. */

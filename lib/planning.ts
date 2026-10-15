@@ -1,5 +1,6 @@
 // Wallet planning (planned payments, budgets, loans) — types and pure helpers.
 // Framework-free so everything here can be unit tested in isolation.
+import { formatDate } from "./dates";
 import type { Period, TagRef, Transaction, TxnType } from "./wallet";
 import { periodParams } from "./wallet";
 
@@ -175,11 +176,7 @@ export function dueLabel(
   if (days === 0) return "Due today";
   if (days === 1) return "Due tomorrow";
   if (days <= 6) return `Due in ${days} days`;
-  return `Due ${due.toLocaleDateString(locale, {
-    day: "numeric",
-    month: "short",
-    ...(due.getFullYear() === now.getFullYear() ? {} : { year: "numeric" }),
-  })}`;
+  return `Due ${formatDate(due, now, locale)}`;
 }
 
 // ---------------------------------------------------------------- pay / skip state

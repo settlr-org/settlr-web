@@ -43,6 +43,7 @@ import {
 } from "../../../components/wallet/AccountSelect";
 import { type LoadFailure, toLoadFailure } from "../../../lib/errors";
 import { plural } from "../../../lib/format";
+import { formatDateTime } from "../../../lib/dates";
 
 type Comment = {
   id: string;
@@ -366,7 +367,7 @@ export default function ExpenseDetail() {
               <div>
                 <strong>{comment.name}</strong>
                 <p>{comment.body}</p>
-                <small>{new Date(comment.created_at).toLocaleString()}</small>
+                <small>{formatDateTime(comment.created_at)}</small>
               </div>
               {comment.user_id === user?.id && (
                 <button

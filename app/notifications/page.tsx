@@ -19,6 +19,7 @@ import {
 import { apiFetch } from "../../lib/api";
 import { Notification } from "../../lib/types";
 import { type LoadFailure, toLoadFailure } from "../../lib/errors";
+import { formatDateTime } from "../../lib/dates";
 export default function Notifications() {
   const [data, setData] = useState<Notification[]>([]);
   const [unread, setUnread] = useState(0);
@@ -98,7 +99,7 @@ export default function Notifications() {
                 <div>
                   <h3>{n.title}</h3>
                   <p>{n.body}</p>
-                  <small>{new Date(n.created_at).toLocaleString()}</small>
+                  <small>{formatDateTime(n.created_at)}</small>
                 </div>
                 {!n.read_at && <i />}
               </button>

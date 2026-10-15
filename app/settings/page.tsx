@@ -29,6 +29,7 @@ import {
   initials,
   isMobileAgent,
 } from "../../lib/types";
+import { formatDate, formatDateTime } from "../../lib/dates";
 type Prefs = {
   email_enabled: boolean;
   push_enabled: boolean;
@@ -441,7 +442,7 @@ export default function Settings() {
                     <p>
                       {[
                         displayIp(s.ip),
-                        `Last used ${new Date(s.last_used_at).toLocaleDateString()}`,
+                        `Last used ${formatDate(s.last_used_at)}`,
                       ]
                         .filter(Boolean)
                         .join(" · ")}
@@ -450,7 +451,7 @@ export default function Settings() {
                   <button
                     type="button"
                     className="session-revoke"
-                    aria-label={`Revoke session ${index + 1} of ${activeSessions.length}: ${device}, last used ${new Date(s.last_used_at).toLocaleString()}`}
+                    aria-label={`Revoke session ${index + 1} of ${activeSessions.length}: ${device}, last used ${formatDateTime(s.last_used_at)}`}
                     title="Revoke session"
                     onClick={() => void revoke(s.id)}
                   >

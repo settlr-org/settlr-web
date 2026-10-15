@@ -27,6 +27,7 @@ import { Category, PersonalExpense, money, todayISO } from "../../lib/types";
 import theme from "../../theme/theme.json";
 import { type LoadFailure, toLoadFailure } from "../../lib/errors";
 import { plural } from "../../lib/format";
+import { formatDate } from "../../lib/dates";
 type Stats = {
   total: number;
   by_category:
@@ -267,7 +268,7 @@ export default function Personal() {
                         "Untitled expense"}
                     </h3>
                     <p>
-                      {new Date(e.expense_date).toLocaleDateString()} ·{" "}
+                      {formatDate(e.expense_date)} ·{" "}
                       {categories.find((c) => c.id === e.category_id)?.name ||
                         "Uncategorized"}
                     </p>

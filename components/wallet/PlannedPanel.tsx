@@ -35,12 +35,9 @@ import { DeferredActions, flushOnLeave, withoutHeld } from "../../lib/undo";
 import { AmountField } from "./AmountField";
 import { PlanFormModal } from "./PlanForm";
 import { TransactionEditor } from "./TransactionEditor";
+import { formatDate } from "../../lib/dates";
 
-const shortDate = (iso: string) =>
-  new Date(iso).toLocaleDateString(undefined, {
-    day: "numeric",
-    month: "short",
-  });
+const shortDate = (iso: string) => formatDate(iso);
 
 function signedAmount(item: PlannedItem) {
   const sign =
