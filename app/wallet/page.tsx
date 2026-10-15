@@ -362,11 +362,11 @@ export default function WalletPage() {
                 <Link href="/wallet/tags" className="link-row">
                   <TagsOutlined /> <span>Tags</span>
                 </Link>
-                <Link href="/personal" className="link-row">
+                <Link href="/wallet/reports" className="link-row">
                   <BarChartOutlined />{" "}
                   <span>
-                    Personal stats &amp; export
-                    <small>Monthly totals and CSV export</small>
+                    Reports
+                    <small>Charts, filters and CSV export</small>
                   </span>
                 </Link>
               </Panel>

@@ -2,6 +2,7 @@
 // pure helpers behind the charts. Framework-free so it can be unit tested.
 import {
   customPeriod,
+  shiftPeriod,
   dateInput,
   parseAmount,
   Period,
@@ -559,4 +560,35 @@ export function bucketLabel(
   if (bucket === "month")
     return d.toLocaleDateString(locale, { month: "short", year: "2-digit" });
   return d.toLocaleDateString(locale, { month: "short", day: "numeric" });
+}
+
+// ------------------------------------------------------------------ presets
+
+export type PresetKey = "3m" | "6m" | "ytd" | "12m";
+export const PRESETS: { key: PresetKey; label: string }[] = [
+  { key: "3m", label: "3 months" },
+  { key: "6m", label: "6 months" },
+  { key: "ytd", label: "This year" },
+  { key: "12m", label: "12 months" },
+];
+
+/** Ranges that end with the current budgeting period (or the calendar year). */
+export function presetPeriod(
+  key: PresetKey,
+  startDay: number,
+  now = new Date(),
+): Period {
+  const current = periodContaining(now, startDay);
+  if (key === "ytd")
+    return {
+      from: new Date(now.getFullYear(), 0, 1),
+      to: new Date(now.getFullYear() + 1, 0, 1),
+      custom: true,
+    };
+  const back = key === "3m" ? 2 : key === "6m" ? 5 : 11;
+  return {
+    from: shiftPeriod(current, -back, startDay).from,
+    to: current.to,
+    custom: true,
+  };
 }

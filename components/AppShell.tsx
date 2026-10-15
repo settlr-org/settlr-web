@@ -37,7 +37,7 @@ const navigation: {
   children?: NavChild[];
 }[] = [
   { href: "/overview", label: "Home", icon: <HomeOutlined /> },
-  // Personal folded into Wallet; /personal stays reachable from the Wallet page.
+  // Personal folded into Wallet; /personal stays reachable by URL only (old app versions).
   {
     href: "/wallet",
     label: "Wallet",
@@ -49,6 +49,7 @@ const navigation: {
         match: ["/wallet/budgets", "/wallet/planned"],
       },
       { href: "/wallet/loans", label: "Loans", match: ["/wallet/loans"] },
+      { href: "/wallet/reports", label: "Reports", match: ["/wallet/reports"] },
     ],
   },
   { href: "/groups", label: "Groups", icon: <TeamOutlined /> },
