@@ -375,6 +375,8 @@ p {
   margin-top: 6px;
 }
 .alert {
+  gap: 12px;
+  align-items: center;
   margin: -12px 0 24px;
   border: 1px solid color-mix(in srgb, var(--danger) 30%, var(--line));
   background: color-mix(in srgb, var(--danger) 8%, var(--paper));
@@ -390,6 +392,9 @@ p {
   background: transparent;
   color: inherit;
   font-weight: 800;
+  min-height: 24px;
+  padding: 0 4px;
+  white-space: nowrap;
 }
 .summary-grid {
   display: grid;
@@ -801,7 +806,7 @@ p {
   }
   .top-actions .button.primary,
   .top-actions .button.danger {
-    width: 43px;
+    width: 44px;
     padding: 0;
     font-size: 0;
   }
@@ -920,12 +925,18 @@ p {
 /* Seven items do not fit at 12px below ~360px: keep the icon for all of them
    and the label for the current page only (names stay available to AT). */
 @media (max-width: 360px) {
+  .topbar {
+    gap: 8px;
+  }
+  .top-actions {
+    gap: 4px;
+  }
   .mobile-nav {
-    left: 8px;
-    right: 8px;
+    left: 4px;
+    right: 4px;
     /* prettier-ignore */
-    grid-template-columns: repeat(3, minmax(0, 1fr)) 52px repeat(3, minmax(0, 1fr));
-    padding: 4px;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) 44px repeat(3, minmax(0, 1fr));
+    padding: 0;
   }
   .mobile-nav .nav-item:not(.active) span {
     position: absolute;
@@ -4389,15 +4400,23 @@ a.account-row:hover {
   padding: 4px;
   border-radius: 8px;
 }
-.mini-search input,
-.search input,
-input[type="search"] {
+input:not([type="checkbox"], [type="radio"], [type="hidden"]),
+select,
+textarea {
   min-height: 24px;
 }
 input[type="checkbox"],
 input[type="radio"] {
-  min-width: 20px;
-  min-height: 20px;
+  min-width: 24px;
+  min-height: 24px;
+}
+.form-meta > a,
+.auth-switch a,
+.manage-name a,
+.simple-auth > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
 }
 @media (pointer: coarse) {
   .text-button,
@@ -4420,16 +4439,14 @@ input[type="radio"] {
     min-height: 44px;
     min-width: 44px;
   }
-  .modal input:not([type="checkbox"], [type="radio"]),
-  .modal select,
-  .auth-form input:not([type="checkbox"], [type="radio"]),
-  .settings-layout input:not([type="checkbox"], [type="radio"]),
-  .settings-layout select,
-  .mini-search input,
-  .global-search input,
-  .inline-form input,
-  .history-filters input,
-  .history-filters select {
+  input:not([type="checkbox"], [type="radio"], [type="hidden"]),
+  select {
+    min-height: 44px;
+  }
+  .form-meta > a,
+  .auth-switch a,
+  .manage-name a,
+  .simple-auth > a {
     min-height: 44px;
   }
   .check-label,
