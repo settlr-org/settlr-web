@@ -4562,7 +4562,7 @@ button.result-line {
 }
 .report-summary {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
   gap: 12px;
   margin-bottom: 16px;
 }
@@ -4574,12 +4574,6 @@ button.result-line {
   grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   margin-bottom: 16px;
-}
-@media (min-width: 1200px) {
-  .report-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    align-items: start;
-  }
 }
 .report-card {
   min-width: 0;
@@ -4641,7 +4635,7 @@ button.result-line {
   display: grid;
   place-content: center;
   text-align: center;
-  padding: 0 28%;
+  padding: 0 17%;
   pointer-events: none;
 }
 .donut-centre span {
@@ -4650,8 +4644,8 @@ button.result-line {
 }
 .donut-centre strong {
   font-family: var(--st-font-display);
-  font-size: 15px;
-  overflow-wrap: anywhere;
+  font-size: calc(15px * var(--amount-k, 1));
+  white-space: nowrap;
 }
 .legend {
   list-style: none;
@@ -4735,12 +4729,12 @@ button.result-line {
   position: relative;
 }
 .trend {
-  width: 100%;
-  height: auto;
+  display: block;
+  max-width: 100%;
   overflow: visible;
 }
 .trend-axis {
-  font-size: 10px;
+  font-size: 12px;
   fill: var(--muted-strong);
   font-family: var(--st-font-data);
   font-variant-numeric: tabular-nums;
@@ -4831,4 +4825,13 @@ button.result-line {
   bottom: 0;
   padding-top: 8px;
   background: var(--paper);
+}
+
+.report-summary .wallet-stat > strong {
+  font-size: clamp(18px, 2vw, 22px);
+}
+.report-transfers {
+  display: grid;
+  gap: 2px;
+  font-size: 15px !important;
 }

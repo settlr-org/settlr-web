@@ -384,9 +384,9 @@ function ReportsView() {
                   (report.transfers_in > 0 || report.transfers_out > 0) && (
                     <article className="wallet-stat">
                       <span>Transfers</span>
-                      <strong className="amount-neutral">
-                        {money(report.transfers_in)} in ·{" "}
-                        {money(report.transfers_out)} out
+                      <strong className="amount-neutral report-transfers">
+                        <span>{money(report.transfers_in)} in</span>
+                        <span>{money(report.transfers_out)} out</span>
                       </strong>
                     </article>
                   )}

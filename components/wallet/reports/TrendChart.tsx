@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BarChartOutlined } from "@ant-design/icons";
 import { Empty } from "../../UI";
 import { Segmented } from "../../RovingRadios";
@@ -12,8 +12,7 @@ import {
 } from "../../../lib/reports";
 import { formatMoney } from "../../../lib/wallet";
 
-const W = 640;
-const H = 200;
+const H = 240;
 const PAD = { l: 44, r: 8, t: 8, b: 26 };
 
 /** Income vs spending bars with a net line. Bars are focusable with text labels. */
@@ -29,11 +28,27 @@ export function TrendChart({
   currency: string;
 }) {
   const [active, setActive] = useState<number | null>(null);
+  // Draw at the real pixel width so axis text stays 12px on phones.
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [W, setW] = useState(640);
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const measure = () => setW(Math.max(Math.round(el.clientWidth), 260));
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const plotW = W - PAD.l - PAD.r;
   const plotH = H - PAD.t - PAD.b;
   const layout = barLayout(buckets, plotW, plotH);
   const empty = buckets.every((b) => b.income === 0 && b.expense === 0);
-  const every = Math.max(1, Math.ceil(buckets.length / 8));
+  const every = Math.max(
+    1,
+    Math.ceil(buckets.length / Math.max(Math.floor(plotW / 64), 2)),
+  );
   const label = (b: TrendBucket) => bucketLabel(b.start, bucket);
   const text = (b: TrendBucket) =>
     `${label(b)}: income ${formatMoney(b.income, currency)}, spent ${formatMoney(b.expense, currency)}, net ${formatMoney(b.net, currency, { sign: "auto" })}`;
@@ -80,10 +95,12 @@ export function TrendChart({
               <i className="key-net" /> Net
             </li>
           </ul>
-          <div className="trend-wrap">
+          <div className="trend-wrap" ref={wrapRef}>
             <svg
               viewBox={`0 0 ${W} ${H}`}
               className="trend"
+              width={W}
+              height={H}
               role="group"
               aria-label={`Income and spending per ${bucket}. Use Tab to move between ${bucket}s.`}
               onMouseLeave={() => setActive(null)}
@@ -171,27 +188,29 @@ export function TrendChart({
               {shown ? text(shown) : "Hover or focus a bar for the figures."}
             </div>
           </div>
-          <table className="sr-only">
-            <caption>Income, spending and net per {bucket}</caption>
-            <thead>
-              <tr>
-                <th>{bucket}</th>
-                <th>Income</th>
-                <th>Spent</th>
-                <th>Net</th>
-              </tr>
-            </thead>
-            <tbody>
-              {buckets.map((b) => (
-                <tr key={b.start}>
-                  <th scope="row">{label(b)}</th>
-                  <td>{formatMoney(b.income, currency)}</td>
-                  <td>{formatMoney(b.expense, currency)}</td>
-                  <td>{formatMoney(b.net, currency)}</td>
+          <div className="sr-only">
+            <table>
+              <caption>Income, spending and net per {bucket}</caption>
+              <thead>
+                <tr>
+                  <th>{bucket}</th>
+                  <th>Income</th>
+                  <th>Spent</th>
+                  <th>Net</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {buckets.map((b) => (
+                  <tr key={b.start}>
+                    <th scope="row">{label(b)}</th>
+                    <td>{formatMoney(b.income, currency)}</td>
+                    <td>{formatMoney(b.expense, currency)}</td>
+                    <td>{formatMoney(b.net, currency)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </>
       )}
     </section>

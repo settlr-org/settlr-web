@@ -8,7 +8,7 @@ import {
   type Breakdown,
   type Slice,
 } from "../../../lib/reports";
-import { formatMoney } from "../../../lib/wallet";
+import { amountScale, formatMoney } from "../../../lib/wallet";
 
 /**
  * Category donut. The SVG is a picture (role=img with a text summary); the
@@ -77,7 +77,9 @@ export function CategoryDonut({
             </svg>
             <div className="donut-centre" aria-hidden="true">
               <span>{noun === "Income" ? "Income" : "Spent"}</span>
-              <strong>{amount(total)}</strong>
+              <strong data-amount-scale={amountScale(amount(total))}>
+                {amount(total)}
+              </strong>
             </div>
           </div>
           <ul className="legend" aria-label="Categories">
