@@ -109,11 +109,11 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         <div>
           <Brand />
           <p className="eyebrow">MAKE SHARED MONEY SIMPLE</p>
-          <h1>
+          <h2>
             {mode === "login"
               ? "Pick up where your group left off."
               : "A clean slate for every shared expense."}
-          </h1>
+          </h2>
           <p>
             Trips, homes, dinners and friendships stay easier when everyone sees
             the same ledger.
@@ -130,7 +130,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
               <MailOutlined />
             </span>
             <p className="eyebrow">CHECK YOUR INBOX</p>
-            <h2>Verify your email</h2>
+            <h1>Verify your email</h1>
             <p>
               We sent a verification link to{" "}
               <strong>{registration.email}</strong>. Your account stays inactive
@@ -171,9 +171,9 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
             <p className="eyebrow">
               {mode === "login" ? "WELCOME BACK" : "JOIN SETTLR"}
             </p>
-            <h2>
+            <h1>
               {mode === "login" ? "Sign in to Settlr" : "Create your account"}
-            </h2>
+            </h1>
             <p>
               {mode === "login"
                 ? "Your groups and balances are waiting."

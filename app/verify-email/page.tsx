@@ -51,13 +51,13 @@ export default function VerifyEmail() {
       <section className="auth-form verify-card">
         {state === "done" ? <CheckCircleOutlined /> : <MailOutlined />}
         <p className="eyebrow">EMAIL VERIFICATION</p>
-        <h2>
+        <h1>
           {state === "loading"
             ? "One moment"
             : state === "done"
               ? "You’re verified"
               : "We could not verify this link"}
-        </h2>
+        </h1>
         <p>{message}</p>
         <Link className="button primary auth-submit" href={loginHref}>
           {state === "done" ? "Sign in" : "Back to sign in"}

@@ -136,7 +136,7 @@ p {
 }
 .brand-tagline {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   margin: 8px 0 38px 49px;
 }
 .sidebar nav {
@@ -191,10 +191,10 @@ p {
   text-overflow: ellipsis;
 }
 .profile strong {
-  font-size: 11px;
+  font-size: 12px;
 }
 .profile small {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 .avatar {
@@ -206,7 +206,7 @@ p {
   color: var(--paper);
   display: grid;
   place-items: center;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
 }
 .content {
@@ -223,7 +223,7 @@ p {
   margin-bottom: 34px;
 }
 .eyebrow {
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 2px;
   color: var(--brand);
   font-weight: 800;
@@ -433,7 +433,7 @@ p {
   justify-content: space-between;
   align-items: center;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 1.5px;
   font-weight: 800;
   position: relative;
@@ -454,7 +454,7 @@ p {
 }
 .balance-card > p {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .negative {
   color: var(--danger) !important;
@@ -472,7 +472,7 @@ p {
 }
 .balance-split span {
   font-family: var(--st-font-data);
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 1.5px;
   color: var(--muted);
   font-weight: 800;
@@ -510,7 +510,7 @@ p {
   font-weight: 600;
 }
 .panel-title p {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 3px;
 }
@@ -518,7 +518,7 @@ p {
   border: 0;
   background: transparent;
   color: var(--brand);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   display: flex;
   gap: 6px;
@@ -557,7 +557,7 @@ p {
 .event-row small,
 .person-row small,
 .event-row time {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 .person-row > svg {
@@ -580,7 +580,7 @@ p {
   color: var(--brand);
 }
 .empty p {
-  font-size: 11px;
+  font-size: 12px;
   max-width: 260px;
   line-height: 1.5;
 }
@@ -623,7 +623,7 @@ p {
   flex: 1;
 }
 .group-card p {
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 1.3px;
   color: var(--brand);
   font-weight: 800;
@@ -633,11 +633,11 @@ p {
   margin: 4px 0;
 }
 .group-card div > span {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 .group-card > strong {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--brand);
   white-space: nowrap;
 }
@@ -670,7 +670,7 @@ p {
 }
 .modal-copy {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.55;
   margin-bottom: 20px;
 }
@@ -693,7 +693,7 @@ p {
   display: grid;
   gap: 6px;
   color: var(--ink);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
 }
 .modal input,
@@ -713,7 +713,7 @@ p {
   box-shadow: 0 0 0 3px var(--brand-soft);
 }
 .form-error {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--danger);
 }
 
@@ -757,7 +757,9 @@ p {
     grid-template-columns: 1fr;
   }
 }
-@media (max-width: 720px) {
+/* Tablet and phone: the sidebar gives way to the bottom nav below 900px so
+   the content column is never squeezed between 721 and 900px. */
+@media (max-width: 900px) {
   .sidebar {
     display: none;
   }
@@ -782,8 +784,11 @@ p {
   }
   .subtitle {
     display: block;
-    font-size: 11px;
+    font-size: 12px;
     margin-top: 4px;
+  }
+  .top-actions .desktop-logout {
+    display: none;
   }
   .top-actions .button.primary,
   .top-actions .button.danger {
@@ -850,7 +855,7 @@ p {
     display: grid;
     place-items: center;
     gap: 3px;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: -0.02em;
     line-height: 1;
@@ -871,6 +876,9 @@ p {
   .mobile-nav .nav-item.active {
     background: transparent;
     color: var(--brand);
+  }
+  .mobile-nav .nav-item {
+    min-height: 48px;
   }
   .mobile-add {
     width: 48px;
@@ -897,6 +905,35 @@ p {
   }
   .loading span:not(:first-child) {
     display: none;
+  }
+}
+/* Seven items do not fit at 12px below ~360px: keep the icon for all of them
+   and the label for the current page only (names stay available to AT). */
+@media (max-width: 360px) {
+  .mobile-nav {
+    left: 8px;
+    right: 8px;
+    grid-template-columns: 1fr 1fr 1fr 52px 1fr 1fr 1fr;
+    padding: 4px;
+  }
+  .mobile-nav .nav-item:not(.active) span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .mobile-nav .nav-item.active span {
+    width: max-content;
+    max-width: none;
+    overflow: visible;
+    justify-self: center;
+    letter-spacing: -0.03em;
+  }
+  .mobile-add {
+    width: 44px;
+    height: 44px;
   }
 }
 
@@ -935,7 +972,7 @@ p {
   border-radius: 12px;
   background: var(--brand-soft);
   color: var(--brand-strong);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
 }
 .invite-line,
@@ -982,7 +1019,7 @@ p {
 .invite-line strong,
 .compact-line strong,
 .comment-line strong {
-  font-size: 11px;
+  font-size: 12px;
 }
 .invite-line p,
 .invite-line small,
@@ -992,7 +1029,7 @@ p {
 .comment-line small,
 .muted-copy {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.5;
 }
 .invite-line > small {
@@ -1036,7 +1073,7 @@ p {
   border-top: 1px solid var(--line);
   padding: 14px 12px 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .search-results-grid,
 .management-grid {
@@ -1065,11 +1102,11 @@ p {
   gap: 3px;
 }
 .result-line strong {
-  font-size: 11px;
+  font-size: 12px;
 }
 .result-line small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .management-grid > .panel {
   position: relative;
@@ -1105,7 +1142,7 @@ p {
 }
 .stats-strip span {
   color: var(--muted-strong);
-  font-size: 10px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -1127,12 +1164,12 @@ p {
   border-top: 1px solid var(--line);
 }
 .danger-inline strong {
-  font-size: 11px;
+  font-size: 12px;
 }
 .danger-inline p {
   margin-top: 5px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .friend-profile {
   display: flex;
@@ -1157,7 +1194,7 @@ p {
 .payment-card span {
   margin-top: 4px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .payment-card {
   display: grid;
@@ -1238,11 +1275,6 @@ textarea {
 .sidebar-secondary + .profile {
   margin-top: 12px;
 }
-.sidebar-mobile-head,
-.mobile-menu,
-.sidebar-scrim {
-  display: none;
-}
 .quick-card > :is(a, button) {
   border: 0;
   background: var(--paper-2);
@@ -1281,7 +1313,7 @@ textarea {
 }
 .quick-card > :is(a, button) > span:not(.anticon) {
   grid-area: meta;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted-strong);
   line-height: 1.4;
 }
@@ -1427,7 +1459,7 @@ textarea {
   display: flex;
   gap: 20px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .trust-row span {
   display: flex;
@@ -1466,7 +1498,7 @@ textarea {
   transform: rotate(-3deg);
 }
 .visual-label {
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 1.8px;
   color: var(--brand);
   font-weight: 800;
@@ -1480,7 +1512,7 @@ textarea {
 }
 .visual-main > p {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .visual-members {
   display: flex;
@@ -1498,7 +1530,7 @@ textarea {
   display: grid;
   place-items: center;
   font-style: normal;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
 }
 .visual-members i:nth-child(2) {
@@ -1508,7 +1540,7 @@ textarea {
   background: var(--st-avatar-warm);
 }
 .visual-members span {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-left: 15px;
 }
@@ -1531,7 +1563,7 @@ textarea {
   gap: 3px;
 }
 .visual-float span {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
 }
 .visual-float strong {
@@ -1550,7 +1582,7 @@ textarea {
 }
 .landing-footer p {
   color: var(--st-band-muted);
-  font-size: 11px;
+  font-size: 12px;
   flex: 1;
 }
 .landing-footer .brand {
@@ -1591,7 +1623,7 @@ textarea {
   color: var(--st-band-text);
 }
 .back-link {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   font-weight: 800;
   display: inline-flex;
@@ -1610,7 +1642,7 @@ textarea {
   color: var(--st-band-eyebrow);
   margin-top: 70px;
 }
-.auth-story h1 {
+.auth-story h2 {
   font-family: var(--st-font-display);
   font-size: 49px;
   line-height: 1.05;
@@ -1644,14 +1676,14 @@ textarea {
   display: grid;
   gap: 16px;
 }
-.auth-form h2 {
+.auth-form h1 {
   font-family: var(--st-font-display);
   font-size: 37px;
   font-weight: 400;
   margin: 4px 0 -8px;
 }
 .auth-form > p:not(.eyebrow, .form-error, .auth-switch) {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-bottom: 9px;
 }
@@ -1661,7 +1693,7 @@ textarea {
 .settings-layout form label {
   display: grid;
   gap: 7px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
 }
 .auth-form label > div {
@@ -1718,7 +1750,7 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 12px;
 }
 .check-label {
   display: flex !important;
@@ -1752,7 +1784,7 @@ textarea {
   align-items: center;
   gap: 10px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   margin: 4px 0 13px;
 }
 .auth-divider::before,
@@ -1764,7 +1796,7 @@ textarea {
 }
 .auth-switch {
   text-align: center;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 .simple-auth {
@@ -1802,7 +1834,7 @@ textarea {
   font-size: 21px;
 }
 .group-list-card p {
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 1.3px;
   color: var(--brand);
   font-weight: 800;
@@ -1812,7 +1844,7 @@ textarea {
   margin: 4px 0;
 }
 .group-list-card div > span {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 .group-position {
@@ -1821,7 +1853,7 @@ textarea {
   gap: 4px;
 }
 .group-position small {
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 1px;
   color: var(--muted);
 }
@@ -1842,7 +1874,7 @@ textarea {
   color: var(--muted-strong);
   border-radius: 8px;
   padding: 7px 11px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
 }
 .segmented button.active {
@@ -1897,7 +1929,7 @@ textarea {
 }
 .amount-field span {
   padding-left: 12px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   color: var(--brand);
 }
@@ -1907,7 +1939,7 @@ fieldset {
   padding: 14px;
 }
 legend {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   padding: 0 6px;
 }
@@ -1949,7 +1981,7 @@ legend {
   gap: 5px;
 }
 .group-summary span {
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 1.4px;
   color: var(--st-band-muted);
   font-weight: 800;
@@ -1961,7 +1993,7 @@ legend {
   color: var(--st-band-amount);
 }
 .group-summary small {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--st-band-muted);
 }
 .member-stack {
@@ -1979,7 +2011,7 @@ legend {
   display: grid;
   place-items: center;
   font-style: normal;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
   margin-left: -8px;
 }
@@ -1987,7 +2019,7 @@ legend {
   background: var(--st-avatar-cool);
 }
 .member-stack b {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--st-band-muted);
   margin-left: 10px;
 }
@@ -2004,7 +2036,7 @@ legend {
   color: var(--muted);
   padding: 12px 15px;
   text-transform: capitalize;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
 }
 .tabs button.active {
@@ -2024,7 +2056,7 @@ legend {
   border: 0;
   background: transparent;
   outline: 0;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--ink);
 }
 .expense-line,
@@ -2062,14 +2094,14 @@ legend {
 .member-line strong,
 .debt-line strong,
 .session-row strong {
-  font-size: 11px;
+  font-size: 12px;
 }
 .expense-line p,
 .expense-line small,
 .member-line small,
 .debt-line p,
 .session-row p {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 4px;
 }
@@ -2123,7 +2155,7 @@ legend {
   outline: 0;
   flex: 1;
   color: var(--ink);
-  font-size: 11px;
+  font-size: 12px;
 }
 .friend-card,
 .request-card {
@@ -2143,7 +2175,7 @@ legend {
 }
 .friend-card p,
 .request-card small {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 3px;
 }
@@ -2173,7 +2205,7 @@ legend {
 }
 .detail-list span {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .detail-list strong {
   font-size: 12px;
@@ -2183,7 +2215,7 @@ legend {
   border-radius: 20px;
   background: var(--brand-soft);
   color: var(--brand-strong);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
   padding: 6px 9px;
 }
@@ -2238,7 +2270,7 @@ legend {
   place-items: center;
 }
 .personal-summary p {
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 1.2px;
   color: var(--muted);
   font-weight: 800;
@@ -2251,7 +2283,7 @@ legend {
   margin: 4px 0;
 }
 .personal-summary small {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
 }
 .progress {
@@ -2299,11 +2331,11 @@ legend {
   flex: 1;
 }
 .notification-row h3 {
-  font-size: 11px;
+  font-size: 12px;
 }
 .notification-row p,
 .notification-row small {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 4px;
 }
@@ -2341,12 +2373,12 @@ legend {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 11px;
+  font-size: 12px;
 }
 .timeline p,
 .timeline time {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .timeline p {
   margin-top: 4px;
@@ -2377,7 +2409,7 @@ legend {
   align-items: center;
   padding: 11px;
   border-radius: 10px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   color: var(--muted);
 }
@@ -2406,7 +2438,7 @@ legend {
   font-size: 14px;
 }
 .profile-hero p {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 .settings-layout form {
@@ -2421,10 +2453,10 @@ legend {
   border-top: 1px solid var(--line);
 }
 .setting-row strong {
-  font-size: 11px;
+  font-size: 12px;
 }
 .setting-row p {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 3px;
 }
@@ -2504,7 +2536,7 @@ legend {
   border-radius: 12px;
   background: var(--brand-soft);
   color: var(--brand-strong);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -2549,44 +2581,6 @@ legend {
   }
 }
 @media (max-width: 720px) {
-  .sidebar {
-    display: flex;
-    transform: translateX(-105%);
-    transition: transform 0.2s;
-    width: min(82vw, 300px);
-    z-index: 30;
-  }
-  .sidebar.open {
-    transform: translateX(0);
-  }
-  .sidebar > .brand,
-  .sidebar > .brand-tagline {
-    display: none;
-  }
-  .sidebar-mobile-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 25px;
-  }
-  .sidebar-scrim {
-    display: block;
-    position: fixed;
-    inset: 0;
-    border: 0;
-    background: var(--st-scrim);
-    z-index: 29;
-  }
-  .mobile-menu {
-    display: grid;
-    place-items: center;
-    width: 38px;
-    height: 38px;
-    border: 1px solid var(--line);
-    border-radius: 11px;
-    background: var(--paper);
-    color: var(--ink);
-  }
   .topbar {
     display: flex;
     width: 100%;
@@ -2597,12 +2591,9 @@ legend {
   .top-actions {
     margin-left: auto;
   }
-  .top-actions .desktop-logout {
-    display: none;
-  }
   .page-heading .eyebrow {
     display: block;
-    font-size: 10px;
+    font-size: 12px;
   }
   .page-heading h1 {
     font-size: 27px;
@@ -2662,7 +2653,7 @@ legend {
   .simple-auth > .brand {
     left: 20px;
   }
-  .auth-form h2 {
+  .auth-form h1 {
     font-size: 32px;
   }
   .group-list-card {
@@ -2743,7 +2734,7 @@ legend {
   }
   .quick-card > :is(a, button) > span:not(.anticon) {
     display: block;
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1.3;
   }
 }
@@ -2754,7 +2745,7 @@ legend {
   display: grid;
   gap: 7px;
   color: var(--ink);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
 }
 .stack-form input,
@@ -2770,7 +2761,7 @@ legend {
   outline: none;
   background: var(--bg);
   color: var(--ink);
-  font-size: 11px;
+  font-size: 12px;
 }
 .stack-form input:focus,
 .stack-form select:focus,
@@ -2900,7 +2891,7 @@ legend {
 .settings-layout .form-grid > label {
   display: grid;
   gap: 6px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   color: var(--ink);
 }
@@ -2960,7 +2951,7 @@ legend {
 }
 .wallet-sub,
 .wallet-missing {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--st-band-muted);
   line-height: 1.5;
 }
@@ -3005,7 +2996,7 @@ legend {
   text-overflow: ellipsis;
 }
 .wallet-stat > small {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 .amount-in {
@@ -3074,7 +3065,7 @@ a.account-row:hover {
   white-space: nowrap;
 }
 .account-name small {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 .account-balance {
@@ -3130,7 +3121,7 @@ a.account-row:hover {
 }
 .link-row small {
   font-weight: 500;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 .link-row:hover span {
@@ -3193,7 +3184,7 @@ a.account-row:hover {
 }
 .ledger-table th {
   text-align: left;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--muted);
   padding: 8px;
@@ -3249,7 +3240,7 @@ a.account-row:hover {
   margin: 2px 0 2px 6px;
   padding: 1px 8px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   vertical-align: middle;
   white-space: nowrap;
@@ -3281,7 +3272,7 @@ a.account-row:hover {
 .ledger-amount small {
   display: block;
   font-family: var(--st-font-sans);
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 2px;
 }
@@ -3320,7 +3311,7 @@ a.account-row:hover {
 .field > label,
 .field-head label,
 .tag-field legend {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   color: var(--ink);
 }
@@ -3336,7 +3327,7 @@ a.account-row:hover {
 }
 .field small,
 .field-hint {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--muted);
 }
@@ -3427,7 +3418,7 @@ a.account-row:hover {
   gap: 8px;
 }
 .picker-label {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
 }
 .swatch-row,
@@ -3486,7 +3477,7 @@ a.account-row:hover {
   text-decoration: underline;
 }
 .manage-name small {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 .category-chip {
@@ -3506,7 +3497,7 @@ a.account-row:hover {
   max-width: 280px;
 }
 .settlement-link .account-select {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
 }
 .settlement-link select {
@@ -3553,7 +3544,7 @@ a.account-row:hover {
   font-weight: 500;
 }
 .rate-row small {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 .rate-form {
@@ -3651,7 +3642,7 @@ a.account-row:hover {
   .ledger-account,
   .ledger-category {
     grid-row: 2;
-    font-size: 11px;
+    font-size: 12px;
     overflow: hidden;
     text-overflow: ellipsis;
   }
@@ -3772,7 +3763,7 @@ a.account-row:hover {
   padding-top: 4px;
 }
 .planned-section-head h3 {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -3832,7 +3823,7 @@ a.account-row:hover {
   overflow-wrap: anywhere;
 }
 .planned-main small {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   line-height: 1.45;
 }
@@ -3914,7 +3905,7 @@ a.account-row:hover {
 .txn-schedule button {
   flex: 1;
   min-height: 36px;
-  font-size: 11px;
+  font-size: 12px;
 }
 .schedule-field {
   border: 0;
@@ -3925,7 +3916,7 @@ a.account-row:hover {
   min-width: 0;
 }
 .schedule-field legend {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   padding: 0;
   margin-bottom: 8px;
@@ -3944,7 +3935,7 @@ a.account-row:hover {
   gap: 8px 10px;
 }
 .interval-row > label {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
 }
 .interval-row input {
@@ -3969,7 +3960,7 @@ a.account-row:hover {
   gap: 6px;
 }
 .chip-group-label {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -4136,7 +4127,7 @@ a.account-row:hover {
   flex: 0 0 auto;
   padding: 3px 10px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
 }
 .loan-pill-lend {
@@ -4272,4 +4263,49 @@ a.account-row:hover {
 }
 .planned-panel + .history-panel {
   margin-top: 20px;
+}
+
+/* ------------------------------------------------ Status pages (404, error) */
+.status-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 14px;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 48px 24px;
+  background: var(--bg);
+  color: var(--ink);
+}
+.status-page h1 {
+  font-family: var(--st-font-display);
+  font-size: clamp(28px, 7vw, 40px);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.status-copy {
+  color: var(--muted-strong);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: var(--st-radius-sm);
+  background: var(--paper);
+  color: var(--ink);
+  border: 2px solid var(--brand);
+  font-weight: 700;
+  transform: translateY(-200%);
+}
+.skip-link:focus {
+  transform: none;
+}
+.content:focus {
+  outline: none;
 }
