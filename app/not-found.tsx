@@ -14,7 +14,7 @@ export default function NotFound() {
       </p>
       <div className="button-row">
         <Link className="button primary" href="/overview">
-          Go to your overview
+          Go to Home
         </Link>
         <Link className="button" href="/">
           Back to the start

@@ -254,7 +254,7 @@ export default function Settings() {
             <LockOutlined /> Security
           </a>
           <a href="#payments">
-            <BankOutlined /> Payments
+            <BankOutlined /> Payment details
           </a>
           <a href="#wallet">
             <WalletOutlined /> Wallet
@@ -327,7 +327,7 @@ export default function Settings() {
                   ],
                   [
                     "settlement_enabled",
-                    "Settlements",
+                    "Payments",
                     "When a payment is recorded with you.",
                   ],
                 ] as [keyof Prefs, string, string][]

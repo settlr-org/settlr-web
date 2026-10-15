@@ -110,14 +110,14 @@ export function LedgerTable({
               entry.title ||
               category?.name ||
               (entry.type === "SETTLEMENT"
-                ? "Settlement"
+                ? "Payment"
                 : entry.type.charAt(0) + entry.type.slice(1).toLowerCase());
             const amount = amountFor(entry, accountId);
             const categoryText =
               entry.type === "TRANSFER"
                 ? "Transfer"
                 : entry.type === "SETTLEMENT"
-                  ? "Settlement"
+                  ? "Payment"
                   : (category?.name ??
                     (entry.source === "LOAN" ? "Loan" : "Uncategorized"));
             const groupHref = entry.loan_id

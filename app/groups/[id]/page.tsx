@@ -247,7 +247,7 @@ export default function GroupDetail() {
               className={tab === x ? "active" : ""}
               onClick={() => setTab(x)}
             >
-              {x}
+              {x === "settlements" ? "payments" : x}
             </button>
           ),
         )}
@@ -394,7 +394,7 @@ export default function GroupDetail() {
       {tab === "settlements" && (
         <Panel>
           <PanelTitle
-            title="Settlement history"
+            title="Payments"
             meta={`${plural(settlements.length, "recorded payment")}`}
           />
           {settlements.map((s) => (
@@ -407,7 +407,7 @@ export default function GroupDetail() {
                   {names[s.from_user]} paid {names[s.to_user]}
                 </h3>
                 <p>
-                  {s.note || "Settlement"} · {formatDate(s.settled_at)}
+                  {s.note || "Payment"} · {formatDate(s.settled_at)}
                 </p>
                 {(s.from_user === user?.id || s.to_user === user?.id) &&
                   walletAccounts.length > 0 && (

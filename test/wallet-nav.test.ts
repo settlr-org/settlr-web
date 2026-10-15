@@ -12,7 +12,7 @@ describe("wallet navigation", () => {
     shell.indexOf("type ShellConfig"),
   );
 
-  it("puts Wallet between Overview and Groups in the sidebar", () => {
+  it("puts Wallet between Home and Groups in the sidebar", () => {
     const order = ["/overview", "/wallet", "/groups"].map((href) =>
       nav.indexOf(`href: "${href}"`),
     );

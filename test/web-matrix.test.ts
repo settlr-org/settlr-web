@@ -698,7 +698,7 @@ describe("expense split matrix — app/overview/page.tsx:356", () => {
 
   it("QuickExpense choose step has Shared vs Personal (Wallet) (app/overview/page.tsx:498-503)", () => {
     expect(overview).toContain("Shared expense");
-    expect(overview).toContain("Personal expense");
+    expect(overview).toContain("Personal transaction");
     // Personal expenses are wallet EXPENSE transactions now.
     expect(overview).toContain('href="/wallet?add=expense"');
   });

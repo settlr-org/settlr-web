@@ -101,7 +101,7 @@ export default function Groups() {
           failure={loadFailure}
           retry={load}
           backHref="/overview"
-          backLabel="Back to overview"
+          backLabel="Back to Home"
         />
       ) : (
         <Panel>

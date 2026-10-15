@@ -36,7 +36,7 @@ const navigation: {
   icon: ReactNode;
   children?: NavChild[];
 }[] = [
-  { href: "/overview", label: "Overview", icon: <HomeOutlined /> },
+  { href: "/overview", label: "Home", icon: <HomeOutlined /> },
   // Personal folded into Wallet; /personal stays reachable from the Wallet page.
   {
     href: "/wallet",
@@ -339,7 +339,7 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
                   className="button primary default-add"
                   onClick={() => router.push("/overview?add=1")}
                 >
-                  <PlusOutlined /> Add expense
+                  <PlusOutlined /> Add transaction
                 </button>
               )}
               <button
@@ -383,7 +383,7 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
             className="mobile-add"
             type="button"
             onClick={() => router.push("/overview?add=1")}
-            aria-label="Add expense"
+            aria-label="Add transaction"
           >
             <PlusOutlined />
           </button>

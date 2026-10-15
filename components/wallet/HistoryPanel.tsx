@@ -22,7 +22,7 @@ const TYPE_OPTIONS: { value: "" | LedgerType; label: string }[] = [
   { value: "EXPENSE", label: "Expenses" },
   { value: "INCOME", label: "Income" },
   { value: "TRANSFER", label: "Transfers" },
-  { value: "SETTLEMENT", label: "Settlements" },
+  { value: "SETTLEMENT", label: "Payments" },
 ];
 
 /** Searchable, filterable history from GET /ledger with cursor paging. */
