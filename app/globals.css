@@ -256,7 +256,7 @@ p {
   height: 43px;
   width: 210px;
   background: var(--paper);
-  border: 1px solid var(--line);
+  border: 1px solid var(--st-border-strong);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -276,7 +276,7 @@ p {
 .icon-button,
 .button {
   height: 43px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--st-border-strong);
   border-radius: 10px;
   background: var(--paper);
   color: var(--ink);
@@ -353,7 +353,7 @@ p {
 :root[data-theme="dark"] .button:not(.primary, .danger),
 :root[data-theme="dark"] .icon-button:not(.primary) {
   background: var(--paper-2);
-  border-color: var(--line);
+  border-color: var(--st-border-strong);
   color: var(--ink);
 }
 .button.primary:hover {
@@ -713,7 +713,7 @@ p {
 .modal input,
 .modal select {
   width: 100%;
-  border: 1px solid var(--line);
+  border: 1px solid var(--st-border-strong);
   background: var(--bg);
   color: var(--ink);
   border-radius: 11px;
@@ -1720,7 +1720,7 @@ textarea {
 }
 .auth-form label > div {
   height: 48px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--st-border-strong);
   background: var(--bg);
   border-radius: 13px;
   display: flex;
@@ -1914,7 +1914,7 @@ textarea {
 .settings-layout select,
 .budget-form input {
   width: 100%;
-  border: 1px solid var(--line);
+  border: 1px solid var(--st-border-strong);
   background: var(--bg);
   color: var(--ink);
   border-radius: 11px;
@@ -1936,7 +1936,7 @@ textarea {
 .amount-field {
   display: flex !important;
   align-items: center;
-  border: 1px solid var(--line);
+  border: 1px solid var(--st-border-strong);
   background: var(--bg);
   border-radius: 11px;
   overflow: hidden;
@@ -2071,7 +2071,7 @@ legend {
   border-bottom-color: var(--brand);
 }
 .mini-search {
-  border: 1px solid var(--line);
+  border: 1px solid var(--st-border-strong);
   border-radius: 10px;
   padding: 7px 10px;
   display: flex;
@@ -2171,7 +2171,7 @@ legend {
   display: flex;
   align-items: center;
   gap: 9px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--st-border-strong);
   border-radius: 14px;
   padding: 5px 5px 5px 13px;
   margin-bottom: 14px;
@@ -2795,7 +2795,7 @@ legend {
 .inline-form select {
   width: 100%;
   min-width: 0;
-  border: 1px solid var(--line);
+  border: 1px solid var(--st-border-strong);
   border-radius: 11px;
   padding: 11px 12px;
   outline: none;
@@ -2940,7 +2940,7 @@ legend {
 .manage-create input {
   width: 100%;
   min-height: 43px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--st-border-strong);
   background: var(--bg);
   color: var(--ink);
   border-radius: 11px;
@@ -3427,7 +3427,7 @@ a.account-row:hover {
   min-height: 34px;
   padding: 0 12px;
   border-radius: 999px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--st-border-strong);
   background: var(--paper);
   color: var(--ink);
   font-size: 12px;
@@ -3561,7 +3561,7 @@ a.account-row:hover {
 .settlement-link select {
   width: 100%;
   min-height: 40px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--st-border-strong);
   background: var(--bg);
   color: var(--ink);
   border-radius: 10px;
