@@ -318,6 +318,9 @@ export function PlannedPanel({
   }, []);
   const listsRef = useRef(lists);
   listsRef.current = lists;
+  // Ids already skipped on the server: React may not have re-rendered the
+  // lists yet when Skip all counts what is left.
+  const skippedRef = useRef(new Set<string>());
 
   const skip = (item: PlannedItem) => {
     const name = item.title || "planned payment";
@@ -335,6 +338,7 @@ export function PlannedPanel({
           undefined,
           { idempotencyKey, keepalive },
         );
+        skippedRef.current.add(item.id);
         release(item.id);
         settle(
           item.id,
@@ -364,7 +368,9 @@ export function PlannedPanel({
       await deferred.current.flushAll();
       await new Promise((resolve) => setTimeout(resolve, 0));
     }
-    const count = listsRef.current.overdue.length;
+    const count = listsRef.current.overdue.filter(
+      (i) => !skippedRef.current.has(i.id),
+    ).length;
     if (!count) return;
     const ok = await confirm({
       title: `Skip ${count} overdue ${count === 1 ? "item" : "items"}?`,

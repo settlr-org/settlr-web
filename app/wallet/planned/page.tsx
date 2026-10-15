@@ -87,6 +87,10 @@ export default function PlannedPage() {
       .then(([p, t]) => {
         if (cancelled) return;
         setPlans(p.data);
+        // Fresh data: rows skipped earlier are gone or advanced, so only
+        // rows still waiting in the undo queue stay hidden.
+        skippedRef.current.clear();
+        setHeld((h) => new Set([...h].filter((k) => deferred.current.has(k))));
         // Standalone planned items: unpaid transactions that belong to no plan.
         setSingles(t.data.filter((i) => !i.planned_payment_id));
       })
@@ -119,7 +123,8 @@ export default function PlannedPage() {
   const [held, setHeld] = useState<ReadonlySet<string>>(new Set());
   const [undo, setUndo] = useState<{ key: string; message: string }>();
   const confirm = useConfirmation();
-  const overdueCountRef = useRef(0);
+  const overdueKeysRef = useRef<string[]>([]);
+  const skippedRef = useRef(new Set<string>());
   const release = (key: string) =>
     setHeld((h) => {
       const next = new Set(h);
@@ -151,7 +156,8 @@ export default function PlannedPage() {
           undefined,
           { idempotencyKey, keepalive },
         );
-        release(row.key);
+        // Stay hidden until the reload below replaces the data.
+        skippedRef.current.add(row.key);
         refresh(
           `Skipped “${row.name}”.${result.next?.due_at ? ` Next due ${shortDate(result.next.due_at)}.` : ""}`,
         );
@@ -175,7 +181,9 @@ export default function PlannedPage() {
       await deferred.current.flushAll();
       await new Promise((resolve) => setTimeout(resolve, 0));
     }
-    const count = overdueCountRef.current;
+    const count = overdueKeysRef.current.filter(
+      (k) => !skippedRef.current.has(k),
+    ).length;
     if (!count) return;
     const ok = await confirm({
       title: `Skip ${count} overdue ${count === 1 ? "item" : "items"}?`,
@@ -243,10 +251,11 @@ export default function PlannedPage() {
         new Date(b.item?.due_at ?? 0).getTime(),
   );
 
-  const overdueCount = [...recurring.map(toRow), ...oneTimeRows].filter(
+  const overdueRows = [...recurring.map(toRow), ...oneTimeRows].filter(
     (r) => r.late && r.item && !r.muted && !held.has(r.key),
-  ).length;
-  overdueCountRef.current = overdueCount;
+  );
+  const overdueCount = overdueRows.length;
+  overdueKeysRef.current = overdueRows.map((r) => r.key);
   const accountsById = useMemo(() => accountMap(refs?.accounts ?? []), [refs]);
   const categoriesById = useMemo(
     () => categoryMap(refs?.categories ?? []),
