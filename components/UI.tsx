@@ -42,17 +42,25 @@ export function matchesConfirmText(typed: string, required?: string): boolean {
 export function ConfirmationProvider({ children }: { children: ReactNode }) {
   const [pending, setPending] = useState<PendingConfirmation>();
   const [typed, setTyped] = useState("");
+  const pendingRef = useRef<PendingConfirmation | undefined>(undefined);
   const requestConfirmation = useCallback(
     (options: ConfirmationOptions) =>
       new Promise<boolean>((resolve) => {
+        // A second question replaces the first; the first is answered "no"
+        // instead of being left unresolved.
+        pendingRef.current?.resolve(false);
+        const next = { ...options, resolve };
+        pendingRef.current = next;
         setTyped("");
-        setPending({ ...options, resolve });
+        setPending(next);
       }),
     [],
   );
   const close = (confirmed: boolean) => {
-    if (!pending) return;
-    pending.resolve(confirmed);
+    const current = pendingRef.current;
+    if (!current) return;
+    pendingRef.current = undefined;
+    current.resolve(confirmed);
     setPending(undefined);
   };
 
@@ -64,6 +72,7 @@ export function ConfirmationProvider({ children }: { children: ReactNode }) {
           title={pending.title}
           subtitle={pending.description}
           onClose={() => close(false)}
+          guardDirty={false}
         >
           {pending.requireText && (
             <label className="confirm-type">
@@ -213,18 +222,33 @@ export function Loading() {
     </div>
   );
 }
+/** Only edits to real form fields count; search boxes and pickers do not. */
+export function isFormEdit(target: HTMLElement | null): boolean {
+  if (!target?.closest) return false;
+  if (!target.matches("input, select, textarea")) return false;
+  if (!target.closest("form")) return false;
+  return (
+    !target.closest(
+      "[data-no-dirty], [role='listbox'], [role='combobox'], [role='searchbox']",
+    ) && target.getAttribute("type") !== "search"
+  );
+}
+
 export function Modal({
   title,
   subtitle,
   onClose,
   children,
   wide = false,
+  guardDirty = true,
 }: {
   title: string;
   subtitle: string;
   onClose: () => void;
   children: ReactNode;
   wide?: boolean;
+  /** Ask "Discard changes?" before an implicit close of an edited form. */
+  guardDirty?: boolean;
 }) {
   const titleId = useId();
   const subtitleId = useId();
@@ -238,18 +262,24 @@ export function Modal({
   // backdrop or the X then asks before throwing the entry away.
   const dirty = useRef(false);
   const closing = useRef(false);
+  const guardRef = useRef(guardDirty);
+  guardRef.current = guardDirty;
 
   const requestClose = useCallback(async () => {
     if (closing.current) return;
-    if (dirty.current && confirmRef.current) {
+    if (guardRef.current && dirty.current && confirmRef.current) {
       closing.current = true;
-      const discard = await confirmRef.current({
-        title: "Discard changes?",
-        description: "What you entered here has not been saved.",
-        confirmLabel: "Discard",
-        danger: true,
-      });
-      closing.current = false;
+      let discard = false;
+      try {
+        discard = await confirmRef.current({
+          title: "Discard changes?",
+          description: "What you entered here has not been saved.",
+          confirmLabel: "Discard",
+          danger: true,
+        });
+      } finally {
+        closing.current = false;
+      }
       if (!discard) return;
     }
     onCloseRef.current();
@@ -307,8 +337,8 @@ export function Modal({
         aria-labelledby={titleId}
         aria-describedby={subtitleId}
         onMouseDown={(e) => e.stopPropagation()}
-        onInputCapture={() => {
-          dirty.current = true;
+        onInputCapture={(event) => {
+          if (isFormEdit(event.target as HTMLElement)) dirty.current = true;
         }}
       >
         <button
