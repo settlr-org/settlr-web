@@ -4486,3 +4486,14 @@ input[type="radio"] {
   color: var(--muted-strong);
   font-size: 13px;
 }
+.landing-nav nav > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+}
+@media (pointer: coarse) {
+  .alert button,
+  .landing-nav nav > a {
+    min-height: 44px;
+  }
+}
