@@ -850,10 +850,8 @@ p {
     height: 68px;
     z-index: 8;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) 64px repeat(
-        3,
-        minmax(0, 1fr)
-      );
+    /* prettier-ignore */
+    grid-template-columns: repeat(3, minmax(0, 1fr)) 64px repeat(3, minmax(0, 1fr));
     align-items: center;
     background: var(--paper);
     backdrop-filter: blur(14px);
@@ -925,10 +923,8 @@ p {
   .mobile-nav {
     left: 8px;
     right: 8px;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) 52px repeat(
-        3,
-        minmax(0, 1fr)
-      );
+    /* prettier-ignore */
+    grid-template-columns: repeat(3, minmax(0, 1fr)) 52px repeat(3, minmax(0, 1fr));
     padding: 4px;
   }
   .mobile-nav .nav-item:not(.active) span {
