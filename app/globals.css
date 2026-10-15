@@ -3315,7 +3315,9 @@ a.account-row:hover {
   font-family: var(--st-font-data);
 }
 .ledger-amount span {
-  overflow-wrap: anywhere;
+  /* break-word keeps a figure whole while it fits; it only splits mid-number
+     if the cell is narrower than the figure itself. */
+  overflow-wrap: break-word;
 }
 /* Money in table cells stays on one line until the cell is squeezed; the
    transfer "from → to" pair may then wrap at the arrow (nbsp keeps each
@@ -3671,7 +3673,7 @@ a.account-row:hover {
   }
   .ledger-table tr {
     display: grid;
-    grid-template-columns: auto auto minmax(0, 1fr) minmax(0, auto);
+    grid-template-columns: auto auto minmax(0, 1fr) minmax(min-content, auto);
     column-gap: 8px;
     row-gap: 3px;
     padding: 11px 0;
