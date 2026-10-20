@@ -1,6 +1,6 @@
 {
   "name": "Deep Teal & Coral",
-  "about": "Single source of truth for Settlr colours. Edit here (settlr-web/theme/theme.json), then run ../scripts/sync-theme.sh to copy it into settlr-android. Web generates CSS variables (--st-<kebab-key>) and the favicon from it; Android generates SettlrColors and colour resources at build time. Values are #RRGGBB or #RRGGBBAA.",
+  "about": "Single source of truth for Settlr colours. Edit here (settlr-web/theme/theme.json), then run ../scripts/sync-theme.sh to copy it into settlr-android. Web generates CSS variables (--st-<kebab-key>) and the favicon from it; Android generates SettlrColors and colour resources at build time. Values are #RRGGBB or #RRGGBBAA. The amoled section lists only the dark tokens that change for the true-black Android theme (the web ignores it).",
   "modes": {
     "light": {
       "canvas": "#F2F7F6",
@@ -100,6 +100,17 @@
       "chart7": "#E79BBE",
       "chart8": "#3A5A56"
     }
+  },
+  "amoled": {
+    "canvas": "#000000",
+    "surface": "#0A1413",
+    "surfaceMuted": "#101D1C",
+    "inputFill": "#0A1413",
+    "border": "#1A2E2C",
+    "divider": "#12201F",
+    "brandSoft": "#0F2A28",
+    "navIndicator": "#153836",
+    "band": "#081C1B"
   },
   "brand": {
     "launcherBackground": "#0E7C7B",

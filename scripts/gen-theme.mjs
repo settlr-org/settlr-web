@@ -15,14 +15,23 @@ for (const [mode, tokens] of Object.entries(theme.modes)) {
   const missing = keys.filter((k) => !(k in tokens));
   const extra = Object.keys(tokens).filter((k) => !keys.includes(k));
   if (missing.length || extra.length) {
-    throw new Error(`theme.json: mode "${mode}" key mismatch (missing ${missing}, extra ${extra})`);
+    throw new Error(
+      `theme.json: mode "${mode}" key mismatch (missing ${missing}, extra ${extra})`,
+    );
   }
+}
+// "amoled" is a partial override of the dark mode used by Android only: every key must exist in dark.
+for (const k of Object.keys(theme.amoled ?? {})) {
+  if (!(k in theme.modes.dark))
+    throw new Error(`theme.json: amoled token "${k}" is not a dark token`);
 }
 for (const [k, v] of [
   ...Object.entries(theme.modes).flatMap(([, t]) => Object.entries(t)),
+  ...Object.entries(theme.amoled ?? {}),
   ...Object.entries(theme.brand),
 ]) {
-  if (!HEX.test(v)) throw new Error(`theme.json: ${k} = ${v} is not #RRGGBB or #RRGGBBAA`);
+  if (!HEX.test(v))
+    throw new Error(`theme.json: ${k} = ${v} is not #RRGGBB or #RRGGBBAA`);
 }
 
 const block = (selector, tokens) =>
@@ -43,4 +52,6 @@ const icon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="
 </svg>
 `;
 writeFileSync(join(root, "app/icon.svg"), icon);
-console.log(`theme: generated app/theme.generated.css and app/icon.svg (${theme.name})`);
+console.log(
+  `theme: generated app/theme.generated.css and app/icon.svg (${theme.name})`,
+);
